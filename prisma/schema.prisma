@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,4 +7,136 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Customer {
+  customer_id Int @id @default(autoincrement())
+  isAnonymous Boolean @default(true)
 
+  email String?
+  name String?
+  phone String?
+
+  orders Order[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Employee {
+  employee_id Int @id @default(autoincrement())
+  role USER_ROLE 
+
+  name String
+  email String
+  phone String?
+  password String
+
+  restaurant_id Int
+  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum USER_ROLE {
+  ADMIN
+  WAITER
+  CHEF
+  CASHIER
+}
+
+model Restaurant {
+  restaurant_id Int @id @default(autoincrement())
+
+  name String
+  description String?
+  phone String?
+  address String?
+
+  employees Employee[]
+  menus Menu[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Menu {
+  menu_id Int @id @default(autoincrement())
+  qr_code String @unique
+
+  restaurant_id Int
+  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+
+  menu_items Menu_Item[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Menu_Item {
+  menu_item_id Int @id @default(autoincrement())
+  title String
+  description String?
+  price Float
+  available Boolean
+
+  menu_id Int
+  menu Menu @relation(fields: [menu_id], references: [menu_id])
+
+  categories Category[]
+  order_items Order_Item[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Order {
+  order_id Int @id @default(autoincrement())
+
+  customer_id Int
+  customer Customer @relation(fields: [customer_id], references: [customer_id])
+
+  order_items Order_Item[]
+
+  payment_method PaymentMethod
+  payment_status PaymentStatus
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Order_Item {
+  order_item_id Int @id @default(autoincrement())
+  quantity Int
+  note String?
+
+  menu_item_id Int
+  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id])
+
+  order_id Int
+  order Order @relation(fields: [order_id], references: [order_id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Category {
+  category_id Int @id @default(autoincrement())
+  name String
+  description String?
+
+  menu_items Menu_Item[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}

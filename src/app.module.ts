@@ -2,14 +2,14 @@ import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "./database/database.module";
 import { AuthModule } from "./auth/auth.module";
-import { CustomerModule } from "./customer/customer.module";
-import { EmployeeModule } from "./employee/employee.module";
+import { CustomerModule } from "./domain/customer/customer.module";
+import { EmployeeModule } from "./domain/employee/employee.module";
 import { ImagesModule } from "./images/images.module";
-import { MenuModule } from "./menu/menu.module";
-import { MenuItemModule } from "./menu-item/menu-item.module";
-import { OrderModule } from "./order/order.module";
-import { RestaurantModule } from "./restaurant/restaurant.module";
-import { OrderItemModule } from './order-item/order-item.module';
+import { MenuModule } from "./domain/menu/menu.module";
+import { MenuItemModule } from "./domain/menu-item/menu-item.module";
+import { OrderModule } from "./domain/order/order.module";
+import { RestaurantModule } from "./domain/restaurant/restaurant.module";
+import { OrderItemModule } from "./domain/order-item/order-item.module";
 
 @Module({
   imports: [

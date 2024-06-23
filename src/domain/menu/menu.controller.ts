@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { MenuService } from "./menu.service";
 import { CreateMenuDto } from "./dto/create-menu.dto";
@@ -29,17 +30,20 @@ export class MenuController {
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
+  findOne(@Param("id", ParseIntPipe) id: string) {
     return this.menuService.findOne(+id);
   }
 
   @Patch(":id")
-  update(@Param("id") id: string, @Body() updateMenuDto: UpdateMenuDto) {
+  update(
+    @Param("id", ParseIntPipe) id: string,
+    @Body() updateMenuDto: UpdateMenuDto
+  ) {
     return this.menuService.update(+id, updateMenuDto);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
+  remove(@Param("id", ParseIntPipe) id: string) {
     return this.menuService.remove(+id);
   }
 }

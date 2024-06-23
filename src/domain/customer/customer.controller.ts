@@ -6,12 +6,13 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { CustomerService } from "./customer.service";
 import { CreateCustomerDto } from "./dto/create-customer.dto";
 import { UpdateCustomerDto } from "./dto/update-customer.dto";
 
-import { ApiTags } from "@nestjs/swagger";
+import { ApiBody, ApiTags } from "@nestjs/swagger";
 
 @Controller("customer")
 @ApiTags("customer")
@@ -19,6 +20,7 @@ export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
   @Post()
+  @ApiBody({ type: CreateCustomerDto })
   create(@Body() createCustomerDto: CreateCustomerDto) {
     return this.customerService.create(createCustomerDto);
   }
@@ -29,20 +31,21 @@ export class CustomerController {
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
+  findOne(@Param("id", ParseIntPipe) id: string) {
     return this.customerService.findOne(+id);
   }
 
   @Patch(":id")
+  @ApiBody({ type: [UpdateCustomerDto] })
   update(
-    @Param("id") id: string,
+    @Param("id", ParseIntPipe) id: string,
     @Body() updateCustomerDto: UpdateCustomerDto
   ) {
     return this.customerService.update(+id, updateCustomerDto);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
+  remove(@Param("id", ParseIntPipe) id: string) {
     return this.customerService.remove(+id);
   }
 }

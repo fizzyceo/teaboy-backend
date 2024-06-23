@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ParseIntPipe,
 } from "@nestjs/common";
 import { RestaurantService } from "./restaurant.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
@@ -29,20 +30,20 @@ export class RestaurantController {
   }
 
   @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.restaurantService.findOne(+id);
+  findOne(@Param("id", ParseIntPipe) id: number) {
+    return this.restaurantService.findOne(id);
   }
 
   @Patch(":id")
   update(
-    @Param("id") id: string,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateRestaurantDto: UpdateRestaurantDto
   ) {
-    return this.restaurantService.update(+id, updateRestaurantDto);
+    return this.restaurantService.update(id, updateRestaurantDto);
   }
 
   @Delete(":id")
-  remove(@Param("id") id: string) {
-    return this.restaurantService.remove(+id);
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.restaurantService.remove(id);
   }
 }

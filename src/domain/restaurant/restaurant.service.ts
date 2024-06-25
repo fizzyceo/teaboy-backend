@@ -7,8 +7,10 @@ import { DatabaseService } from "src/database/database.service";
 export class RestaurantService {
   constructor(private readonly database: DatabaseService) {}
 
-  create(createRestaurantDto: CreateRestaurantDto) {
-    return "This action adds a new restaurant";
+  async create(createRestaurantDto: CreateRestaurantDto) {
+    return await this.database.restaurant.create({
+      data: createRestaurantDto,
+    });
   }
 
   async findAll() {
@@ -21,11 +23,16 @@ export class RestaurantService {
     });
   }
 
-  update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
-    return `This action updates a #${id} restaurant`;
+  async update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
+    return await this.database.restaurant.update({
+      where: { restaurant_id: id },
+      data: updateRestaurantDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} restaurant`;
+  async remove(id: number) {
+    return await this.database.restaurant.delete({
+      where: { restaurant_id: id },
+    });
   }
 }

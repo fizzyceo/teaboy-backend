@@ -7,23 +7,32 @@ import { DatabaseService } from "src/database/database.service";
 export class MenuService {
   constructor(private readonly database: DatabaseService) {}
 
-  create(createMenuDto: CreateMenuDto) {
-    return "This action adds a new menu";
+  async create(createMenuDto: CreateMenuDto) {
+    return await this.database.menu.create({
+      data: createMenuDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all menu`;
+  async findAll() {
+    return await this.database.menu.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} menu`;
+  async findOne(id: number) {
+    return await this.database.menu.findUnique({
+      where: { menu_id: id },
+    });
   }
 
-  update(id: number, updateMenuDto: UpdateMenuDto) {
-    return `This action updates a #${id} menu`;
+  async update(id: number, updateMenuDto: UpdateMenuDto) {
+    return await this.database.menu.update({
+      where: { menu_id: id },
+      data: updateMenuDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} menu`;
+  async remove(id: number) {
+    return await this.database.menu.delete({
+      where: { menu_id: id },
+    });
   }
 }

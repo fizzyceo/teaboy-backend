@@ -1,6 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsOptional, IsString } from "class-validator";
+import { IsEmail, IsEnum, IsInt, IsOptional, IsString } from "class-validator";
 
+enum UserRole {
+  ADMIN = "ADMIN",
+  WAITER = "WAITER",
+  CHEF = "CHEF",
+  CASHIER = "CASHIER",
+}
 export class CreateEmployeeDto {
   @ApiProperty()
   @IsString()
@@ -17,8 +23,13 @@ export class CreateEmployeeDto {
   @ApiProperty()
   @IsOptional()
   @IsString()
-  phone: string;
+  phone?: string;
 
-  @ApiProperty({ enum: ["ADMIN", "WAITER", "CHEF", "CASHIER"] })
-  role: string;
+  @ApiProperty({ enum: UserRole })
+  @IsEnum(UserRole)
+  role: UserRole;
+
+  @ApiProperty()
+  @IsInt()
+  restaurant_id: number;
 }

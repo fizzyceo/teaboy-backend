@@ -7,23 +7,32 @@ import { DatabaseService } from "src/database/database.service";
 export class OrderItemService {
   constructor(private readonly database: DatabaseService) {}
 
-  create(createOrderItemDto: CreateOrderItemDto) {
-    return "This action adds a new orderItem";
+  async create(createOrderItemDto: CreateOrderItemDto) {
+    return await this.database.order_Item.create({
+      data: createOrderItemDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all orderItem`;
+  async findAll() {
+    return await this.database.order_Item.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} orderItem`;
+  async findOne(id: number) {
+    return await this.database.order_Item.findUnique({
+      where: { order_item_id: id },
+    });
   }
 
-  update(id: number, updateOrderItemDto: UpdateOrderItemDto) {
-    return `This action updates a #${id} orderItem`;
+  async update(id: number, updateOrderItemDto: UpdateOrderItemDto) {
+    return await this.database.order_Item.update({
+      where: { order_item_id: id },
+      data: updateOrderItemDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} orderItem`;
+  async remove(id: number) {
+    return await this.database.order_Item.delete({
+      where: { order_item_id: id },
+    });
   }
 }

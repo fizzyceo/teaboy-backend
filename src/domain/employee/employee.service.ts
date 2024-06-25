@@ -7,23 +7,32 @@ import { DatabaseService } from "src/database/database.service";
 export class EmployeeService {
   constructor(private readonly database: DatabaseService) {}
 
-  create(createEmployeeDto: CreateEmployeeDto) {
-    return "This action adds a new employee";
+  async create(createEmployeeDto: CreateEmployeeDto) {
+    return await this.database.employee.create({
+      data: createEmployeeDto,
+    });
   }
 
-  findAll() {
-    return `This action returns all employee`;
+  async findAll() {
+    return await this.database.employee.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} employee`;
+  async findOne(id: number) {
+    return await this.database.employee.findUnique({
+      where: { employee_id: id },
+    });
   }
 
-  update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    return `This action updates a #${id} employee`;
+  async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
+    await this.database.employee.update({
+      where: { employee_id: id },
+      data: updateEmployeeDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} employee`;
+  async remove(id: number) {
+    await this.database.employee.delete({
+      where: { employee_id: id },
+    });
   }
 }

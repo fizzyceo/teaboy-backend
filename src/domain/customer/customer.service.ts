@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateCustomerDto } from "./dto/create-customer.dto";
 import { UpdateCustomerDto } from "./dto/update-customer.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -18,9 +18,13 @@ export class CustomerService {
   }
 
   async findOne(id: number) {
-    return await this.database.customer.findUnique({
+    const customer = await this.database.customer.findUnique({
       where: { customer_id: id },
     });
+    if (!customer) {
+      throw new NotFoundException(`Customer with id ${id} not found`);
+    }
+    return customer;
   }
 
   async update(id: number, updateCustomerDto: UpdateCustomerDto) {

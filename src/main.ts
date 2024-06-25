@@ -14,7 +14,8 @@ async function bootstrap() {
   app.use(helmet());
   app.use(morgan("dev"));
   app.use(compression());
-  app.useGlobalPipes(new ValidationPipe());
+
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   const config = new DocumentBuilder()
     .setTitle("iMenu")

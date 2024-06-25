@@ -31,21 +31,21 @@ export class EmployeeController {
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: string) {
-    return this.employeeService.findOne(+id);
+  findOne(@Param("id", ParseIntPipe) id: number) {
+    return this.employeeService.findOne(id);
   }
 
   @Patch(":id")
-  @ApiBody({ type: [UpdateEmployeeDto] })
+  @ApiBody({ type: UpdateEmployeeDto })
   update(
-    @Param("id", ParseIntPipe) id: string,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateEmployeeDto: UpdateEmployeeDto
   ) {
-    return this.employeeService.update(+id, updateEmployeeDto);
+    return this.employeeService.update(id, updateEmployeeDto);
   }
 
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: string) {
-    return this.employeeService.remove(+id);
+  remove(@Param("id", ParseIntPipe) id: number) {
+    return this.employeeService.remove(id);
   }
 }

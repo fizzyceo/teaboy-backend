@@ -31,21 +31,21 @@ export class CustomerController {
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: string) {
+  findOne(@Param("id", ParseIntPipe) id: number) {
     return this.customerService.findOne(+id);
   }
 
   @Patch(":id")
   @ApiBody({ type: [UpdateCustomerDto] })
   update(
-    @Param("id", ParseIntPipe) id: string,
+    @Param("id", ParseIntPipe) id: number,
     @Body() updateCustomerDto: UpdateCustomerDto
   ) {
     return this.customerService.update(+id, updateCustomerDto);
   }
 
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: string) {
+  remove(@Param("id", ParseIntPipe) id: number) {
     return this.customerService.remove(+id);
   }
 }

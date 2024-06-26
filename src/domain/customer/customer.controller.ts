@@ -32,7 +32,7 @@ export class CustomerController {
 
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.customerService.findOne(+id);
+    return this.customerService.findOne(id);
   }
 
   @Patch(":id")
@@ -46,6 +46,6 @@ export class CustomerController {
 
   @Delete(":id")
   remove(@Param("id", ParseIntPipe) id: number) {
-    return this.customerService.remove(+id);
+    return this.customerService.remove(id);
   }
 }

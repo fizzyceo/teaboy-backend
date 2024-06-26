@@ -1,5 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsInt } from "class-validator";
+import { Type } from "class-transformer";
+import { IsEnum, IsInt, ValidateNested } from "class-validator";
+import { CreateCustomerDto } from "src/domain/customer/dto/create-customer.dto";
+import { CreateOrderItemDto } from "src/domain/order-item/dto/create-order-item.dto";
 
 enum PaymentMethod {
   CASH = "CASH",
@@ -14,8 +17,14 @@ enum PaymentStatus {
 
 export class CreateOrderDto {
   @ApiProperty()
-  @IsInt()
-  customer_id: number;
+  @ValidateNested()
+  @Type(() => CreateCustomerDto)
+  customer: CreateCustomerDto;
+
+  @ApiProperty()
+  @ValidateNested()
+  @Type(() => CreateOrderItemDto)
+  order_items: CreateOrderItemDto[];
 
   @ApiProperty({ enum: PaymentMethod })
   @IsEnum(PaymentMethod)

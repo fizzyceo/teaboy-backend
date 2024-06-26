@@ -22,17 +22,17 @@ export class MenuItemController {
   @Post()
   @ApiBody({ type: CreateMenuItemDto })
   create(@Body() createMenuItemDto: CreateMenuItemDto) {
-    return this.menuItemService.create(createMenuItemDto);
+    return this.menuItemService.createMenuItem(createMenuItemDto);
   }
 
   @Get()
   findAll() {
-    return this.menuItemService.findAll();
+    return this.menuItemService.getAllMenuItems();
   }
 
   @Get(":id")
   findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.menuItemService.findOne(id);
+    return this.menuItemService.getMenuItemById(id);
   }
 
   @Patch(":id")
@@ -41,11 +41,11 @@ export class MenuItemController {
     @Param("id", ParseIntPipe) id: number,
     @Body() updateMenuItemDto: UpdateMenuItemDto
   ) {
-    return this.menuItemService.update(+id, updateMenuItemDto);
+    return this.menuItemService.updateMenuItem(id, updateMenuItemDto);
   }
 
   @Delete(":id")
   remove(@Param("id", ParseIntPipe) id: number) {
-    return this.menuItemService.remove(+id);
+    return this.menuItemService.deleteMenuItem(id);
   }
 }

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -7,30 +7,52 @@ import { DatabaseService } from "src/database/database.service";
 export class MenuItemService {
   constructor(private readonly database: DatabaseService) {}
 
-  async create(createMenuItemDto: CreateMenuItemDto) {
+  async createMenuItem(createMenuItemDto: CreateMenuItemDto) {
     return await this.database.menu_Item.create({
       data: createMenuItemDto,
     });
   }
 
-  async findAll() {
+  async getAllMenuItems() {
     return await this.database.menu_Item.findMany();
   }
 
-  async findOne(id: number) {
-    return await this.database.menu_Item.findUnique({
+  async getMenuItemById(id: number) {
+    const menuItem = this.database.menu_Item.findUnique({
       where: { menu_item_id: id },
     });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${id} not found`);
+    }
+
+    return menuItem;
   }
 
-  async update(id: number, updateMenuItemDto: UpdateMenuItemDto) {
+  async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: id },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${id} not found`);
+    }
+
     return await this.database.menu_Item.update({
       where: { menu_item_id: id },
       data: updateMenuItemDto,
     });
   }
 
-  async remove(id: number) {
+  async deleteMenuItem(id: number) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: id },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${id} not found`);
+    }
+
     return await this.database.menu_Item.delete({
       where: { menu_item_id: id },
     });

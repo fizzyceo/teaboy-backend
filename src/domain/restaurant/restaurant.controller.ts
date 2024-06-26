@@ -21,31 +21,31 @@ export class RestaurantController {
 
   @Post()
   @ApiBody({ type: CreateRestaurantDto })
-  create(@Body() createRestaurantDto: CreateRestaurantDto) {
-    return this.restaurantService.create(createRestaurantDto);
+  createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto) {
+    return this.restaurantService.createRestaurant(createRestaurantDto);
   }
 
   @Get()
-  findAll() {
-    return this.restaurantService.findAll();
+  getAllRestraurants() {
+    return this.restaurantService.getAllRestraurants();
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.restaurantService.findOne(id);
+  getRestaurantById(@Param("id", ParseIntPipe) id: number) {
+    return this.restaurantService.getRestaurantById(id);
   }
 
   @Patch(":id")
   @ApiBody({ type: UpdateRestaurantDto })
-  update(
+  updateRestraurant(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateRestaurantDto: UpdateRestaurantDto
   ) {
-    return this.restaurantService.update(id, updateRestaurantDto);
+    return this.restaurantService.updateRestraurant(id, updateRestaurantDto);
   }
 
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.restaurantService.remove(id);
+  deleteRestaurant(@Param("id", ParseIntPipe) id: number) {
+    return this.restaurantService.deleteRestaurant(id);
   }
 }

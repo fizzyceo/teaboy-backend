@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateOrderItemDto } from "./dto/create-order-item.dto";
 import { UpdateOrderItemDto } from "./dto/update-order-item.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -18,12 +18,27 @@ export class OrderItemService {
   }
 
   async findOne(id: number) {
+    const orderItem = await this.database.order_Item.findUnique({
+      where: { order_item_id: id },
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(`Order Item with id ${id} not found`);
+    }
     return await this.database.order_Item.findUnique({
       where: { order_item_id: id },
     });
   }
 
   async update(id: number, updateOrderItemDto: UpdateOrderItemDto) {
+    const orderItem = await this.database.order_Item.findUnique({
+      where: { order_item_id: id },
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(`Order Item with id ${id} not found`);
+    }
+
     return await this.database.order_Item.update({
       where: { order_item_id: id },
       data: updateOrderItemDto,
@@ -31,6 +46,14 @@ export class OrderItemService {
   }
 
   async remove(id: number) {
+    const orderItem = await this.database.order_Item.findUnique({
+      where: { order_item_id: id },
+    });
+
+    if (!orderItem) {
+      throw new NotFoundException(`Order Item with id ${id} not found`);
+    }
+
     return await this.database.order_Item.delete({
       where: { order_item_id: id },
     });

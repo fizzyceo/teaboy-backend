@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateEmployeeDto } from "./dto/create-employee.dto";
 import { UpdateEmployeeDto } from "./dto/update-employee.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -18,20 +18,43 @@ export class EmployeeService {
   }
 
   async findOne(id: number) {
+    const employee = await this.database.employee.findUnique({
+      where: { employee_id: id },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(`Employee with id ${id} not found`);
+    }
     return await this.database.employee.findUnique({
       where: { employee_id: id },
     });
   }
 
   async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
-    await this.database.employee.update({
+    const employee = await this.database.employee.findUnique({
+      where: { employee_id: id },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(`Employee with id ${id} not found`);
+    }
+
+    return await this.database.employee.update({
       where: { employee_id: id },
       data: updateEmployeeDto,
     });
   }
 
   async remove(id: number) {
-    await this.database.employee.delete({
+    const employee = await this.database.employee.findUnique({
+      where: { employee_id: id },
+    });
+
+    if (!employee) {
+      throw new NotFoundException(`Employee with id ${id} not found`);
+    }
+
+    return await this.database.employee.delete({
       where: { employee_id: id },
     });
   }

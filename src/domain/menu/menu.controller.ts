@@ -21,31 +21,31 @@ export class MenuController {
 
   @Post()
   @ApiBody({ type: CreateMenuDto })
-  create(@Body() createMenuDto: CreateMenuDto) {
-    return this.menuService.create(createMenuDto);
+  createMenu(@Body() createMenuDto: CreateMenuDto) {
+    return this.menuService.createMenu(createMenuDto);
   }
 
   @Get()
-  findAll() {
-    return this.menuService.findAll();
+  getAllMenus() {
+    return this.menuService.getAllMenus();
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.menuService.findOne(id);
+  getMenuById(@Param("id", ParseIntPipe) id: number) {
+    return this.menuService.getMenuById(id);
   }
 
   @Patch(":id")
   @ApiBody({ type: UpdateMenuDto })
-  update(
+  updateMenu(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateMenuDto: UpdateMenuDto
   ) {
-    return this.menuService.update(id, updateMenuDto);
+    return this.menuService.updateMenu(id, updateMenuDto);
   }
 
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.menuService.remove(id);
+  deleteMenu(@Param("id", ParseIntPipe) id: number) {
+    return this.menuService.deleteMenu(id);
   }
 }

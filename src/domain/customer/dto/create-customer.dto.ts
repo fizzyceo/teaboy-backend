@@ -4,17 +4,17 @@ export class CreateCustomerDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
-  name: string;
+  name?: string;
 
   @ApiProperty()
   @IsString()
   @IsEmail()
   @IsOptional()
-  email: string;
+  email?: string;
 
   @ApiProperty()
   @IsString()
   @IsPhoneNumber("DZ")
   @IsOptional()
-  phone: string;
+  phone?: string;
 }

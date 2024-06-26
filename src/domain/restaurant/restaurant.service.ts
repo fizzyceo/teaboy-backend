@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
 import { UpdateRestaurantDto } from "./dto/update-restaurant.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -7,30 +7,61 @@ import { DatabaseService } from "src/database/database.service";
 export class RestaurantService {
   constructor(private readonly database: DatabaseService) {}
 
-  async create(createRestaurantDto: CreateRestaurantDto) {
+  async createRestaurant(createRestaurantDto: CreateRestaurantDto) {
     return await this.database.restaurant.create({
       data: createRestaurantDto,
     });
   }
 
-  async findAll() {
+  async getAllRestraurants() {
     return await this.database.restaurant.findMany();
   }
 
-  async findOne(id: number) {
+  async getRestaurantById(id: number) {
+    const restaurant = await this.database.restaurant.findUnique({
+      where: { restaurant_id: id },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant with id ${id} not found`);
+    }
+
     return await this.database.restaurant.findUnique({
       where: { restaurant_id: id },
+      include: {
+        menus: true,
+        employees: true,
+      },
     });
   }
 
-  async update(id: number, updateRestaurantDto: UpdateRestaurantDto) {
+  async updateRestraurant(
+    id: number,
+    updateRestaurantDto: UpdateRestaurantDto
+  ) {
+    const restaurant = await this.database.restaurant.findUnique({
+      where: { restaurant_id: id },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant with id ${id} not found`);
+    }
+
     return await this.database.restaurant.update({
       where: { restaurant_id: id },
       data: updateRestaurantDto,
     });
   }
 
-  async remove(id: number) {
+  async deleteRestaurant(id: number) {
+    const restaurant = await this.database.restaurant.findUnique({
+      where: { restaurant_id: id },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant with id ${id} not found`);
+    }
+
     return await this.database.restaurant.delete({
       where: { restaurant_id: id },
     });

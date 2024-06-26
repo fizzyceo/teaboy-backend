@@ -28,6 +28,14 @@ export class CustomerService {
   }
 
   async update(id: number, updateCustomerDto: UpdateCustomerDto) {
+    const customer = await this.database.customer.findUnique({
+      where: { customer_id: id },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Customer with id ${id} not found`);
+    }
+
     return await this.database.customer.update({
       where: { customer_id: id },
       data: updateCustomerDto,
@@ -35,6 +43,14 @@ export class CustomerService {
   }
 
   async remove(id: number) {
+    const customer = await this.database.customer.findUnique({
+      where: { customer_id: id },
+    });
+
+    if (!customer) {
+      throw new NotFoundException(`Customer with id ${id} not found`);
+    }
+
     return await this.database.customer.delete({
       where: { customer_id: id },
     });

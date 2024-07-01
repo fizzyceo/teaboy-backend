@@ -35,6 +35,11 @@ export class MenuController {
     return this.menuService.getMenuById(id);
   }
 
+  @Get(":id/items")
+  getMenuItems(@Param("id", ParseIntPipe) id: number) {
+    return this.menuService.getMenuItems(id);
+  }
+
   @Patch(":id")
   @ApiBody({ type: UpdateMenuDto })
   updateMenu(

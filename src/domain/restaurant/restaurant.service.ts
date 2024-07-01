@@ -29,9 +29,37 @@ export class RestaurantService {
     return await this.database.restaurant.findUnique({
       where: { restaurant_id: id },
       include: {
-        menus: true,
-        employees: true,
+        // menus: true,
+        // employees: true,
       },
+    });
+  }
+
+  async getRestaurantMenus(id: number) {
+    const restaurant = await this.database.restaurant.findUnique({
+      where: { restaurant_id: id },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant with id ${id} not found`);
+    }
+
+    return await this.database.menu.findMany({
+      where: { restaurant_id: id },
+    });
+  }
+
+  async getRestaurantEmployees(id: number) {
+    const restaurant = await this.database.restaurant.findUnique({
+      where: { restaurant_id: id },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(`Restaurant with id ${id} not found`);
+    }
+
+    return await this.database.employee.findMany({
+      where: { restaurant_id: id },
     });
   }
 

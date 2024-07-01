@@ -35,6 +35,16 @@ export class RestaurantController {
     return this.restaurantService.getRestaurantById(id);
   }
 
+  @Get(":id/menus")
+  getRestaurantMenus(@Param("id", ParseIntPipe) id: number) {
+    return this.restaurantService.getRestaurantMenus(id);
+  }
+
+  @Get(":id/employees")
+  getRestaurantEmployees(@Param("id", ParseIntPipe) id: number) {
+    return this.restaurantService.getRestaurantEmployees(id);
+  }
+
   @Patch(":id")
   @ApiBody({ type: UpdateRestaurantDto })
   updateRestraurant(

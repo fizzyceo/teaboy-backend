@@ -10,6 +10,7 @@ import { MenuItemModule } from "./domain/menu-item/menu-item.module";
 import { OrderModule } from "./domain/order/order.module";
 import { RestaurantModule } from "./domain/restaurant/restaurant.module";
 import { OrderItemModule } from "./domain/order-item/order-item.module";
+import { ConfigModule } from "@nestjs/config";
 
 @Module({
   imports: [
@@ -23,6 +24,9 @@ import { OrderItemModule } from "./domain/order-item/order-item.module";
     MenuItemModule,
     OrderModule,
     OrderItemModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
   ],
 })
 export class AppModule {}

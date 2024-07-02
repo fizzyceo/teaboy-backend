@@ -1,8 +1,14 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsEnum, IsInt, ValidateNested } from "class-validator";
-import { CreateCustomerDto } from "src/domain/customer/dto/create-customer.dto";
-import { CreateOrderItemDto } from "src/domain/order-item/dto/create-order-item.dto";
+import {
+  IsArray,
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from "class-validator";
+import { OrderItemDto } from "./order-item.dto";
 
 enum PaymentMethod {
   CASH = "CASH",
@@ -16,21 +22,27 @@ enum PaymentStatus {
 }
 
 export class CreateOrderDto {
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => CreateCustomerDto)
-  customer: CreateCustomerDto;
+  @ApiProperty({ type: [OrderItemDto] })
+  @ValidateNested({ each: true })
+  @IsArray()
+  @Type(() => OrderItemDto)
+  order_items: OrderItemDto[];
 
-  @ApiProperty()
-  @ValidateNested()
-  @Type(() => CreateOrderItemDto)
-  order_items: CreateOrderItemDto[];
-
-  @ApiProperty({ enum: PaymentMethod })
+  @ApiProperty({ enum: PaymentMethod, default: PaymentMethod.CASH })
   @IsEnum(PaymentMethod)
   payment_method: PaymentMethod;
 
-  @ApiProperty({ enum: PaymentStatus })
+  @ApiProperty({ enum: PaymentStatus, default: PaymentStatus.PENDING })
   @IsEnum(PaymentStatus)
   payment_status: PaymentStatus;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  customer_name: string;
+
+  @ApiProperty()
+  @IsInt()
+  @IsOptional()
+  table_number: number;
 }

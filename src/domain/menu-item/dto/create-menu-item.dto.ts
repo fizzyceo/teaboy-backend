@@ -1,11 +1,20 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { Type } from "class-transformer";
 import {
+  IsArray,
   IsBoolean,
   IsInt,
   IsNumber,
   IsOptional,
   IsString,
+  ValidateNested,
 } from "class-validator";
+
+class CreateItemImageDto {
+  @ApiProperty()
+  @IsString()
+  image_url: string;
+}
 
 export class CreateMenuItemDto {
   @ApiProperty()
@@ -28,4 +37,10 @@ export class CreateMenuItemDto {
   @ApiProperty()
   @IsInt()
   menu_id: number;
+
+  @ApiProperty({ type: [CreateItemImageDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateItemImageDto)
+  images: CreateItemImageDto[];
 }

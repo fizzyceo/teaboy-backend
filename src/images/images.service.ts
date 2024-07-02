@@ -1,29 +1,23 @@
 import { Injectable } from "@nestjs/common";
-import { CreateImageDto } from "./dto/create-image.dto";
-import { UpdateImageDto } from "./dto/update-image.dto";
-import { DatabaseService } from "src/database/database.service";
+import { v2 as cloudinary } from "cloudinary";
+const streamifier = require("streamifier");
+
+import { UploadApiErrorResponse, UploadApiResponse } from "cloudinary";
+
+export type CloudinaryResponse = UploadApiResponse | UploadApiErrorResponse;
 
 @Injectable()
 export class ImagesService {
-  constructor(private readonly database: DatabaseService) {}
+  uploadFile(file: Express.Multer.File): Promise<CloudinaryResponse> {
+    return new Promise<CloudinaryResponse>((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        (error, result) => {
+          if (error) return reject(error);
+          resolve(result);
+        }
+      );
 
-  create(createImageDto: CreateImageDto) {
-    return "This action adds a new image";
-  }
-
-  findAll() {
-    return `This action returns all images`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} image`;
-  }
-
-  update(id: number, updateImageDto: UpdateImageDto) {
-    return `This action updates a #${id} image`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} image`;
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
   }
 }

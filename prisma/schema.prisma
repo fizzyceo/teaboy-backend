@@ -7,19 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Customer {
-  customer_id Int @id @default(autoincrement())
-  isAnonymous Boolean @default(true)
+// model Customer {
+//   customer_id Int @id @default(autoincrement())
+//   isAnonymous Boolean @default(true)
 
-  email String?
-  name String?
-  phone String?
+//   email String?
+//   name String?
+//   phone String?
 
-  orders Order[]
+//   orders Order[]
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+// }
 
 model Employee {
   employee_id Int @id @default(autoincrement())
@@ -31,7 +31,7 @@ model Employee {
   password String
 
   restaurant_id Int
-  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -52,7 +52,7 @@ model Restaurant {
   phone String?
   address String?
 
-  employees Employee[]
+  employees Employee[] 
   menus Menu[]
 
   created_at DateTime @default(now())
@@ -61,10 +61,12 @@ model Restaurant {
 
 model Menu {
   menu_id Int @id @default(autoincrement())
-  qr_code String @unique
+  name String?
+  description String?
+  // qr_code String @unique
 
   restaurant_id Int
-  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id])
+  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
 
   menu_items Menu_Item[]
 
@@ -74,16 +76,18 @@ model Menu {
 
 model Menu_Item {
   menu_item_id Int @id @default(autoincrement())
+
   title String
   description String?
   price Float
   available Boolean
 
   menu_id Int
-  menu Menu @relation(fields: [menu_id], references: [menu_id])
+  menu Menu @relation(fields: [menu_id], references: [menu_id],onDelete: Cascade,onUpdate: Cascade)
 
   categories Category[]
   order_items Order_Item[]
+  item_images ItemImages[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -92,8 +96,11 @@ model Menu_Item {
 model Order {
   order_id Int @id @default(autoincrement())
 
-  customer_id Int
-  customer Customer @relation(fields: [customer_id], references: [customer_id])
+  customer_name String?
+  table_number Int?
+
+  // customer_id Int
+  // customer Customer @relation(fields: [customer_id], references: [customer_id])
 
   order_items Order_Item[]
 
@@ -115,16 +122,26 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CANCELLED
+}
+
 model Order_Item {
   order_item_id Int @id @default(autoincrement())
   quantity Int
   note String?
 
   menu_item_id Int
-  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id])
+  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
 
   order_id Int
-  order Order @relation(fields: [order_id], references: [order_id])
+  order Order @relation(fields: [order_id], references: [order_id],onDelete: Cascade,onUpdate: Cascade)
+
+  status OrderStatus
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -136,6 +153,17 @@ model Category {
   description String?
 
   menu_items Menu_Item[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model ItemImages{
+  item_image_id Int @id @default(autoincrement())
+  image_url String
+
+  menu_item_id Int
+  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt

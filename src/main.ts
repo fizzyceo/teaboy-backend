@@ -4,6 +4,7 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
 
 import "dotenv/config";
+import * as swaggerUi from "swagger-ui-express";
 
 import * as morgan from "morgan";
 import * as compression from "compression";
@@ -26,7 +27,15 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, document);
+
+  const options = {
+    swaggerOptions: {
+      defaultModelsExpandDepth: -1,
+      defaultModelExpandDepth: -1,
+      docExpansion: "none",
+    },
+  };
+  app.use("/api", swaggerUi.serve, swaggerUi.setup(document, options));
 
   await app.listen(process.env.PORT || 3000);
 }

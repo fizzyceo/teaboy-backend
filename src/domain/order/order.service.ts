@@ -8,27 +8,26 @@ export class OrderService {
   constructor(private readonly database: DatabaseService) {}
 
   async create(createOrderDto: CreateOrderDto) {
-    return await this.database.order.create({
-      data: {
-        customer: {
-          create: {
-            name: createOrderDto.customer.name,
-            email: createOrderDto.customer.email,
-            phone: createOrderDto.customer.phone,
-          },
-        },
-        order_items: {
-          create: createOrderDto.order_items.map((item) => ({
-            menu_item_id: item.menu_item_id,
-            quantity: item.quantity,
-            note: item.note,
-          })),
-        },
+    const { order_items, ...orderData } = createOrderDto;
 
-        payment_method: createOrderDto.payment_method,
-        payment_status: createOrderDto.payment_status,
-      },
+    const createdOrder = await this.database.$transaction(async (database) => {
+      const order = await database.order.create({
+        data: orderData,
+      });
+
+      const orderItems = order_items.map((orderItem) => ({
+        ...orderItem,
+        order_id: order.order_id,
+      }));
+
+      await database.order_Item.createMany({
+        data: orderItems,
+      });
+
+      return order;
     });
+
+    return createdOrder;
   }
 
   async findAll() {
@@ -38,6 +37,17 @@ export class OrderService {
   async findOne(id: number) {
     const order = await this.database.order.findUnique({
       where: { order_id: id },
+      include: {
+        order_items: {
+          select: {
+            order_item_id: true,
+            quantity: true,
+            note: true,
+            status: true,
+            menu_item: true,
+          },
+        },
+      },
     });
 
     if (!order) {

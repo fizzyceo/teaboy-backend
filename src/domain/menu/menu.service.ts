@@ -8,8 +8,10 @@ export class MenuService {
   constructor(private readonly database: DatabaseService) {}
 
   async createMenu(createMenuDto: CreateMenuDto) {
+    const { restaurant_id, ...rest } = createMenuDto;
+
     const restaurant = await this.database.restaurant.findUnique({
-      where: { restaurant_id: createMenuDto.restaurant_id },
+      where: { restaurant_id: restaurant_id },
     });
 
     if (!restaurant) {
@@ -19,14 +21,30 @@ export class MenuService {
     }
 
     return await this.database.menu.create({
-      data: createMenuDto,
+      data: {
+        ...rest,
+        restaurant: {
+          connect: {
+            restaurant_id: restaurant_id,
+          },
+        },
+        menu_items: {
+          create: createMenuDto.menu_items.map((item) => ({
+            ...item,
+            item_images: {
+              create: item.item_images.map((image) => ({
+                image_url: image.image_url,
+              })),
+            },
+          })),
+        },
+      },
     });
   }
 
   async getAllMenus() {
     return await this.database.menu.findMany({
       include: {
-        // menu_items: true,
         restaurant: true,
       },
     });
@@ -35,23 +53,36 @@ export class MenuService {
   async getMenuById(id: number) {
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
+
       include: {
-        menu_items: {
-          select: {
-            menu_item_id: true,
-            title: true,
-            price: true,
-            description: true,
-            categories: true,
-            available: true,
-          },
-        },
         restaurant: {
           select: {
             restaurant_id: true,
             name: true,
             address: true,
             phone: true,
+            image_url: true,
+          },
+        },
+        menu_items: {
+          select: {
+            menu_item_id: true,
+            title: true,
+            price: true,
+            description: true,
+            available: true,
+            categories: {
+              select: {
+                name: true,
+                description: true,
+              },
+            },
+            item_images: {
+              select: {
+                image_url: true,
+                item_image_id: true,
+              },
+            },
           },
         },
       },
@@ -75,6 +106,9 @@ export class MenuService {
 
     return await this.database.menu_Item.findMany({
       where: { menu_id: id },
+      include: {
+        item_images: true,
+      },
     });
   }
 
@@ -105,5 +139,34 @@ export class MenuService {
     return await this.database.menu.delete({
       where: { menu_id: id },
     });
+  }
+
+  async getMenuCategories(id: number) {
+    const menu = await this.database.menu.findUnique({
+      where: { menu_id: id },
+    });
+
+    if (!menu) {
+      throw new NotFoundException(`Menu with id ${id} not found`);
+    }
+
+    const menuItems = await this.database.menu_Item.findMany({
+      where: { menu_id: id },
+      include: {
+        categories: true,
+      },
+    });
+
+    const categories = menuItems.reduce((acc, item) => {
+      item.categories.forEach((category) => {
+        if (!acc.includes(category)) {
+          acc.push(category);
+        }
+      });
+
+      return acc;
+    }, []);
+
+    return categories;
   }
 }

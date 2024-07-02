@@ -27,7 +27,10 @@ export class MenuItemController {
   }
 
   @Get()
-  @ApiOperation({ summary: "Get all menu items" })
+  @ApiOperation({
+    summary: "Get all menu items",
+    description: "Get All menu items , this should be later be modified",
+  })
   getAllMenuItems() {
     return this.menuItemService.getAllMenuItems();
   }
@@ -41,6 +44,17 @@ export class MenuItemController {
   })
   getMenuItemById(@Param("id", ParseIntPipe) id: number) {
     return this.menuItemService.getMenuItemById(id);
+  }
+
+  @Get(":id/images")
+  @ApiOperation({ summary: "Get menu item images by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to fetch images",
+    required: true,
+  })
+  getMenuItemImages(@Param("id", ParseIntPipe) id: number) {
+    return this.menuItemService.getMenuItemImages(id);
   }
 
   @Patch(":id")
@@ -67,5 +81,24 @@ export class MenuItemController {
   })
   deleteMenuItem(@Param("id", ParseIntPipe) id: number) {
     return this.menuItemService.deleteMenuItem(id);
+  }
+
+  @Delete(":id/image/:imageId")
+  @ApiOperation({ summary: "Delete menu item image by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to delete image from",
+    required: true,
+  })
+  @ApiParam({
+    name: "imageId",
+    description: "Image id to delete",
+    required: true,
+  })
+  deleteMenuItemImage(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("imageId", ParseIntPipe) imageId: number
+  ) {
+    return this.menuItemService.deleteMenuImage(id, imageId);
   }
 }

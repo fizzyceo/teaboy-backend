@@ -37,6 +37,7 @@ model Restaurant {
   description String?
   phone String?
   address String?
+  image_url String?
 
   employees Employee[] 
   menus Menu[]
@@ -131,7 +132,7 @@ model Order_Item {
 
 model Category {
   category_id Int @id @default(autoincrement())
-  name String
+  name String @unique
   description String?
 
   menu_items Menu_Item[]

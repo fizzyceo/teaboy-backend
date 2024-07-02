@@ -20,4 +20,9 @@ export class CreateRestaurantDto {
   @IsString()
   @IsOptional()
   phone: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  image_url?: string;
 }

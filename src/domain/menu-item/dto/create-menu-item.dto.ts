@@ -10,12 +10,27 @@ import {
   ValidateNested,
 } from "class-validator";
 
-class CreateItemImageDto {
+export class CreateItemImageDto {
   @ApiProperty()
   @IsString()
   image_url: string;
 }
 
+export class MenuItemCategory {
+  @ApiProperty()
+  @IsString()
+  name: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  // @ApiProperty()
+  // @IsInt()
+  // @IsOptional()
+  // category_id: number;
+}
 export class CreateMenuItemDto {
   @ApiProperty()
   @IsString()
@@ -24,7 +39,7 @@ export class CreateMenuItemDto {
   @ApiProperty()
   @IsString()
   @IsOptional()
-  description: string;
+  description?: string;
 
   @ApiProperty()
   @IsNumber()
@@ -42,5 +57,11 @@ export class CreateMenuItemDto {
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateItemImageDto)
-  images: CreateItemImageDto[];
+  item_images: CreateItemImageDto[];
+
+  @ApiProperty({ type: [MenuItemCategory] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => MenuItemCategory)
+  categories: MenuItemCategory[];
 }

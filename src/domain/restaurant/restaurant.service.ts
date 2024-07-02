@@ -28,10 +28,6 @@ export class RestaurantService {
 
     return await this.database.restaurant.findUnique({
       where: { restaurant_id: id },
-      include: {
-        // menus: true,
-        // employees: true,
-      },
     });
   }
 

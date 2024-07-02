@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
 } from "@nestjs/common";
+
 import { MenuService } from "./menu.service";
 import { CreateMenuDto } from "./dto/create-menu.dto";
 import { UpdateMenuDto } from "./dto/update-menu.dto";
@@ -21,11 +22,16 @@ export class MenuController {
 
   @Post()
   @ApiBody({ type: CreateMenuDto })
-  @ApiOperation({ summary: "Create a new menu" })
+  @ApiOperation({
+    summary: "Create a new menu",
+    description:
+      "Create a new menu by providing name, description, restaurant_id and menu_items",
+  })
   createMenu(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.createMenu(createMenuDto);
   }
 
+  // TODO: only admin should be able to access this route to get all menus , for employees they can access only their restaurant menus
   @Get()
   @ApiOperation({ summary: "Get all menus" })
   getAllMenus() {
@@ -44,7 +50,10 @@ export class MenuController {
   }
 
   @Get(":id/items")
-  @ApiOperation({ summary: "Get menu items for a menu by id" })
+  @ApiOperation({
+    summary: "Get menu items for a menu by id",
+    description: "Get all menu items for a menu by providing menu id",
+  })
   @ApiParam({
     name: "id",
     description: "Menu id to fetch items",
@@ -54,12 +63,30 @@ export class MenuController {
     return this.menuService.getMenuItems(id);
   }
 
-  @Patch(":id")
-  @ApiBody({ type: UpdateMenuDto })
-  @ApiOperation({ summary: "Update menu details by id" })
+  @Get(":id/categories")
+  @ApiOperation({
+    summary: "Get menu categories for a menu by id",
+    description: "Get all menu categories for a menu by providing menu id",
+  })
   @ApiParam({
     name: "id",
-    description: "Menu id to update",
+    description: "Menu id to fetch categories",
+    required: true,
+  })
+  getMenuCategories(@Param("id", ParseIntPipe) id: number) {
+    return this.menuService.getMenuCategories(id);
+  }
+
+  @Patch(":id")
+  @ApiBody({ type: UpdateMenuDto })
+  @ApiOperation({
+    summary: "Update menu details by id",
+    description:
+      "You can only update name and description of the menu , restaurant_id cannot be updated, menu_items should be updated separately",
+  })
+  @ApiParam({
+    name: "id",
+    description: "Menu id to update ",
     required: true,
   })
   updateMenu(

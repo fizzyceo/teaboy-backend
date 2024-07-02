@@ -7,20 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// model Customer {
-//   customer_id Int @id @default(autoincrement())
-//   isAnonymous Boolean @default(true)
-
-//   email String?
-//   name String?
-//   phone String?
-
-//   orders Order[]
-
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-// }
-
 model Employee {
   employee_id Int @id @default(autoincrement())
   role USER_ROLE 
@@ -63,7 +49,6 @@ model Menu {
   menu_id Int @id @default(autoincrement())
   name String?
   description String?
-  // qr_code String @unique
 
   restaurant_id Int
   restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
@@ -98,9 +83,6 @@ model Order {
 
   customer_name String?
   table_number Int?
-
-  // customer_id Int
-  // customer Customer @relation(fields: [customer_id], references: [customer_id])
 
   order_items Order_Item[]
 

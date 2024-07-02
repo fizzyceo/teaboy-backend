@@ -37,8 +37,8 @@ export class OrderController {
     description: "The order has been successfully created.",
   })
   @ApiResponse({ status: 400, description: "Invalid input, object invalid." })
-  create(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.create(createOrderDto);
+  creareOrder(@Body() createOrderDto: CreateOrderDto) {
+    return this.orderService.creareOrder(createOrderDto);
   }
 
   @Get()
@@ -48,8 +48,8 @@ export class OrderController {
     description: "List of all orders",
   })
   @ApiResponse({ status: 404, description: "No orders found" })
-  findAll() {
-    return this.orderService.findAll();
+  getAllOrders() {
+    return this.orderService.getAllOrders();
   }
 
   @Get(":id")
@@ -60,8 +60,8 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.findOne(id);
+  getOrderById(@Param("id", ParseIntPipe) id: number) {
+    return this.orderService.getOrderById(id);
   }
 
   @Patch(":id")
@@ -73,11 +73,11 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  update(
+  updateOrder(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateOrderDto: UpdateOrderDto
   ) {
-    return this.orderService.update(id, updateOrderDto);
+    return this.orderService.updateOrder(id, updateOrderDto);
   }
 
   @Delete(":id")
@@ -88,7 +88,7 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.remove(id);
+  deleteOrder(@Param("id", ParseIntPipe) id: number) {
+    return this.orderService.deleteOrder(id);
   }
 }

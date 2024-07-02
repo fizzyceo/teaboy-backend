@@ -21,8 +21,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
   const config = new DocumentBuilder()
-    .setTitle("iMenu")
-    .setDescription("API for iMenu by Basseer")
+    .setTitle("Basseer Restaurant App API")
     .setVersion("1.0")
     .build();
 

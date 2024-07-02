@@ -26,7 +26,7 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @IsArray()
   @Type(() => OrderItemDto)
-  order_items: OrderItemDto[];
+  order_items?: OrderItemDto[];
 
   @ApiProperty({ enum: PaymentMethod, default: PaymentMethod.CASH })
   @IsEnum(PaymentMethod)

@@ -12,7 +12,7 @@ import { MenuItemService } from "./menu-item.service";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 
-import { ApiTags, ApiBody } from "@nestjs/swagger";
+import { ApiTags, ApiBody, ApiOperation, ApiParam } from "@nestjs/swagger";
 
 @Controller("menu-item")
 @ApiTags("menu-item")
@@ -21,23 +21,37 @@ export class MenuItemController {
 
   @Post()
   @ApiBody({ type: CreateMenuItemDto })
-  create(@Body() createMenuItemDto: CreateMenuItemDto) {
+  @ApiOperation({ summary: "Create a new menu item" })
+  createMenuItem(@Body() createMenuItemDto: CreateMenuItemDto) {
     return this.menuItemService.createMenuItem(createMenuItemDto);
   }
 
   @Get()
-  findAll() {
+  @ApiOperation({ summary: "Get all menu items" })
+  getAllMenuItems() {
     return this.menuItemService.getAllMenuItems();
   }
 
   @Get(":id")
-  findOne(@Param("id", ParseIntPipe) id: number) {
+  @ApiOperation({ summary: "Get menu item details by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to fetch",
+    required: true,
+  })
+  getMenuItemById(@Param("id", ParseIntPipe) id: number) {
     return this.menuItemService.getMenuItemById(id);
   }
 
   @Patch(":id")
   @ApiBody({ type: UpdateMenuItemDto })
-  update(
+  @ApiOperation({ summary: "Update menu item details by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to update",
+    required: true,
+  })
+  updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateMenuItemDto: UpdateMenuItemDto
   ) {
@@ -45,7 +59,13 @@ export class MenuItemController {
   }
 
   @Delete(":id")
-  remove(@Param("id", ParseIntPipe) id: number) {
+  @ApiOperation({ summary: "Delete menu item by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to delete",
+    required: true,
+  })
+  deleteMenuItem(@Param("id", ParseIntPipe) id: number) {
     return this.menuItemService.deleteMenuItem(id);
   }
 }

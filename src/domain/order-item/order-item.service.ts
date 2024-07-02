@@ -7,17 +7,17 @@ import { DatabaseService } from "src/database/database.service";
 export class OrderItemService {
   constructor(private readonly database: DatabaseService) {}
 
-  async create(createOrderItemDto: CreateOrderItemDto) {
+  async createMenuItem(createOrderItemDto: CreateOrderItemDto) {
     return await this.database.order_Item.create({
       data: createOrderItemDto,
     });
   }
 
-  async findAll() {
+  async getAllMenuItems() {
     return await this.database.order_Item.findMany();
   }
 
-  async findOne(id: number) {
+  async getMenuItemById(id: number) {
     const orderItem = await this.database.order_Item.findUnique({
       where: { order_item_id: id },
     });
@@ -30,7 +30,7 @@ export class OrderItemService {
     });
   }
 
-  async update(id: number, updateOrderItemDto: UpdateOrderItemDto) {
+  async updateMenuItem(id: number, updateOrderItemDto: UpdateOrderItemDto) {
     const orderItem = await this.database.order_Item.findUnique({
       where: { order_item_id: id },
     });
@@ -45,7 +45,7 @@ export class OrderItemService {
     });
   }
 
-  async remove(id: number) {
+  async deleteMenuItem(id: number) {
     const orderItem = await this.database.order_Item.findUnique({
       where: { order_item_id: id },
     });

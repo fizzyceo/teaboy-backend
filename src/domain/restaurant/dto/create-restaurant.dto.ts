@@ -21,8 +21,6 @@ export class CreateRestaurantDto {
   @IsOptional()
   phone: string;
 
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  image_url?: string;
+  @ApiProperty({ type: "string", format: "binary" })
+  file: Express.Multer.File;
 }

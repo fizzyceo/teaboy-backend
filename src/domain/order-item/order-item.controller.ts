@@ -52,7 +52,7 @@ export class OrderItemController {
   @ApiBody({ type: UpdateOrderItemDto })
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateOrderItemDto: UpdateOrderItemDto
+    @Body() updateOrderItemDto: UpdateOrderItemDto,
   ) {
     return this.orderItemService.updateMenuItem(id, updateOrderItemDto);
   }

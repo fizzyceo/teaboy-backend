@@ -53,7 +53,7 @@ export class EmployeeController {
   })
   update(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateEmployeeDto: UpdateEmployeeDto
+    @Body() updateEmployeeDto: UpdateEmployeeDto,
   ) {
     return this.employeeService.update(id, updateEmployeeDto);
   }

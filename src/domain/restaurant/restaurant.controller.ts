@@ -7,12 +7,21 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import { RestaurantService } from "./restaurant.service";
 import { CreateRestaurantDto } from "./dto/create-restaurant.dto";
 import { UpdateRestaurantDto } from "./dto/update-restaurant.dto";
 
-import { ApiTags, ApiBody, ApiOperation, ApiParam } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiConsumes,
+} from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller("restaurant")
 @ApiTags("restaurant")
@@ -22,8 +31,13 @@ export class RestaurantController {
   @Post()
   @ApiBody({ type: CreateRestaurantDto })
   @ApiOperation({ summary: "Create a new restaurant" })
-  createRestaurant(@Body() createRestaurantDto: CreateRestaurantDto) {
-    return this.restaurantService.createRestaurant(createRestaurantDto);
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  createRestaurant(
+    @Body() createRestaurantDto: CreateRestaurantDto,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    return this.restaurantService.createRestaurant(createRestaurantDto, file);
   }
 
   @Get()
@@ -68,6 +82,8 @@ export class RestaurantController {
   @Patch(":id")
   @ApiBody({ type: UpdateRestaurantDto })
   @ApiOperation({ summary: "Update restaurant details by id" })
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
   @ApiParam({
     name: "id",
     description: "Restaurant id to update",
@@ -75,9 +91,14 @@ export class RestaurantController {
   })
   updateRestraurant(
     @Param("id", ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
     @Body() updateRestaurantDto: UpdateRestaurantDto
   ) {
-    return this.restaurantService.updateRestraurant(id, updateRestaurantDto);
+    return this.restaurantService.updateRestaurant(
+      id,
+      updateRestaurantDto,
+      file
+    );
   }
 
   @Delete(":id")

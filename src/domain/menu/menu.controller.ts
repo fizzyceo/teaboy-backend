@@ -91,7 +91,7 @@ export class MenuController {
   })
   updateMenu(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuDto: UpdateMenuDto
+    @Body() updateMenuDto: UpdateMenuDto,
   ) {
     return this.menuService.updateMenu(id, updateMenuDto);
   }

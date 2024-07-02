@@ -67,7 +67,7 @@ export class MenuItemController {
   })
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuItemDto: UpdateMenuItemDto
+    @Body() updateMenuItemDto: UpdateMenuItemDto,
   ) {
     return this.menuItemService.updateMenuItem(id, updateMenuItemDto);
   }
@@ -97,7 +97,7 @@ export class MenuItemController {
   })
   deleteMenuItemImage(
     @Param("id", ParseIntPipe) id: number,
-    @Param("imageId", ParseIntPipe) imageId: number
+    @Param("imageId", ParseIntPipe) imageId: number,
   ) {
     return this.menuItemService.deleteMenuImage(id, imageId);
   }

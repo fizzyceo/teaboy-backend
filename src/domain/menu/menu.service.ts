@@ -16,7 +16,7 @@ export class MenuService {
 
     if (!restaurant) {
       throw new NotFoundException(
-        `Restaurant with id ${createMenuDto.restaurant_id} not found`
+        `Restaurant with id ${createMenuDto.restaurant_id} not found`,
       );
     }
 

@@ -23,10 +23,10 @@ export class CreateMenuDto {
   @IsNumber()
   restaurant_id: number;
 
-  @ApiProperty({ type: [MenuItem] })
-  @ValidateNested({ each: true })
-  @IsArray()
-  @IsOptional()
-  @Type(() => MenuItem)
-  menu_items?: MenuItem[];
+  // @ApiProperty({ type: [MenuItem] })
+  // @ValidateNested({ each: true })
+  // @IsArray()
+  // @IsOptional()
+  // @Type(() => MenuItem)
+  // menu_items?: MenuItem[];
 }

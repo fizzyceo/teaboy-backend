@@ -11,6 +11,34 @@ export class OrderService {
   async creareOrder(createOrderDto: CreateOrderDto) {
     const { order_items, ...orderData } = createOrderDto;
 
+    const menuItemIds = order_items.map((orderItem) => orderItem.menu_item_id);
+
+    const existingMenuItems = await this.database.menu_Item.findMany({
+      where: {
+        menu_item_id: {
+          in: menuItemIds,
+        },
+      },
+    });
+
+    const existingMenuItemIds = existingMenuItems.map(
+      (item) => item.menu_item_id
+    );
+
+    const missingMenuItemIds = menuItemIds.filter(
+      (id) => !existingMenuItemIds.includes(id)
+    );
+
+    if (missingMenuItemIds.length > 0) {
+      console.error(
+        "The following menu_item_ids do not exist:",
+        missingMenuItemIds
+      );
+      throw new Error(
+        `Some menu items do not exist: ${missingMenuItemIds.join(", ")}`
+      );
+    }
+
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: orderData,
@@ -32,7 +60,32 @@ export class OrderService {
   }
 
   async getAllOrders() {
-    return await this.database.order.findMany();
+    return await this.database.order.findMany({
+      include: {
+        order_items: {
+          select: {
+            order_item_id: true,
+            quantity: true,
+            note: true,
+            status: true,
+            menu_item: {
+              select: {
+                available: true,
+                description: true,
+                menu_item_id: true,
+                price: true,
+                title: true,
+                item_images: {
+                  select: {
+                    image_url: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   async getOrderById(id: number) {
@@ -45,7 +98,20 @@ export class OrderService {
             quantity: true,
             note: true,
             status: true,
-            menu_item: true,
+            menu_item: {
+              select: {
+                menu_item_id: true,
+                title: true,
+                description: true,
+                price: true,
+                available: true,
+                item_images: {
+                  select: {
+                    image_url: true,
+                  },
+                },
+              },
+            },
           },
         },
       },

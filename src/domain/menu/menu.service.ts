@@ -28,9 +28,9 @@ export class MenuService {
             restaurant_id: restaurant_id,
           },
         },
-        menu_items: {
-          create: createMenuDto.menu_items || [],
-        },
+        // menu_items: {
+        //   create: createMenuDto.menu_items || [],
+        // },
       },
     });
   }

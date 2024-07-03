@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
+import { Transform, Type } from "class-transformer";
 import {
   IsArray,
   IsBoolean,
@@ -10,58 +10,68 @@ import {
   ValidateNested,
 } from "class-validator";
 
-export class CreateItemImageDto {
-  @ApiProperty()
-  @IsString()
-  image_url: string;
-}
-
 export class MenuItemCategory {
   @ApiProperty()
   @IsString()
   name: string;
-
-  @ApiProperty()
-  @IsString()
-  @IsOptional()
-  description?: string;
-
-  // @ApiProperty()
-  // @IsInt()
-  // @IsOptional()
-  // category_id: number;
 }
+
 export class CreateMenuItemDto {
-  @ApiProperty()
+  @ApiProperty({
+    description: "Title of the menu item",
+    example: "Burger",
+    type: "string",
+  })
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: "Description of the menu item",
+    example: "Delicious burger",
+    type: "string",
+    required: false,
+  })
   @IsString()
   @IsOptional()
   description?: string;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: "Price of the menu item",
+    example: 10,
+    type: "number",
+  })
   @IsNumber()
+  @Transform(({ value }) => Number(value))
   price: number;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: "Availability of the menu item",
+    example: true,
+    type: "boolean",
+    default: true,
+  })
   @IsBoolean()
+  @Transform(({ value }) => value === "true" || value === true)
   available: boolean;
 
-  @ApiProperty()
+  @ApiProperty({
+    description: "Menu id",
+    example: 1,
+    type: "number",
+  })
   @IsInt()
+  @Transform(({ value }) => Number(value))
   menu_id: number;
 
-  @ApiProperty({ type: [CreateItemImageDto] })
+  @ApiProperty({
+    description: "Images of the menu Item",
+    type: "array",
+    items: {
+      type: "string",
+      format: "binary",
+    },
+  })
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateItemImageDto)
-  item_images: CreateItemImageDto[];
-
-  @ApiProperty({ type: [MenuItemCategory] })
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => MenuItemCategory)
-  categories: MenuItemCategory[];
+  @IsOptional()
+  item_images: any[];
 }

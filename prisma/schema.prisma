@@ -133,7 +133,6 @@ model Order_Item {
 model Category {
   category_id Int @id @default(autoincrement())
   name String @unique
-  description String?
 
   menu_items Menu_Item[]
 

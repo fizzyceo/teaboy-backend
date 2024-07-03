@@ -26,6 +26,7 @@ export class CreateMenuDto {
   @ApiProperty({ type: [MenuItem] })
   @ValidateNested({ each: true })
   @IsArray()
+  @IsOptional()
   @Type(() => MenuItem)
   menu_items?: MenuItem[];
 }

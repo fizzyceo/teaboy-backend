@@ -8,7 +8,7 @@ import {
   IsString,
   ValidateNested,
 } from "class-validator";
-import { CreateItemImageDto } from "src/domain/menu-item/dto/create-menu-item.dto";
+// import { CreateItemImageDto } from "src/domain/menu-item/dto/create-menu-item.dto";
 
 export class MenuItem {
   @ApiProperty()
@@ -28,10 +28,11 @@ export class MenuItem {
   @IsBoolean()
   available: boolean;
 
-  @ApiProperty({ type: [CreateItemImageDto] })
-  @IsArray()
-  @IsOptional()
-  @ValidateNested({ each: true })
-  @Type(() => CreateItemImageDto)
-  item_images: CreateItemImageDto[];
+  // for now we are not going to use this field
+  // @ApiProperty({ type: [CreateItemImageDto] })
+  // @IsArray()
+  // @IsOptional()
+  // @ValidateNested({ each: true })
+  // @Type(() => CreateItemImageDto)
+  // item_images: CreateItemImageDto[];
 }

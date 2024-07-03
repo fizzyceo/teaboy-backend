@@ -2,32 +2,59 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 import { DatabaseService } from "src/database/database.service";
+import { ImagesService } from "src/images/images.service";
 
 @Injectable()
 export class MenuItemService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly imagesService: ImagesService
+  ) {}
 
-  async createMenuItem(createMenuItemDto: CreateMenuItemDto) {
-    const { menu_id, ...rest } = createMenuItemDto;
+  async createMenuItem(
+    createMenuItemDto: CreateMenuItemDto,
+    files: Express.Multer.File[]
+  ) {
+    //categories = [],
+    const { menu_id, ...menuItemData } = createMenuItemDto;
+
+    const item_images = [];
+
+    const uploadedImages = await Promise.all(
+      files.map(async (file) => {
+        const imgUrl = await this.imagesService.uploadFile(file);
+        return { image_url: imgUrl.url };
+      })
+    );
+
+    item_images.push(...uploadedImages);
+
+    console.log("item_images", item_images);
+
     return await this.database.menu_Item.create({
       data: {
-        ...rest,
+        ...menuItemData,
         menu: {
           connect: {
             menu_id: menu_id,
           },
         },
         item_images: {
-          create: createMenuItemDto.item_images.map((image) => ({
-            image_url: image.image_url,
-          })),
+          createMany: {
+            data: item_images.map((image) => ({
+              image_url: image.image_url,
+            })),
+          },
         },
-        categories: {
-          connectOrCreate: createMenuItemDto.categories.map((category) => ({
-            where: { name: category.name },
-            create: { name: category.name, description: category.description },
-          })),
-        },
+        // categories: {
+        //   connectOrCreate: categories.map((category) => ({
+        //     where: { name: category.name },
+        //     create: {
+        //       name: category.name,
+        //       description: category.description || undefined,
+        //     },
+        //   })),
+        // },
       },
     });
   }
@@ -52,8 +79,12 @@ export class MenuItemService {
     return menuItem;
   }
 
-  async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
-    const { item_images, categories, ...menuItemData } = updateMenuItemDto;
+  async updateMenuItem(
+    id: number,
+    updateMenuItemDto: UpdateMenuItemDto,
+    files: Express.Multer.File[]
+  ) {
+    // const { categories, ...updateMenuItemData } = updateMenuItemDto;
 
     const menuItem = await this.database.menu_Item.findUnique({
       where: { menu_item_id: id },
@@ -67,28 +98,22 @@ export class MenuItemService {
       throw new NotFoundException(`Menu item with id ${id} not found`);
     }
 
-    const updateData = {
-      ...menuItemData,
-      item_images: {
-        createMany: {
-          data:
-            item_images?.map((image) => ({ image_url: image.image_url })) || [],
-        },
-      },
-      categories: {
-        connectOrCreate: (categories || []).map((category) => ({
-          where: { name: category.name },
-          create: {
-            name: category.name,
-            description: category.description || undefined,
-          },
-        })),
-      },
-    };
+    // const updateData = {
+    //   ...updateMenuItemData,
+    //   categories: {
+    //     connectOrCreate: (categories || []).map((category) => ({
+    //       where: { name: category.name },
+    //       create: {
+    //         name: category.name,
+    //         description: category.description || undefined,
+    //       },
+    //     })),
+    //   },
+    // };
 
     const updatedMenuItem = await this.database.menu_Item.update({
       where: { menu_item_id: id },
-      data: updateData,
+      data: updateMenuItemDto,
       include: {
         item_images: true,
         categories: true,

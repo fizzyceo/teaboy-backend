@@ -18,7 +18,13 @@ async function bootstrap() {
   app.use(morgan("dev"));
   app.use(compression());
 
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      transformOptions: { enableImplicitConversion: true },
+    })
+  );
 
   const config = new DocumentBuilder()
     .setTitle("Basseer Restaurant App API")

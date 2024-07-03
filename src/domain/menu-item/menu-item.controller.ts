@@ -7,12 +7,26 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseInterceptors,
+  UploadedFiles,
+  UsePipes,
+  ValidationPipe,
 } from "@nestjs/common";
 import { MenuItemService } from "./menu-item.service";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 
-import { ApiTags, ApiBody, ApiOperation, ApiParam } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiConsumes,
+} from "@nestjs/swagger";
+import {
+  FileFieldsInterceptor,
+  FilesInterceptor,
+} from "@nestjs/platform-express";
 
 @Controller("menu-item")
 @ApiTags("menu-item")
@@ -21,9 +35,17 @@ export class MenuItemController {
 
   @Post()
   @ApiBody({ type: CreateMenuItemDto })
-  @ApiOperation({ summary: "Create a new menu item" })
-  createMenuItem(@Body() createMenuItemDto: CreateMenuItemDto) {
-    return this.menuItemService.createMenuItem(createMenuItemDto);
+  @ApiOperation({
+    summary: "Create a new menu item",
+    description: "you can add multiple images (max 5) for a menu item",
+  })
+  @ApiConsumes("multipart/form-data")
+  @UseInterceptors(FilesInterceptor("item_images"))
+  createMenuItem(
+    @Body() createMenuItemDto: CreateMenuItemDto,
+    @UploadedFiles() files: Express.Multer.File[]
+  ) {
+    return this.menuItemService.createMenuItem(createMenuItemDto, files);
   }
 
   @Get()
@@ -68,8 +90,9 @@ export class MenuItemController {
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateMenuItemDto: UpdateMenuItemDto,
+    @UploadedFiles() files: Express.Multer.File[]
   ) {
-    return this.menuItemService.updateMenuItem(id, updateMenuItemDto);
+    return this.menuItemService.updateMenuItem(id, updateMenuItemDto, files);
   }
 
   @Delete(":id")
@@ -97,7 +120,7 @@ export class MenuItemController {
   })
   deleteMenuItemImage(
     @Param("id", ParseIntPipe) id: number,
-    @Param("imageId", ParseIntPipe) imageId: number,
+    @Param("imageId", ParseIntPipe) imageId: number
   ) {
     return this.menuItemService.deleteMenuImage(id, imageId);
   }

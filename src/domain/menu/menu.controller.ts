@@ -25,7 +25,7 @@ export class MenuController {
   @ApiOperation({
     summary: "Create a new menu",
     description:
-      "Create a new menu by providing name, description, restaurant_id and menu_items",
+      "Create a new menu by providing name, description, restaurant_id and menu_items(without images , add them separately , could be added later)",
   })
   createMenu(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.createMenu(createMenuDto);
@@ -91,7 +91,7 @@ export class MenuController {
   })
   updateMenu(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuDto: UpdateMenuDto,
+    @Body() updateMenuDto: UpdateMenuDto
   ) {
     return this.menuService.updateMenu(id, updateMenuDto);
   }

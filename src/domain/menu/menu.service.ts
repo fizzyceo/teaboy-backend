@@ -16,7 +16,7 @@ export class MenuService {
 
     if (!restaurant) {
       throw new NotFoundException(
-        `Restaurant with id ${createMenuDto.restaurant_id} not found`,
+        `Restaurant with id ${createMenuDto.restaurant_id} not found`
       );
     }
 
@@ -29,14 +29,7 @@ export class MenuService {
           },
         },
         menu_items: {
-          create: createMenuDto.menu_items.map((item) => ({
-            ...item,
-            item_images: {
-              create: item.item_images.map((image) => ({
-                image_url: image.image_url,
-              })),
-            },
-          })),
+          create: createMenuDto.menu_items || [],
         },
       },
     });
@@ -74,7 +67,6 @@ export class MenuService {
             categories: {
               select: {
                 name: true,
-                description: true,
               },
             },
             item_images: {
@@ -108,6 +100,7 @@ export class MenuService {
       where: { menu_id: id },
       include: {
         item_images: true,
+        categories: true,
       },
     });
   }

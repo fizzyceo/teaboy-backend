@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateOrderItemDto } from "./dto/create-order-item.dto";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { CreateOrderItemDto, OrderStatus } from "./dto/create-order-item.dto";
 import { UpdateOrderItemDto } from "./dto/update-order-item.dto";
 import { DatabaseService } from "src/database/database.service";
 
@@ -13,7 +17,16 @@ export class OrderItemService {
     });
   }
 
-  async getAllMenuItems() {
+  async getAllMenuItems(status?: string) {
+    const validStatuses = Object.values(OrderStatus);
+    if (status) {
+      if (!validStatuses.includes(status as OrderStatus)) {
+        throw new BadRequestException(`Invalid status: ${status}`);
+      }
+      return await this.database.order_Item.findMany({
+        where: { status: status as OrderStatus },
+      });
+    }
     return await this.database.order_Item.findMany();
   }
 

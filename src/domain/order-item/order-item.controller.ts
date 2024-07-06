@@ -7,11 +7,18 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from "@nestjs/common";
 import { OrderItemService } from "./order-item.service";
-import { CreateOrderItemDto } from "./dto/create-order-item.dto";
+import { CreateOrderItemDto, OrderStatus } from "./dto/create-order-item.dto";
 import { UpdateOrderItemDto } from "./dto/update-order-item.dto";
-import { ApiBody, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 
 @Controller("order-item")
 @ApiTags("order-item")
@@ -27,8 +34,14 @@ export class OrderItemController {
 
   @Get()
   @ApiOperation({ summary: "Get all order items" })
-  getAllMenuItems() {
-    return this.orderItemService.getAllMenuItems();
+  @ApiQuery({
+    name: "status",
+    required: false,
+    description: "Filter order items by status",
+    enum: OrderStatus,
+  })
+  getAllMenuItems(@Query("status") status?: string) {
+    return this.orderItemService.getAllMenuItems(status);
   }
 
   @Get(":id")
@@ -52,7 +65,7 @@ export class OrderItemController {
   @ApiBody({ type: UpdateOrderItemDto })
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateOrderItemDto: UpdateOrderItemDto,
+    @Body() updateOrderItemDto: UpdateOrderItemDto
   ) {
     return this.orderItemService.updateMenuItem(id, updateOrderItemDto);
   }

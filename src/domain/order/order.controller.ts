@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -18,12 +19,21 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
 } from "@nestjs/swagger";
+import { NotificationService } from "src/notification/notification.service";
+import { sendNotificationDTO } from "src/notification/dto/send-notification.dto";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("order")
 @ApiTags("order")
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly notificationService: NotificationService
+  ) {}
 
   @Post()
   @ApiOperation({ summary: "Create a new order" })
@@ -38,7 +48,16 @@ export class OrderController {
   })
   @ApiResponse({ status: 400, description: "Invalid input, object invalid." })
   creareOrder(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.creareOrder(createOrderDto);
+    const response = this.orderService.creareOrder(createOrderDto);
+
+    const notificationData: sendNotificationDTO = {
+      title: "Order Created",
+      body: `Your order with ID has been successfully created.`,
+      deviceId: "response",
+    };
+
+    // this.notificationService.sendPush(notificationData);
+    return response;
   }
 
   @Get()
@@ -53,6 +72,8 @@ export class OrderController {
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get order details by id" })
   @ApiParam({
     name: "id",

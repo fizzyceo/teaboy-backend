@@ -12,7 +12,7 @@ model Employee {
   role USER_ROLE 
 
   name String
-  email String
+  email String @unique
   phone String?
   password String
 

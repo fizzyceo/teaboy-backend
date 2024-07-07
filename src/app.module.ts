@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "./database/database.module";
-import { AuthModule } from "./auth/auth.module";
 import { EmployeeModule } from "./domain/employee/employee.module";
 import { MenuModule } from "./domain/menu/menu.module";
 import { MenuItemModule } from "./domain/menu-item/menu-item.module";
@@ -10,13 +9,15 @@ import { RestaurantModule } from "./domain/restaurant/restaurant.module";
 import { OrderItemModule } from "./domain/order-item/order-item.module";
 import { ConfigModule } from "@nestjs/config";
 import { ImagesModule } from "./images/images.module";
+import { NotificationModule } from "./notification/notification.module";
+import { AuthModule } from "./auth/auth.module";
 
 @Module({
   imports: [
-    RestaurantModule,
-    DatabaseModule,
     AuthModule,
+    RestaurantModule,
     EmployeeModule,
+    DatabaseModule,
     MenuModule,
     MenuItemModule,
     OrderModule,
@@ -25,6 +26,7 @@ import { ImagesModule } from "./images/images.module";
       isGlobal: true,
     }),
     ImagesModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

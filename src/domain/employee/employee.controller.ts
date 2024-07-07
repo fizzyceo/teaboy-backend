@@ -22,14 +22,14 @@ export class EmployeeController {
   @Post()
   @ApiBody({ type: CreateEmployeeDto })
   @ApiOperation({ summary: "Create a new employee" })
-  create(@Body() createEmployeeDto: CreateEmployeeDto) {
-    return this.employeeService.create(createEmployeeDto);
+  createEmployee(@Body() createEmployeeDto: CreateEmployeeDto) {
+    return this.employeeService.createEmployee(createEmployeeDto);
   }
 
   @Get("")
   @ApiOperation({ summary: "Get all employees" })
-  findAll() {
-    return this.employeeService.findAll();
+  getAllEmployees() {
+    return this.employeeService.getAllEmployees();
   }
 
   @Get(":id")
@@ -39,8 +39,8 @@ export class EmployeeController {
     description: "Employee id to fetch",
     required: true,
   })
-  findOne(@Param("id", ParseIntPipe) id: number) {
-    return this.employeeService.findOne(id);
+  getEmployeeById(@Param("id", ParseIntPipe) id: number) {
+    return this.employeeService.getEmployeeById(id);
   }
 
   @Patch(":id")
@@ -51,11 +51,11 @@ export class EmployeeController {
     description: "Employee id to update",
     required: true,
   })
-  update(
+  updateEmployee(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateEmployeeDto: UpdateEmployeeDto,
+    @Body() updateEmployeeDto: UpdateEmployeeDto
   ) {
-    return this.employeeService.update(id, updateEmployeeDto);
+    return this.employeeService.updateEmployee(id, updateEmployeeDto);
   }
 
   @Delete(":id")
@@ -65,7 +65,7 @@ export class EmployeeController {
     description: "Employee id to delete",
     required: true,
   })
-  remove(@Param("id", ParseIntPipe) id: number) {
-    return this.employeeService.remove(id);
+  deleteEmployee(@Param("id", ParseIntPipe) id: number) {
+    return this.employeeService.deleteEmployee(id);
   }
 }

@@ -7,5 +7,6 @@ import { DatabaseModule } from "src/database/database.module";
   controllers: [EmployeeController],
   providers: [EmployeeService],
   imports: [DatabaseModule],
+  exports: [EmployeeService],
 })
 export class EmployeeModule {}

@@ -17,30 +17,164 @@ export class OrderItemService {
     });
   }
 
+  // async getAllMenuItems(status?: string) {
+  //   const validStatuses = Object.values(OrderStatus);
+  //   if (status) {
+  //     if (!validStatuses.includes(status as OrderStatus)) {
+  //       throw new BadRequestException(`Invalid status: ${status}`);
+  //     }
+  //     return await this.database.order_Item.findMany({
+  //       where: { status: status as OrderStatus },
+  //       include: {
+  //         order: {
+  //           select: {
+  //             order_id: true,
+  //             customer_name: true,
+  //             table_number: true,
+  //           },
+  //         },
+  //         menu_item: {
+  //           select: {
+  //             menu: {
+  //               select: {
+  //                 menu_id: true,
+  //                 name: true,
+  //                 description: true,
+  //               },
+  //             },
+  //             title: true,
+  //             available: true,
+  //             description: true,
+  //             menu_item_id: true,
+  //             price: true,
+  //             item_images: {
+  //               select: {
+  //                 image_url: true,
+  //               },
+  //             },
+  //           },
+  //         },
+  //       },
+  //     });
+  //   }
+  //   return await this.database.order_Item.findMany({
+  //     where: { status: status as OrderStatus },
+  //     include: {
+  //       order: {
+  //         select: {
+  //           order_id: true,
+  //           customer_name: true,
+  //           table_number: true,
+  //         },
+  //       },
+  //       menu_item: {
+  //         select: {
+  //           menu: {
+  //             select: {
+  //               menu_id: true,
+  //               name: true,
+  //               description: true,
+  //             },
+  //           },
+  //           title: true,
+  //           available: true,
+  //           description: true,
+  //           menu_item_id: true,
+  //           price: true,
+  //           item_images: {
+  //             select: {
+  //               image_url: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
+  // }
   async getAllMenuItems(status?: string) {
     const validStatuses = Object.values(OrderStatus);
-    if (status) {
-      if (!validStatuses.includes(status as OrderStatus)) {
-        throw new BadRequestException(`Invalid status: ${status}`);
-      }
+    const queryOptions = {
+      include: {
+        order: {
+          select: {
+            customer_name: true,
+            table_number: true,
+          },
+        },
+        menu_item: {
+          select: {
+            menu: {
+              select: {
+                name: true,
+                description: true,
+              },
+            },
+            title: true,
+            available: true,
+            description: true,
+            price: true,
+            item_images: {
+              select: {
+                image_url: true,
+              },
+            },
+          },
+        },
+      },
+    };
+
+    if (status && validStatuses.includes(status as OrderStatus)) {
       return await this.database.order_Item.findMany({
         where: { status: status as OrderStatus },
+        ...queryOptions,
       });
     }
-    return await this.database.order_Item.findMany();
+
+    return await this.database.order_Item.findMany({
+      ...queryOptions,
+    });
   }
 
   async getMenuItemById(id: number) {
     const orderItem = await this.database.order_Item.findUnique({
       where: { order_item_id: id },
+      include: {
+        order: {
+          select: {
+            order_id: true,
+            customer_name: true,
+            table_number: true,
+          },
+        },
+        menu_item: {
+          select: {
+            menu: {
+              select: {
+                menu_id: true,
+                name: true,
+                description: true,
+              },
+            },
+            title: true,
+            available: true,
+            description: true,
+            menu_item_id: true,
+            price: true,
+            item_images: {
+              select: {
+                image_url: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!orderItem) {
       throw new NotFoundException(`Order Item with id ${id} not found`);
     }
-    return await this.database.order_Item.findUnique({
-      where: { order_item_id: id },
-    });
+
+    return orderItem;
   }
 
   async updateMenuItem(id: number, updateOrderItemDto: UpdateOrderItemDto) {

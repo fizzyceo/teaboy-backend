@@ -66,7 +66,7 @@ model Menu_Item {
   title String
   description String?
   price Float
-  available Boolean
+  available Boolean @default(true)
 
   menu_id Int
   menu Menu @relation(fields: [menu_id], references: [menu_id],onDelete: Cascade,onUpdate: Cascade)
@@ -74,13 +74,39 @@ model Menu_Item {
   categories Category[]
   order_items Order_Item[]
   item_images ItemImages[]
+  options Menu_Item_Option[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
+model Menu_Item_Option{
+  menu_item_option_id Int @id @default(autoincrement())
+
+  name String
+
+  menu_item_id Int
+  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
+  
+  choices Menu_Item_Option_Choice[]
+}
+
+model Menu_Item_Option_Choice {
+  menu_item_option_choice_id Int @id @default(autoincrement())
+
+  name String
+
+  Menu_Item_Option_id Int
+  menu_item_option Menu_Item_Option @relation(fields: [Menu_Item_Option_id], references: [menu_item_option_id],onDelete: Cascade,onUpdate: Cascade)
+
+  order_item_choices Order_Item_Choice[]
+}
+
+
 model Order {
   order_id Int @id @default(autoincrement())
+
+  order_number String
 
   customer_name String?
   table_number Int?
@@ -115,7 +141,7 @@ enum OrderStatus {
 
 model Order_Item {
   order_item_id Int @id @default(autoincrement())
-  quantity Int
+  // quantity Int
   note String?
 
   menu_item_id Int
@@ -126,12 +152,26 @@ model Order_Item {
 
   status OrderStatus
 
+  choices Order_Item_Choice[]
+
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
+model Order_Item_Choice {
+  order_item_choice_id Int @id @default(autoincrement())
+
+  // name String
+  order_item_id Int
+  order_item Order_Item @relation(fields: [order_item_id], references: [order_item_id],onDelete: Cascade,onUpdate: Cascade)
+
+  menu_item_option_choice_id Int
+  menu_item_option_choice Menu_Item_Option_Choice @relation(fields: [menu_item_option_choice_id], references: [menu_item_option_choice_id],onDelete: Cascade,onUpdate: Cascade)
+}
+
 model Category {
   category_id Int @id @default(autoincrement())
+  
   name String @unique
 
   menu_items Menu_Item[]
@@ -142,6 +182,7 @@ model Category {
 
 model ItemImages{
   item_image_id Int @id @default(autoincrement())
+  
   image_url String
 
   menu_item_id Int

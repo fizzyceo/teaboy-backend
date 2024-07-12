@@ -3,6 +3,7 @@ import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 import { DatabaseService } from "src/database/database.service";
 import { ImagesService } from "src/images/images.service";
+import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
 
 @Injectable()
 export class MenuItemService {
@@ -69,6 +70,11 @@ export class MenuItemService {
       include: {
         item_images: true,
         categories: true,
+        options: {
+          include: {
+            choices: true,
+          },
+        },
       },
     });
 
@@ -179,5 +185,64 @@ export class MenuItemService {
     }
 
     return menuItem.item_images;
+  }
+
+  async createMenuItemOption(
+    menuItemId: number,
+    createMenuItemOptionDto: CreateMenuItemOption
+  ) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: menuItemId },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
+    }
+
+    const { choices, name } = createMenuItemOptionDto;
+
+    const createdOption = await this.database.menu_Item_Option.create({
+      data: {
+        name,
+        menu_item: {
+          connect: {
+            menu_item_id: menuItemId,
+          },
+        },
+        choices: {
+          createMany: {
+            data: choices.map((choice) => ({
+              name: choice.name,
+            })),
+          },
+        },
+      },
+    });
+
+    return createdOption;
+  }
+
+  async getMenuItemOptions(menuItemId: number) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: menuItemId },
+      include: {
+        options: {
+          include: {
+            choices: {
+              select: {
+                name: true,
+                menu_item_option_choice_id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
+    }
+
+    return menuItem.options;
   }
 }

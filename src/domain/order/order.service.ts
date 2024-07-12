@@ -41,16 +41,28 @@ export class OrderService {
 
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
-        data: orderData,
-      });
-
-      const orderItems = order_items.map((orderItem) => ({
-        ...orderItem,
-        order_id: order.order_id,
-      }));
-
-      await database.order_Item.createMany({
-        data: orderItems,
+        data: {
+          order_number: Math.floor(Math.random() * 1000000).toString(),
+          ...orderData,
+          order_items: {
+            create: order_items.map((orderItem) => ({
+              menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
+              note: orderItem.note,
+              status: orderItem.status,
+              choices: {
+                create: orderItem.choices.map((choice) => ({
+                  menu_item_option_choice: {
+                    connect: {
+                      menu_item_option_choice_id:
+                        choice.menu_item_option_choice_id,
+                    },
+                  },
+                })),
+              },
+            })),
+          },
+        },
+        include: { order_items: true },
       });
 
       return order;
@@ -65,7 +77,6 @@ export class OrderService {
         order_items: {
           select: {
             order_item_id: true,
-            quantity: true,
             note: true,
             status: true,
             menu_item: {
@@ -95,7 +106,6 @@ export class OrderService {
         order_items: {
           select: {
             order_item_id: true,
-            quantity: true,
             note: true,
             status: true,
             menu_item: {

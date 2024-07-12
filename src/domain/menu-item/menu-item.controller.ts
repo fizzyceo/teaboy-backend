@@ -27,6 +27,7 @@ import {
   FileFieldsInterceptor,
   FilesInterceptor,
 } from "@nestjs/platform-express";
+import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
 
 @Controller("menu-item")
 @ApiTags("menu-item")
@@ -123,5 +124,31 @@ export class MenuItemController {
     @Param("imageId", ParseIntPipe) imageId: number
   ) {
     return this.menuItemService.deleteMenuImage(id, imageId);
+  }
+
+  // Menu Item Options
+  @Get(":id/options")
+  @ApiOperation({ summary: "Get menu item options by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to fetch options",
+    required: true,
+  })
+  getMenuItemOptions(@Param("id", ParseIntPipe) id: number) {
+    return this.menuItemService.getMenuItemOptions(id);
+  }
+
+  @Post(":id/options")
+  @ApiOperation({ summary: "Create menu item options by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to create options",
+    required: true,
+  })
+  createMenuItemOptions(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() MenuOption: CreateMenuItemOption
+  ) {
+    return this.menuItemService.createMenuItemOption(id, MenuOption);
   }
 }

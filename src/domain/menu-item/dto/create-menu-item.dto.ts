@@ -45,6 +45,17 @@ export class CreateMenuItemDto {
   price: number;
 
   @ApiProperty({
+    description: "Categories of the menu item",
+    type: Number,
+    isArray: true,
+  })
+  // @IsArray()
+  @IsInt({ each: true })
+  @IsOptional()
+  @Type(() => Number)
+  categories: number[];
+
+  @ApiProperty({
     description: "Availability of the menu item",
     example: true,
     type: "boolean",

@@ -42,7 +42,11 @@ export class OrderService {
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: {
-          order_number: Math.floor(Math.random() * 1000000).toString(),
+          order_number: Math.floor(Math.random() * 4096)
+            .toString(16)
+            .padStart(3, "0")
+            .toUpperCase(),
+
           ...orderData,
           order_items: {
             create: order_items.map((orderItem) => ({
@@ -72,13 +76,29 @@ export class OrderService {
   }
 
   async getAllOrders() {
-    return await this.database.order.findMany({
+    const orders = await this.database.order.findMany({
       include: {
         order_items: {
           select: {
             order_item_id: true,
             note: true,
             status: true,
+            choices: {
+              select: {
+                menu_item_option_choice: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                    menu_item_option: {
+                      select: {
+                        name: true,
+                        menu_item_option_id: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
             menu_item: {
               select: {
                 available: true,
@@ -97,6 +117,25 @@ export class OrderService {
         },
       },
     });
+
+    // Transform the choices and return the modified orders
+    return orders.map((order) => ({
+      ...order,
+      order_items: order.order_items.map((orderItem) => {
+        const transformedChoices = orderItem.choices.map((choice) => ({
+          option: choice.menu_item_option_choice.menu_item_option.name,
+          option_id:
+            choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
+          choice: choice.menu_item_option_choice.name,
+          choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
+        }));
+
+        return {
+          ...orderItem,
+          choices: transformedChoices,
+        };
+      }),
+    }));
   }
 
   async getOrderById(id: number) {

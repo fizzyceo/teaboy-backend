@@ -91,4 +91,16 @@ export class OrderController {
   deleteOrder(@Param("id", ParseIntPipe) id: number) {
     return this.orderService.deleteOrder(id);
   }
+
+  @Post(":id/cancel")
+  @ApiOperation({ summary: "Cancel order by id" })
+  @ApiParam({
+    name: "id",
+    description: "Order id to cancel",
+    required: true,
+    type: Number,
+  })
+  cancelOrder(@Param("id", ParseIntPipe) id: number) {
+    return this.orderService.cancelOrder(id);
+  }
 }

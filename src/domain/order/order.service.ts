@@ -199,4 +199,19 @@ export class OrderService {
       where: { order_id: id },
     });
   }
+
+  async cancelOrder(id: number) {
+    const order = await this.database.order.findUnique({
+      where: { order_id: id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    return await this.database.order_Item.updateMany({
+      where: { order_id: id },
+      data: { status: "CANCELLED" },
+    });
+  }
 }

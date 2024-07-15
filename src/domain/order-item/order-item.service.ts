@@ -198,18 +198,23 @@ export class OrderItemService {
       throw new NotFoundException(`Order Item with id ${id} not found`);
     }
 
+    const updateData: any = {
+      ...orderItemData,
+    };
+
+    if (choices && choices.length > 0) {
+      updateData.choices = {
+        createMany: {
+          data: choices.map((choice) => ({
+            menu_item_option_choice_id: choice.menu_item_option_choice_id,
+          })),
+        },
+      };
+    }
+
     return await this.database.order_Item.update({
       where: { order_item_id: id },
-      data: {
-        ...orderItemData,
-        choices: {
-          createMany: {
-            data: choices.map((choice) => ({
-              menu_item_option_choice_id: choice.menu_item_option_choice_id,
-            })),
-          },
-        },
-      },
+      data: updateData,
     });
   }
 

@@ -63,12 +63,29 @@ export class OrderItemService {
         : {}),
     };
 
-    const queryOptions = {
+    const orders = await this.database.order_Item.findMany({
+      where: whereConditions,
       include: {
         order: {
           select: {
             customer_name: true,
             table_number: true,
+          },
+        },
+        choices: {
+          select: {
+            menu_item_option_choice: {
+              select: {
+                name: true,
+                menu_item_option_choice_id: true,
+                menu_item_option: {
+                  select: {
+                    name: true,
+                    menu_item_option_id: true,
+                  },
+                },
+              },
+            },
           },
         },
         menu_item: {
@@ -92,12 +109,18 @@ export class OrderItemService {
           },
         },
       },
-    };
-
-    return await this.database.order_Item.findMany({
-      where: whereConditions,
-      ...queryOptions,
     });
+
+    return orders.map((order) => ({
+      ...order,
+      choices: order.choices.map((choice) => ({
+        option: choice.menu_item_option_choice.menu_item_option.name,
+        option_id:
+          choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
+        choice: choice.menu_item_option_choice.name,
+        choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
+      })),
+    }));
   }
 
   async getOrderItemById(id: number) {

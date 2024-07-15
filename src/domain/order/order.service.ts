@@ -117,8 +117,6 @@ export class OrderService {
         },
       },
     });
-
-    // Transform the choices and return the modified orders
     return orders.map((order) => ({
       ...order,
       order_items: order.order_items.map((orderItem) => {

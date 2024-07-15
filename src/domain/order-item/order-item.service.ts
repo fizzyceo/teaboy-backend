@@ -51,8 +51,18 @@ export class OrderItemService {
     return orderItem;
   }
 
-  async getAllOrderItems(status?: string) {
+  async getAllOrderItems(status?: string, menu_id?: number) {
     const validStatuses = Object.values(OrderStatus);
+
+    const whereConditions: any = {
+      ...(status && validStatuses.includes(status as OrderStatus)
+        ? { status: status as OrderStatus }
+        : {}),
+      ...(menu_id && !isNaN(menu_id)
+        ? { menu_item: { menu: { menu_id: menu_id } } }
+        : {}),
+    };
+
     const queryOptions = {
       include: {
         order: {
@@ -65,6 +75,7 @@ export class OrderItemService {
           select: {
             menu: {
               select: {
+                menu_id: true,
                 name: true,
                 description: true,
               },
@@ -83,14 +94,8 @@ export class OrderItemService {
       },
     };
 
-    if (status && validStatuses.includes(status as OrderStatus)) {
-      return await this.database.order_Item.findMany({
-        where: { status: status as OrderStatus },
-        ...queryOptions,
-      });
-    }
-
     return await this.database.order_Item.findMany({
+      where: whereConditions,
       ...queryOptions,
     });
   }

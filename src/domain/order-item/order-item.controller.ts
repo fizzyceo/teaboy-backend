@@ -40,8 +40,16 @@ export class OrderItemController {
     description: "Filter order items by status",
     enum: OrderStatus,
   })
-  getAllOrderItems(@Query("status") status?: string) {
-    return this.orderItemService.getAllOrderItems(status);
+  @ApiQuery({
+    name: "menu_id",
+    required: false,
+    description: "filter orders by menu",
+  })
+  getAllOrderItems(
+    @Query("status") status?: string,
+    @Query("menu_id") menu_id?: number
+  ) {
+    return this.orderItemService.getAllOrderItems(status, menu_id);
   }
 
   @Get(":id")

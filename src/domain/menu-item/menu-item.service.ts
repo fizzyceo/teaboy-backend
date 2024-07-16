@@ -1,8 +1,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
+import {
+  CreateMenuItemDto,
+  MenuItemCategory,
+} from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 import { DatabaseService } from "src/database/database.service";
 import { ImagesService } from "src/images/images.service";
+import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
 
 @Injectable()
 export class MenuItemService {
@@ -15,47 +19,52 @@ export class MenuItemService {
     createMenuItemDto: CreateMenuItemDto,
     files: Express.Multer.File[]
   ) {
-    //categories = [],
-    const { menu_id, ...menuItemData } = createMenuItemDto;
+    const { menu_id, categories, ...menuItemData } = createMenuItemDto;
 
-    const item_images = [];
+    let item_images = [];
 
-    const uploadedImages = await Promise.all(
-      files.map(async (file) => {
-        const imgUrl = await this.imagesService.uploadFile(file);
-        return { image_url: imgUrl.url };
-      })
-    );
+    if (files && files.length > 0) {
+      const uploadedImages = await Promise.all(
+        files.map(async (file) => {
+          const imgUrl = await this.imagesService.uploadFile(file);
+          return { image_url: imgUrl.url };
+        })
+      );
 
-    item_images.push(...uploadedImages);
+      if (uploadedImages) {
+        console.log("Images uploaded successfully");
+      }
 
-    console.log("item_images", item_images);
+      item_images = uploadedImages;
+    }
+
+    const createData: any = {
+      ...menuItemData,
+      menu: {
+        connect: {
+          menu_id: menu_id,
+        },
+      },
+    };
+
+    if (item_images.length > 0) {
+      createData.item_images = {
+        createMany: {
+          data: item_images.map((image) => ({
+            image_url: image.image_url,
+          })),
+        },
+      };
+    }
+
+    if (categories && categories.length > 0) {
+      createData.categories = {
+        connect: categories.map((category_id) => ({ category_id })),
+      };
+    }
 
     return await this.database.menu_Item.create({
-      data: {
-        ...menuItemData,
-        menu: {
-          connect: {
-            menu_id: menu_id,
-          },
-        },
-        item_images: {
-          createMany: {
-            data: item_images.map((image) => ({
-              image_url: image.image_url,
-            })),
-          },
-        },
-        // categories: {
-        //   connectOrCreate: categories.map((category) => ({
-        //     where: { name: category.name },
-        //     create: {
-        //       name: category.name,
-        //       description: category.description || undefined,
-        //     },
-        //   })),
-        // },
-      },
+      data: createData,
     });
   }
 
@@ -69,6 +78,18 @@ export class MenuItemService {
       include: {
         item_images: true,
         categories: true,
+        options: {
+          select: {
+            menu_item_option_id: true,
+            name: true,
+            choices: {
+              select: {
+                menu_item_option_choice_id: true,
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -79,12 +100,8 @@ export class MenuItemService {
     return menuItem;
   }
 
-  async updateMenuItem(
-    id: number,
-    updateMenuItemDto: UpdateMenuItemDto,
-    files: Express.Multer.File[]
-  ) {
-    // const { categories, ...updateMenuItemData } = updateMenuItemDto;
+  async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
+    const { categories, ...menuItemData } = updateMenuItemDto;
 
     const menuItem = await this.database.menu_Item.findUnique({
       where: { menu_item_id: id },
@@ -98,25 +115,22 @@ export class MenuItemService {
       throw new NotFoundException(`Menu item with id ${id} not found`);
     }
 
-    // const updateData = {
-    //   ...updateMenuItemData,
-    //   categories: {
-    //     connectOrCreate: (categories || []).map((category) => ({
-    //       where: { name: category.name },
-    //       create: {
-    //         name: category.name,
-    //         description: category.description || undefined,
-    //       },
-    //     })),
-    //   },
-    // };
+    const updateData: any = {
+      ...menuItemData,
+    };
+
+    if (categories !== undefined) {
+      updateData.categories = {
+        set: categories.map((category_id) => ({ category_id })),
+      };
+    }
 
     const updatedMenuItem = await this.database.menu_Item.update({
       where: { menu_item_id: id },
-      data: updateMenuItemDto,
+      data: updateData,
       include: {
-        item_images: true,
         categories: true,
+        item_images: true,
       },
     });
 
@@ -179,5 +193,70 @@ export class MenuItemService {
     }
 
     return menuItem.item_images;
+  }
+
+  async createMenuItemOption(
+    menuItemId: number,
+    createMenuItemOptionDto: CreateMenuItemOption
+  ) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: menuItemId },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
+    }
+
+    const { choices, name } = createMenuItemOptionDto;
+
+    const createdOption = await this.database.menu_Item_Option.create({
+      data: {
+        name,
+        menu_item: {
+          connect: {
+            menu_item_id: menuItemId,
+          },
+        },
+        choices: {
+          createMany: {
+            data: choices.map((choice) => ({
+              name: choice.name,
+            })),
+          },
+        },
+      },
+    });
+
+    return createdOption;
+  }
+
+  async getMenuItemOptions(menuItemId: number) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: menuItemId },
+      include: {
+        options: {
+          include: {
+            choices: {
+              select: {
+                name: true,
+                menu_item_option_choice_id: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
+    }
+
+    return menuItem.options;
+  }
+
+  async createMenuItemCategory(category: MenuItemCategory) {
+    return await this.database.category.create({
+      data: category,
+    });
   }
 }

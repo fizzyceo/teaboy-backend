@@ -28,9 +28,6 @@ export class MenuService {
             restaurant_id: restaurant_id,
           },
         },
-        // menu_items: {
-        //   create: createMenuDto.menu_items || [],
-        // },
       },
     });
   }
@@ -38,7 +35,12 @@ export class MenuService {
   async getAllMenus() {
     return await this.database.menu.findMany({
       include: {
-        restaurant: true,
+        restaurant: {
+          select: {
+            restaurant_id: true,
+            name: true,
+          },
+        },
       },
     });
   }
@@ -67,12 +69,25 @@ export class MenuService {
             categories: {
               select: {
                 name: true,
+                category_id: true,
               },
             },
             item_images: {
               select: {
                 image_url: true,
                 item_image_id: true,
+              },
+            },
+            options: {
+              select: {
+                menu_item_option_id: true,
+                name: true,
+                choices: {
+                  select: {
+                    menu_item_option_choice_id: true,
+                    name: true,
+                  },
+                },
               },
             },
           },

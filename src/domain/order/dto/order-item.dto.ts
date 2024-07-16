@@ -1,5 +1,12 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsInt, IsOptional, IsString } from "class-validator";
+import { Type } from "class-transformer";
+import {
+  IsEnum,
+  IsInt,
+  IsOptional,
+  IsString,
+  ValidateNested,
+} from "class-validator";
 
 enum OrderStatus {
   PENDING = "PENDING",
@@ -9,10 +16,20 @@ enum OrderStatus {
   CANCELLED = "CANCELLED",
 }
 
-export class OrderItemDto {
+export class OrderItemChoice {
+  // @ApiProperty()
+  // @IsInt()
+  // order_item_id: number;
+
   @ApiProperty()
   @IsInt()
-  quantity: number;
+  menu_item_option_choice_id: number;
+}
+
+export class OrderItemDto {
+  // @ApiProperty()
+  // @IsInt()
+  // quantity: number;
 
   @ApiProperty()
   @IsString()
@@ -26,4 +43,9 @@ export class OrderItemDto {
   @ApiProperty({ enum: OrderStatus, default: OrderStatus.PENDING })
   @IsEnum(OrderStatus)
   status: OrderStatus;
+
+  @ApiProperty({ type: [OrderItemChoice] })
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemChoice)
+  choices: OrderItemChoice[];
 }

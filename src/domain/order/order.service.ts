@@ -41,16 +41,32 @@ export class OrderService {
 
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
-        data: orderData,
-      });
+        data: {
+          order_number: Math.floor(Math.random() * 4096)
+            .toString(16)
+            .padStart(3, "0")
+            .toUpperCase(),
 
-      const orderItems = order_items.map((orderItem) => ({
-        ...orderItem,
-        order_id: order.order_id,
-      }));
-
-      await database.order_Item.createMany({
-        data: orderItems,
+          ...orderData,
+          order_items: {
+            create: order_items.map((orderItem) => ({
+              menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
+              note: orderItem.note,
+              status: orderItem.status,
+              choices: {
+                create: orderItem.choices.map((choice) => ({
+                  menu_item_option_choice: {
+                    connect: {
+                      menu_item_option_choice_id:
+                        choice.menu_item_option_choice_id,
+                    },
+                  },
+                })),
+              },
+            })),
+          },
+        },
+        include: { order_items: true },
       });
 
       return order;
@@ -60,14 +76,29 @@ export class OrderService {
   }
 
   async getAllOrders() {
-    return await this.database.order.findMany({
+    const orders = await this.database.order.findMany({
       include: {
         order_items: {
           select: {
             order_item_id: true,
-            quantity: true,
             note: true,
             status: true,
+            choices: {
+              select: {
+                menu_item_option_choice: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                    menu_item_option: {
+                      select: {
+                        name: true,
+                        menu_item_option_id: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
             menu_item: {
               select: {
                 available: true,
@@ -86,6 +117,23 @@ export class OrderService {
         },
       },
     });
+    return orders.map((order) => ({
+      ...order,
+      order_items: order.order_items.map((orderItem) => {
+        const transformedChoices = orderItem.choices.map((choice) => ({
+          option: choice.menu_item_option_choice.menu_item_option.name,
+          option_id:
+            choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
+          choice: choice.menu_item_option_choice.name,
+          choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
+        }));
+
+        return {
+          ...orderItem,
+          choices: transformedChoices,
+        };
+      }),
+    }));
   }
 
   async getOrderById(id: number) {
@@ -95,7 +143,6 @@ export class OrderService {
         order_items: {
           select: {
             order_item_id: true,
-            quantity: true,
             note: true,
             status: true,
             menu_item: {
@@ -150,6 +197,21 @@ export class OrderService {
 
     return await this.database.order.delete({
       where: { order_id: id },
+    });
+  }
+
+  async cancelOrder(id: number) {
+    const order = await this.database.order.findUnique({
+      where: { order_id: id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    return await this.database.order_Item.updateMany({
+      where: { order_id: id },
+      data: { status: "CANCELLED" },
     });
   }
 }

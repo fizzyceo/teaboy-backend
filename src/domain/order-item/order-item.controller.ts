@@ -28,8 +28,8 @@ export class OrderItemController {
   @Post()
   @ApiBody({ type: CreateOrderItemDto })
   @ApiOperation({ summary: "Create a new order item" })
-  createMenuItem(@Body() createOrderItemDto: CreateOrderItemDto) {
-    return this.orderItemService.createMenuItem(createOrderItemDto);
+  createOrderItem(@Body() createOrderItemDto: CreateOrderItemDto) {
+    return this.orderItemService.createOrderItem(createOrderItemDto);
   }
 
   @Get()
@@ -40,8 +40,16 @@ export class OrderItemController {
     description: "Filter order items by status",
     enum: OrderStatus,
   })
-  getAllMenuItems(@Query("status") status?: string) {
-    return this.orderItemService.getAllMenuItems(status);
+  @ApiQuery({
+    name: "menu_id",
+    required: false,
+    description: "filter orders by menu",
+  })
+  getAllOrderItems(
+    @Query("status") status?: string,
+    @Query("menu_id") menu_id?: number
+  ) {
+    return this.orderItemService.getAllOrderItems(status, menu_id);
   }
 
   @Get(":id")
@@ -51,8 +59,8 @@ export class OrderItemController {
     description: "Order item id to fetch",
     required: true,
   })
-  getMenuItemById(@Param("id", ParseIntPipe) id: number) {
-    return this.orderItemService.getMenuItemById(id);
+  getOrderItemById(@Param("id", ParseIntPipe) id: number) {
+    return this.orderItemService.getOrderItemById(id);
   }
 
   @Patch(":id")
@@ -63,11 +71,11 @@ export class OrderItemController {
     required: true,
   })
   @ApiBody({ type: UpdateOrderItemDto })
-  updateMenuItem(
+  updateOrderItem(
     @Param("id", ParseIntPipe) id: number,
     @Body() updateOrderItemDto: UpdateOrderItemDto
   ) {
-    return this.orderItemService.updateMenuItem(id, updateOrderItemDto);
+    return this.orderItemService.updateOrderItem(id, updateOrderItemDto);
   }
 
   @Delete(":id")
@@ -77,7 +85,7 @@ export class OrderItemController {
     description: "Order item id to delete",
     required: true,
   })
-  deleteMenuItem(@Param("id", ParseIntPipe) id: number) {
-    return this.orderItemService.deleteMenuItem(id);
+  deleteOrderItem(@Param("id", ParseIntPipe) id: number) {
+    return this.orderItemService.deleteOrderItem(id);
   }
 }

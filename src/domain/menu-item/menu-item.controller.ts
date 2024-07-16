@@ -9,11 +9,12 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFiles,
-  UsePipes,
-  ValidationPipe,
 } from "@nestjs/common";
 import { MenuItemService } from "./menu-item.service";
-import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
+import {
+  CreateMenuItemDto,
+  MenuItemCategory,
+} from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 
 import {
@@ -23,10 +24,8 @@ import {
   ApiParam,
   ApiConsumes,
 } from "@nestjs/swagger";
-import {
-  FileFieldsInterceptor,
-  FilesInterceptor,
-} from "@nestjs/platform-express";
+import { FilesInterceptor } from "@nestjs/platform-express";
+import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
 
 @Controller("menu-item")
 @ApiTags("menu-item")
@@ -89,10 +88,9 @@ export class MenuItemController {
   })
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuItemDto: UpdateMenuItemDto,
-    @UploadedFiles() files: Express.Multer.File[]
+    @Body() updateMenuItemDto: UpdateMenuItemDto
   ) {
-    return this.menuItemService.updateMenuItem(id, updateMenuItemDto, files);
+    return this.menuItemService.updateMenuItem(id, updateMenuItemDto);
   }
 
   @Delete(":id")
@@ -123,5 +121,37 @@ export class MenuItemController {
     @Param("imageId", ParseIntPipe) imageId: number
   ) {
     return this.menuItemService.deleteMenuImage(id, imageId);
+  }
+
+  // Menu Item Options
+  @Get(":id/options")
+  @ApiOperation({ summary: "Get menu item options by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to fetch options",
+    required: true,
+  })
+  getMenuItemOptions(@Param("id", ParseIntPipe) id: number) {
+    return this.menuItemService.getMenuItemOptions(id);
+  }
+
+  @Post(":id/options")
+  @ApiOperation({ summary: "Create menu item options by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id to create options",
+    required: true,
+  })
+  createMenuItemOptions(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() MenuOption: CreateMenuItemOption
+  ) {
+    return this.menuItemService.createMenuItemOption(id, MenuOption);
+  }
+
+  @Post("/category/create")
+  @ApiOperation({ summary: "Create menu item category" })
+  createMenuItemCategory(@Body() category: MenuItemCategory) {
+    return this.menuItemService.createMenuItemCategory(category);
   }
 }

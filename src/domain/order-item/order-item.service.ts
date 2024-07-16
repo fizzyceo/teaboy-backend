@@ -70,6 +70,7 @@ export class OrderItemService {
           select: {
             customer_name: true,
             table_number: true,
+            order_number: true,
           },
         },
         choices: {

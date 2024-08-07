@@ -13,23 +13,32 @@ import { UserService } from "./user.service";
 import { ApiBody, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { LinkUserToRestaurantDto } from "./dto/link-user-to-restaurant.dto";
 
 @Controller("user")
 @ApiTags("user")
 export class UserController {
-  constructor(private readonly UserService: UserService) {}
+  constructor(private readonly userService: UserService) {}
 
-  @Post()
+  @Post("/create")
   @ApiBody({ type: CreateUserDto })
   @ApiOperation({ summary: "Create a new User" })
   createUser(@Body() createUserDto: CreateUserDto) {
-    return this.UserService.createUser(createUserDto);
+    return this.userService.createUser(createUserDto);
+  }
+
+  @Patch("link")
+  @ApiOperation({ summary: "Add User to Restaurant" })
+  addUserToRestaurant(
+    @Body() linkUserToRestaurantDto: LinkUserToRestaurantDto
+  ) {
+    return this.userService.addUserToRestaurant(linkUserToRestaurantDto);
   }
 
   @Get("")
   @ApiOperation({ summary: "Get all Users" })
   getAllUsers() {
-    return this.UserService.getAllUsers();
+    return this.userService.getAllUsers();
   }
 
   @Get(":id")
@@ -40,7 +49,7 @@ export class UserController {
     required: true,
   })
   getUserById(@Param("id", ParseIntPipe) id: number) {
-    return this.UserService.getUserById(id);
+    return this.userService.getUserById(id);
   }
 
   @Patch(":id")
@@ -55,7 +64,7 @@ export class UserController {
     @Param("id", ParseIntPipe) id: number,
     @Body() updateUserDto: UpdateUserDto
   ) {
-    return this.UserService.updateUser(id, updateUserDto);
+    return this.userService.updateUser(id, updateUserDto);
   }
 
   @Delete(":id")
@@ -66,6 +75,6 @@ export class UserController {
     required: true,
   })
   deleteUser(@Param("id", ParseIntPipe) id: number) {
-    return this.UserService.deleteUser(id);
+    return this.userService.deleteUser(id);
   }
 }

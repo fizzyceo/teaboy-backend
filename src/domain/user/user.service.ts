@@ -4,6 +4,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { DatabaseService } from "src/database/database.service";
 
 import * as bcrypt from "bcrypt";
+import { LinkUserToRestaurantDto } from "./dto/link-user-to-restaurant.dto";
 
 export const roundsOfHashing = 10;
 
@@ -19,13 +20,60 @@ export class UserService {
 
     createuserDto.password = hashedPassword;
 
-    // return await this.database.user.create({
-    //   data: createuserDto,
-    // });
+    console.log(createuserDto);
+
+    return await this.database.user.create({
+      data: createuserDto,
+    });
   }
 
   async getAllUsers() {
     return await this.database.user.findMany();
+  }
+
+  async addUserToRestaurant(linkUserToRestaurantDto: LinkUserToRestaurantDto) {
+    console.log(linkUserToRestaurantDto);
+    const { userId, restaurantId } = linkUserToRestaurantDto;
+    const user = await this.database.user.findUnique({
+      where: {
+        user_id: userId,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`user with id ${userId} not found`);
+    }
+
+    const restaurant = await this.database.restaurant.findUnique({
+      where: {
+        restaurant_id: restaurantId,
+      },
+    });
+
+    if (!restaurant) {
+      throw new NotFoundException(
+        `restaurant with id ${restaurantId} not found`
+      );
+    }
+
+    return this.database.user.update({
+      where: { user_id: userId },
+      data: {
+        restaurants: {
+          connectOrCreate: {
+            where: {
+              user_id_restaurant_id: {
+                user_id: userId,
+                restaurant_id: restaurantId,
+              },
+            },
+            create: {
+              restaurant_id: restaurantId,
+            },
+          },
+        },
+      },
+    });
   }
 
   async getUserById(id: number) {

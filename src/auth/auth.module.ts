@@ -5,7 +5,7 @@ import { DatabaseModule } from "src/database/database.module";
 import { PassportModule } from "@nestjs/passport";
 import { JwtModule } from "@nestjs/jwt";
 import { JwtStrategy } from "./strategy/jwt.strategy";
-import { EmployeeModule } from "src/domain/employee/employee.module";
+import { RolesGuard } from "./guard/roles.guard";
 
 @Module({
   imports: [
@@ -15,9 +15,8 @@ import { EmployeeModule } from "src/domain/employee/employee.module";
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: "1d" },
     }),
-    EmployeeModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, RolesGuard],
 })
 export class AuthModule {}

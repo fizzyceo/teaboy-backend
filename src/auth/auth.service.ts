@@ -6,7 +6,6 @@ import {
 import { JwtService } from "@nestjs/jwt";
 import { DatabaseService } from "src/database/database.service";
 import { AuthEntity } from "./entity/auth.entity";
-
 import * as bcrypt from "bcrypt";
 
 @Injectable()
@@ -17,15 +16,15 @@ export class AuthService {
   ) {}
 
   async login(email: string, password: string): Promise<AuthEntity> {
-    const employee = await this.databaseService.employee.findUnique({
+    const user = await this.databaseService.user.findUnique({
       where: { email },
     });
 
-    if (!employee) {
-      throw new NotFoundException("employee not found");
+    if (!user) {
+      throw new NotFoundException("User not found");
     }
 
-    const isPasswordValid = await bcrypt.compare(password, employee.password);
+    const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid password");
@@ -33,8 +32,9 @@ export class AuthService {
 
     return {
       accessToken: this.jwtService.sign({
-        employee_id: employee.employee_id,
-        email: employee.email,
+        user_id: user.user_id,
+        email: user.email,
+        role: user.role,
       }),
     };
   }

@@ -7,27 +7,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Employee {
-  employee_id Int @id @default(autoincrement())
-  role USER_ROLE 
+enum USER_ROLE {
+  ADMIN
+  TEABOY
+  NORMAL_USER
+}
+
+model User { 
+  user_id Int @id @default(autoincrement())
+
+  role USER_ROLE // ADMIN, TEABOY, NORMAL_USER
+  // A normal user can only place orders
+  // A teaboy can see orders and mark them as ready
+  // An admin can manage the account, manage the menu and place orders
 
   name String
   email String @unique
-  phone String?
   password String
+  phone String?
 
-  restaurant_id Int
-  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
+  can_manage_account Boolean @default(false) 
+  can_manage_menu Boolean @default(false)
+  can_place_order Boolean @default(false)
+
+  restaurants UserRestaurant[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-}
-
-enum USER_ROLE {
-  ADMIN
-  WAITER
-  CHEF
-  CASHIER
 }
 
 model Restaurant {
@@ -36,20 +42,34 @@ model Restaurant {
   name String
   description String?
   phone String?
-  address String?
   image_url String?
+  location String?
+  address String?
 
-  employees Employee[] 
+  employees UserRestaurant[]
   menus Menu[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
+model UserRestaurant {
+  user_id Int
+  restaurant_id Int
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: Cascade)
+  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([user_id, restaurant_id])
+}
+
+
 model Menu {
   menu_id Int @id @default(autoincrement())
   name String?
-  description String?
+
+  ask_for_name Boolean @default(false)
+  ask_for_table Boolean @default(false)
 
   restaurant_id Int
   restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
@@ -111,25 +131,16 @@ model Order {
   customer_name String?
   table_number Int?
 
+  // The order can be scheduled for a later time
+  scheduled_at DateTime?
+
   order_items Order_Item[]
 
-  payment_method PaymentMethod
-  payment_status PaymentStatus
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
-enum PaymentMethod {
-  CASH
-  CARD
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  CANCELLED
-}
 
 enum OrderStatus {
   PENDING
@@ -141,7 +152,6 @@ enum OrderStatus {
 
 model Order_Item {
   order_item_id Int @id @default(autoincrement())
-  // quantity Int
   note String?
 
   menu_item_id Int
@@ -161,7 +171,6 @@ model Order_Item {
 model Order_Item_Choice {
   order_item_choice_id Int @id @default(autoincrement())
 
-  // name String
   order_item_id Int
   order_item Order_Item @relation(fields: [order_item_id], references: [order_item_id],onDelete: Cascade,onUpdate: Cascade)
 

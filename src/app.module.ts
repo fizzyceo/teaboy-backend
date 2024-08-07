@@ -1,7 +1,7 @@
 import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "./database/database.module";
-import { EmployeeModule } from "./domain/employee/employee.module";
+
 import { MenuModule } from "./domain/menu/menu.module";
 import { MenuItemModule } from "./domain/menu-item/menu-item.module";
 import { OrderModule } from "./domain/order/order.module";
@@ -11,12 +11,13 @@ import { ConfigModule } from "@nestjs/config";
 import { ImagesModule } from "./images/images.module";
 import { NotificationModule } from "./notification/notification.module";
 import { AuthModule } from "./auth/auth.module";
+import { UserModule } from "./domain/user/user.module";
 
 @Module({
   imports: [
     AuthModule,
     RestaurantModule,
-    EmployeeModule,
+    UserModule,
     DatabaseModule,
     MenuModule,
     MenuItemModule,

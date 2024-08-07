@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderDto } from "./dto/update-order.dto";
 import { DatabaseService } from "src/database/database.service";
@@ -8,6 +12,45 @@ import { Order } from "./entities/order.entity";
 export class OrderService {
   constructor(private readonly database: DatabaseService) {}
 
+  /**
+   * Retrieves the restaurant ID associated with the given order ID.
+   * @param orderId - The ID of the order.
+   * @returns A Promise that resolves to the restaurant ID.
+   * @throws NotFoundException if the order is not found or has no order items.
+   */
+  private async getOrderRestaurantId(orderId: number): Promise<number> {
+    const order = await this.database.order.findUnique({
+      where: { order_id: orderId },
+      select: {
+        order_items: {
+          select: {
+            menu_item: {
+              select: {
+                menu: {
+                  select: {
+                    restaurant_id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order || !order.order_items.length) {
+      throw new NotFoundException(`Order with id ${orderId} not found`);
+    }
+
+    return order.order_items[0].menu_item.menu.restaurant_id;
+  }
+
+  /**
+   * Creates an order based on the provided order data.
+   * @param createOrderDto - The data for creating the order.
+   * @returns The created order.
+   * @throws Error if any of the menu items in the order do not exist.
+   */
   async creareOrder(createOrderDto: CreateOrderDto) {
     const { order_items, ...orderData } = createOrderDto;
 
@@ -75,8 +118,25 @@ export class OrderService {
     return createdOrder;
   }
 
-  async getAllOrders() {
+  /**
+   * Retrieves all orders for a given user.
+   * @param user - The user object.
+   * @returns An array of orders with transformed order items.
+   */
+  async getAllOrders(user: any) {
+    const { restaurant_id } = user;
     const orders = await this.database.order.findMany({
+      where: {
+        order_items: {
+          some: {
+            menu_item: {
+              menu: {
+                restaurant_id: restaurant_id,
+              },
+            },
+          },
+        },
+      },
       include: {
         order_items: {
           select: {
@@ -117,6 +177,7 @@ export class OrderService {
         },
       },
     });
+
     return orders.map((order) => ({
       ...order,
       order_items: order.order_items.map((orderItem) => {
@@ -136,7 +197,16 @@ export class OrderService {
     }));
   }
 
-  async getOrderById(id: number) {
+  /**
+   * Retrieves an order by its ID.
+   * @param id - The ID of the order.
+   * @param user - The user object containing the restaurant ID.
+   * @returns The order object with the specified ID.
+   * @throws NotFoundException if the order with the specified ID is not found.
+   * @throws UnauthorizedException if the user does not have access to the order.
+   */
+  async getOrderById(id: number, user: any) {
+    const { restaurant_id } = user;
     const order = await this.database.order.findUnique({
       where: { order_id: id },
       include: {
@@ -167,11 +237,16 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException(`Order with id ${id} not found`);
     }
+    const orderRestaurantId = await this.getOrderRestaurantId(id);
+    if (orderRestaurantId !== restaurant_id) {
+      throw new UnauthorizedException("You do not have access to this order");
+    }
 
     return order;
   }
 
-  async updateOrder(id: number, updateOrderDto: UpdateOrderDto) {
+  async updateOrder(id: number, updateOrderDto: UpdateOrderDto, user: any) {
+    const { restaurant_id } = user;
     const order = await this.database.order.findUnique({
       where: { order_id: id },
     });
@@ -186,7 +261,8 @@ export class OrderService {
     });
   }
 
-  async deleteOrder(id: number) {
+  async deleteOrder(id: number, user: any) {
+    const { restaurant_id } = user;
     const order = await this.database.order.findUnique({
       where: { order_id: id },
     });

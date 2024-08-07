@@ -66,8 +66,14 @@ export class RestaurantService {
       throw new NotFoundException(`Restaurant with id ${id} not found`);
     }
 
-    return await this.database.employee.findMany({
-      where: { restaurant_id: id },
+    return await this.database.user.findMany({
+      where: {
+        restaurants: {
+          some: {
+            restaurant_id: id,
+          },
+        },
+      },
     });
   }
 

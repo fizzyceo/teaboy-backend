@@ -94,7 +94,6 @@ export class OrderItemService {
               select: {
                 menu_id: true,
                 name: true,
-                description: true,
               },
             },
             title: true,
@@ -140,7 +139,6 @@ export class OrderItemService {
               select: {
                 menu_id: true,
                 name: true,
-                description: true,
               },
             },
             title: true,

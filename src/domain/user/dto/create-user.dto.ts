@@ -2,12 +2,11 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsEnum, IsInt, IsOptional, IsString } from "class-validator";
 
 enum UserRole {
-  ADMIN = "ADMIN",
-  WAITER = "WAITER",
-  CHEF = "CHEF",
-  CASHIER = "CASHIER",
+  ADMIN = "admin",
+  TEABOY = "teaboy",
+  NORMAL_USER = "normal_user",
 }
-export class CreateEmployeeDto {
+export class CreateUserDto {
   @ApiProperty()
   @IsString()
   name: string;

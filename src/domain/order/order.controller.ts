@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Req,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -61,14 +62,18 @@ export class OrderController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get all orders" })
   @ApiResponse({
     status: 200,
-    description: "List of all orders",
+    description: "List of all orders related to the authenticated user",
   })
   @ApiResponse({ status: 404, description: "No orders found" })
-  getAllOrders() {
-    return this.orderService.getAllOrders();
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  getAllOrders(@Req() req) {
+    const user = req.user;
+    return this.orderService.getAllOrders(user);
   }
 
   @Get(":id")
@@ -81,11 +86,14 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  getOrderById(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.getOrderById(id);
+  getOrderById(@Param("id", ParseIntPipe) id: number, @Req() req) {
+    const user = req.user;
+    return this.orderService.getOrderById(id, user);
   }
 
   @Patch(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Update order details by id" })
   @ApiBody({ type: UpdateOrderDto })
   @ApiParam({
@@ -96,12 +104,16 @@ export class OrderController {
   })
   updateOrder(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateOrderDto: UpdateOrderDto
+    @Body() updateOrderDto: UpdateOrderDto,
+    @Req() req
   ) {
-    return this.orderService.updateOrder(id, updateOrderDto);
+    const user = req.user;
+    return this.orderService.updateOrder(id, updateOrderDto, user);
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Delete order by id" })
   @ApiParam({
     name: "id",
@@ -109,8 +121,9 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  deleteOrder(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.deleteOrder(id);
+  deleteOrder(@Param("id", ParseIntPipe) id: number, @Req() req) {
+    const user = req.user;
+    return this.orderService.deleteOrder(id, user);
   }
 
   @Post(":id/cancel")

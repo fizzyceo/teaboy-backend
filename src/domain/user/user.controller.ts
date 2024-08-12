@@ -27,7 +27,7 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
-  @Patch("link")
+  @Patch("link-site")
   @ApiOperation({ summary: "Add User to Site" })
   addUserToSite(@Body() addUserToSiteDto: AddUserToSiteDto) {
     return this.userService.addUserToSite(addUserToSiteDto);

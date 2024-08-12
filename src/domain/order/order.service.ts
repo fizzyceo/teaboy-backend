@@ -24,12 +24,6 @@ export class OrderService {
     return order;
   }
 
-  /**
-   * Retrieves the restaurant ID associated with the given order ID.
-   * @param orderId - The ID of the order.
-   * @returns A Promise that resolves to the restaurant ID.
-   * @throws NotFoundException if the order is not found or has no order items.
-   */
   private async getOrderSpaceId(orderId: number): Promise<number> {
     const order = await this.database.order.findUnique({
       where: { order_id: orderId },
@@ -62,12 +56,6 @@ export class OrderService {
     return order.order_items[0].menu_item.menu.space.space_id;
   }
 
-  /**
-   * Creates an order based on the provided order data.
-   * @param createOrderDto - The data for creating the order.
-   * @returns The created order.
-   * @throws Error if any of the menu items in the order do not exist.
-   */
   async creareOrder(createOrderDto: CreateOrderDto) {
     const { order_items, ...orderData } = createOrderDto;
 
@@ -135,11 +123,6 @@ export class OrderService {
     return createdOrder;
   }
 
-  /**
-   * Retrieves all orders for a given user.
-   * @param user - The user object.
-   * @returns An array of orders with transformed order items.
-   */
   async getAllOrders(user: any) {
     const { space_id } = user;
     const orders = await this.database.order.findMany({
@@ -214,14 +197,6 @@ export class OrderService {
     }));
   }
 
-  /**
-   * Retrieves an order by its ID.
-   * @param id - The ID of the order.
-   * @param user - The user object containing the restaurant ID.
-   * @returns The order object with the specified ID.
-   * @throws NotFoundException if the order with the specified ID is not found.
-   * @throws UnauthorizedException if the user does not have access to the order.
-   */
   async getOrderById(id: number, user: any) {
     const { space_id } = user;
     const order = await this.database.order.findUnique({

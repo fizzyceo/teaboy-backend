@@ -21,6 +21,7 @@ import {
   ApiConsumes,
 } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { CreateSpaceDto } from "./dto";
 
 @Controller("site")
 @ApiTags("site")
@@ -87,6 +88,20 @@ export class SiteController {
   })
   getSiteSpaces(@Param("id", ParseIntPipe) id: number) {
     return this.siteService.getSiteSpaces(id);
+  }
+
+  @Post(":id/spaces")
+  @ApiOperation({ summary: "Add space to site" })
+  @ApiParam({
+    name: "id",
+    description: "site id to add space",
+    required: true,
+  })
+  addSpaceToSite(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() createSiteSpaceDto: CreateSpaceDto
+  ) {
+    return this.siteService.createSiteSpace(id, createSiteSpaceDto);
   }
 
   @Patch(":id")

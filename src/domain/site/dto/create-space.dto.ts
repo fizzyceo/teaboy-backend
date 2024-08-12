@@ -9,12 +9,4 @@ export class CreateSpaceDto {
   })
   @IsString()
   name: string;
-
-  @ApiProperty({
-    description: "Site id of the space",
-    example: 1,
-    type: "number",
-  })
-  @IsInt()
-  site_id: number;
 }

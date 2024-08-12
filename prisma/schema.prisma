@@ -16,15 +16,12 @@ enum USER_ROLE {
 model User { 
   user_id Int @id @default(autoincrement())
 
-  role USER_ROLE // ADMIN, TEABOY, NORMAL_USER
-  // A normal user can only place orders
-  // A teaboy can see orders and mark them as ready
-  // An admin can manage the account, manage the menu and place orders
-
   name String
   email String @unique
   password String
   phone String?
+
+  role USER_ROLE 
 
   can_manage_account Boolean @default(false) 
   can_manage_menu Boolean @default(false)
@@ -43,11 +40,9 @@ model Site {
   description String?
   phone String?
   image_url String?
-  location String?
   address String?
 
   employees UserSite[]
-  // menus Menu[]
   spaces Space[]
 
   created_at DateTime @default(now())
@@ -56,7 +51,6 @@ model Site {
 
 model Space {
   space_id Int @id @default(autoincrement())
-  // a space is part of the site, it could be a room, a table, a department etc
   name String
 
   menu Menu[]
@@ -149,7 +143,6 @@ model Order {
   customer_name String?
   table_number Int?
 
-  // The order can be scheduled for a later time
   scheduled_at DateTime?
 
   order_items Order_Item[]

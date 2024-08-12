@@ -8,23 +8,22 @@ import {
   Delete,
   ParseIntPipe,
 } from "@nestjs/common";
+import { ApiTags, ApiBody, ApiOperation, ApiParam } from "@nestjs/swagger";
 
 import { MenuService } from "./menu.service";
-import { CreateMenuDto } from "./dto/create-menu.dto";
-import { UpdateMenuDto } from "./dto/update-menu.dto";
 
-import { ApiTags, ApiBody, ApiOperation, ApiParam } from "@nestjs/swagger";
+import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
 @Controller("menu")
 @ApiTags("menu")
 export class MenuController {
   constructor(private readonly menuService: MenuService) {}
 
-  @Post()
+  @Post("create")
   @ApiBody({ type: CreateMenuDto })
   @ApiOperation({
     summary: "Create a new menu",
-    description: "Create a new menu by providing name, description, space_id ",
+    description: "Create a new menu by providing name, space_id",
   })
   createMenu(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.createMenu(createMenuDto);

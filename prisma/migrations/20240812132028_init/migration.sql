@@ -7,11 +7,11 @@ CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'READY', 'DELIVERED
 -- CreateTable
 CREATE TABLE "User" (
     "user_id" SERIAL NOT NULL,
-    "role" "USER_ROLE" NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "phone" TEXT,
+    "role" "USER_ROLE" NOT NULL,
     "can_manage_account" BOOLEAN NOT NULL DEFAULT false,
     "can_manage_menu" BOOLEAN NOT NULL DEFAULT false,
     "can_place_order" BOOLEAN NOT NULL DEFAULT false,
@@ -22,26 +22,34 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "Restaurant" (
-    "restaurant_id" SERIAL NOT NULL,
+CREATE TABLE "Site" (
+    "site_id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "phone" TEXT,
     "image_url" TEXT,
-    "location" TEXT,
     "address" TEXT,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "Restaurant_pkey" PRIMARY KEY ("restaurant_id")
+    CONSTRAINT "Site_pkey" PRIMARY KEY ("site_id")
 );
 
 -- CreateTable
-CREATE TABLE "UserRestaurant" (
-    "user_id" INTEGER NOT NULL,
-    "restaurant_id" INTEGER NOT NULL,
+CREATE TABLE "Space" (
+    "space_id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "site_id" INTEGER NOT NULL,
 
-    CONSTRAINT "UserRestaurant_pkey" PRIMARY KEY ("user_id","restaurant_id")
+    CONSTRAINT "Space_pkey" PRIMARY KEY ("space_id")
+);
+
+-- CreateTable
+CREATE TABLE "UserSite" (
+    "user_id" INTEGER NOT NULL,
+    "site_id" INTEGER NOT NULL,
+
+    CONSTRAINT "UserSite_pkey" PRIMARY KEY ("user_id","site_id")
 );
 
 -- CreateTable
@@ -50,7 +58,7 @@ CREATE TABLE "Menu" (
     "name" TEXT,
     "ask_for_name" BOOLEAN NOT NULL DEFAULT false,
     "ask_for_table" BOOLEAN NOT NULL DEFAULT false,
-    "restaurant_id" INTEGER NOT NULL,
+    "space_id" INTEGER NOT NULL,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
@@ -76,6 +84,7 @@ CREATE TABLE "Menu_Item_Option" (
     "menu_item_option_id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
     "menu_item_id" INTEGER NOT NULL,
+    "default_choice_id" INTEGER,
 
     CONSTRAINT "Menu_Item_Option_pkey" PRIMARY KEY ("menu_item_option_id")
 );
@@ -84,7 +93,7 @@ CREATE TABLE "Menu_Item_Option" (
 CREATE TABLE "Menu_Item_Option_Choice" (
     "menu_item_option_choice_id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
-    "Menu_Item_Option_id" INTEGER NOT NULL,
+    "menu_item_option_id" INTEGER NOT NULL,
 
     CONSTRAINT "Menu_Item_Option_Choice_pkey" PRIMARY KEY ("menu_item_option_choice_id")
 );
@@ -155,6 +164,9 @@ CREATE TABLE "_CategoryToMenu_Item" (
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Menu_Item_Option_default_choice_id_key" ON "Menu_Item_Option"("default_choice_id");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
@@ -164,13 +176,16 @@ CREATE UNIQUE INDEX "_CategoryToMenu_Item_AB_unique" ON "_CategoryToMenu_Item"("
 CREATE INDEX "_CategoryToMenu_Item_B_index" ON "_CategoryToMenu_Item"("B");
 
 -- AddForeignKey
-ALTER TABLE "UserRestaurant" ADD CONSTRAINT "UserRestaurant_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Space" ADD CONSTRAINT "Space_site_id_fkey" FOREIGN KEY ("site_id") REFERENCES "Site"("site_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "UserRestaurant" ADD CONSTRAINT "UserRestaurant_restaurant_id_fkey" FOREIGN KEY ("restaurant_id") REFERENCES "Restaurant"("restaurant_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserSite" ADD CONSTRAINT "UserSite_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("user_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Menu" ADD CONSTRAINT "Menu_restaurant_id_fkey" FOREIGN KEY ("restaurant_id") REFERENCES "Restaurant"("restaurant_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "UserSite" ADD CONSTRAINT "UserSite_site_id_fkey" FOREIGN KEY ("site_id") REFERENCES "Site"("site_id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Menu" ADD CONSTRAINT "Menu_space_id_fkey" FOREIGN KEY ("space_id") REFERENCES "Space"("space_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Menu_Item" ADD CONSTRAINT "Menu_Item_menu_id_fkey" FOREIGN KEY ("menu_id") REFERENCES "Menu"("menu_id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -179,7 +194,10 @@ ALTER TABLE "Menu_Item" ADD CONSTRAINT "Menu_Item_menu_id_fkey" FOREIGN KEY ("me
 ALTER TABLE "Menu_Item_Option" ADD CONSTRAINT "Menu_Item_Option_menu_item_id_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "Menu_Item"("menu_item_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Menu_Item_Option_Choice" ADD CONSTRAINT "Menu_Item_Option_Choice_Menu_Item_Option_id_fkey" FOREIGN KEY ("Menu_Item_Option_id") REFERENCES "Menu_Item_Option"("menu_item_option_id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Menu_Item_Option" ADD CONSTRAINT "Menu_Item_Option_default_choice_id_fkey" FOREIGN KEY ("default_choice_id") REFERENCES "Menu_Item_Option_Choice"("menu_item_option_choice_id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Menu_Item_Option_Choice" ADD CONSTRAINT "Menu_Item_Option_Choice_menu_item_option_id_fkey" FOREIGN KEY ("menu_item_option_id") REFERENCES "Menu_Item_Option"("menu_item_option_id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Order_Item" ADD CONSTRAINT "Order_Item_menu_item_id_fkey" FOREIGN KEY ("menu_item_id") REFERENCES "Menu_Item"("menu_item_id") ON DELETE CASCADE ON UPDATE CASCADE;

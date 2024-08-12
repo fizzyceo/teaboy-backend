@@ -12,13 +12,25 @@ import { Order } from "./entities/order.entity";
 export class OrderService {
   constructor(private readonly database: DatabaseService) {}
 
+  private async findOrderById(id: number) {
+    const order = await this.database.order.findUnique({
+      where: { order_id: id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    return order;
+  }
+
   /**
    * Retrieves the restaurant ID associated with the given order ID.
    * @param orderId - The ID of the order.
    * @returns A Promise that resolves to the restaurant ID.
    * @throws NotFoundException if the order is not found or has no order items.
    */
-  private async getOrderRestaurantId(orderId: number): Promise<number> {
+  private async getOrderSpaceId(orderId: number): Promise<number> {
     const order = await this.database.order.findUnique({
       where: { order_id: orderId },
       select: {
@@ -28,7 +40,12 @@ export class OrderService {
               select: {
                 menu: {
                   select: {
-                    restaurant_id: true,
+                    space: {
+                      select: {
+                        space_id: true,
+                        site_id: true,
+                      },
+                    },
                   },
                 },
               },
@@ -42,7 +59,7 @@ export class OrderService {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }
 
-    return order.order_items[0].menu_item.menu.restaurant_id;
+    return order.order_items[0].menu_item.menu.space.space_id;
   }
 
   /**
@@ -124,14 +141,14 @@ export class OrderService {
    * @returns An array of orders with transformed order items.
    */
   async getAllOrders(user: any) {
-    const { restaurant_id } = user;
+    const { space_id } = user;
     const orders = await this.database.order.findMany({
       where: {
         order_items: {
           some: {
             menu_item: {
               menu: {
-                restaurant_id: restaurant_id,
+                space_id: space_id,
               },
             },
           },
@@ -206,7 +223,7 @@ export class OrderService {
    * @throws UnauthorizedException if the user does not have access to the order.
    */
   async getOrderById(id: number, user: any) {
-    const { restaurant_id } = user;
+    const { space_id } = user;
     const order = await this.database.order.findUnique({
       where: { order_id: id },
       include: {
@@ -237,8 +254,8 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException(`Order with id ${id} not found`);
     }
-    const orderRestaurantId = await this.getOrderRestaurantId(id);
-    if (orderRestaurantId !== restaurant_id) {
+    const orderSpaceId = await this.getOrderSpaceId(id);
+    if (orderSpaceId !== space_id) {
       throw new UnauthorizedException("You do not have access to this order");
     }
 
@@ -246,14 +263,8 @@ export class OrderService {
   }
 
   async updateOrder(id: number, updateOrderDto: UpdateOrderDto, user: any) {
-    const { restaurant_id } = user;
-    const order = await this.database.order.findUnique({
-      where: { order_id: id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
+    const { space_id } = user;
+    const order = await this.findOrderById(id);
 
     return await this.database.order.update({
       where: { order_id: id },
@@ -263,13 +274,7 @@ export class OrderService {
 
   async deleteOrder(id: number, user: any) {
     const { restaurant_id } = user;
-    const order = await this.database.order.findUnique({
-      where: { order_id: id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
+    const order = await this.findOrderById(id);
 
     return await this.database.order.delete({
       where: { order_id: id },
@@ -277,13 +282,7 @@ export class OrderService {
   }
 
   async cancelOrder(id: number) {
-    const order = await this.database.order.findUnique({
-      where: { order_id: id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
+    const order = await this.findOrderById(id);
 
     return await this.database.order_Item.updateMany({
       where: { order_id: id },

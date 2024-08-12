@@ -1,14 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import {
-  IsArray,
-  IsBoolean,
-  IsNumber,
-  IsOptional,
-  IsString,
-  ValidateNested,
-} from "class-validator";
-// import { CreateItemImageDto } from "src/domain/menu-item/dto/create-menu-item.dto";
+import { IsBoolean, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class MenuItem {
   @ApiProperty()
@@ -27,12 +18,4 @@ export class MenuItem {
   @ApiProperty()
   @IsBoolean()
   available: boolean;
-
-  // for now we are not going to use this field
-  // @ApiProperty({ type: [CreateItemImageDto] })
-  // @IsArray()
-  // @IsOptional()
-  // @ValidateNested({ each: true })
-  // @Type(() => CreateItemImageDto)
-  // item_images: CreateItemImageDto[];
 }

@@ -1,29 +1,50 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { DatabaseService } from "src/database/database.service";
 
-import * as bcrypt from "bcrypt";
-import { LinkUserToRestaurantDto } from "./dto/link-user-to-restaurant.dto";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { AddUserToSiteDto } from "./dto/add-user-to-site.dto";
 
-export const roundsOfHashing = 10;
+import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class UserService {
   constructor(private readonly database: DatabaseService) {}
 
-  async createUser(createuserDto: CreateUserDto) {
-    const hashedPassword = await bcrypt.hash(
-      createuserDto.password,
-      roundsOfHashing
-    );
+  private readonly roundsOfHashing = 10;
 
-    createuserDto.password = hashedPassword;
+  private async checkIfUserExists(email: string) {
+    const user = await this.database.user.findUnique({ where: { email } });
+    if (user) {
+      throw new ConflictException("Email already exists");
+    }
+  }
 
-    console.log(createuserDto);
+  private async hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, this.roundsOfHashing);
+  }
+
+  private async findUserById(id: number) {
+    const user = await this.database.user.findUnique({
+      where: { user_id: id },
+    });
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return user;
+  }
+
+  async createUser(createUserDto: CreateUserDto) {
+    await this.checkIfUserExists(createUserDto.email);
+
+    createUserDto.password = await this.hashPassword(createUserDto.password);
 
     return await this.database.user.create({
-      data: createuserDto,
+      data: createUserDto,
     });
   }
 
@@ -31,44 +52,34 @@ export class UserService {
     return await this.database.user.findMany();
   }
 
-  async addUserToRestaurant(linkUserToRestaurantDto: LinkUserToRestaurantDto) {
-    console.log(linkUserToRestaurantDto);
-    const { userId, restaurantId } = linkUserToRestaurantDto;
-    const user = await this.database.user.findUnique({
+  async addUserToSite(addUserToSite: AddUserToSiteDto) {
+    const { userId, site_id } = addUserToSite;
+
+    const user = await this.findUserById(userId);
+
+    const site = await this.database.site.findUnique({
       where: {
-        user_id: userId,
+        site_id: site_id,
       },
     });
 
-    if (!user) {
-      throw new NotFoundException(`user with id ${userId} not found`);
-    }
-
-    const restaurant = await this.database.restaurant.findUnique({
-      where: {
-        restaurant_id: restaurantId,
-      },
-    });
-
-    if (!restaurant) {
-      throw new NotFoundException(
-        `restaurant with id ${restaurantId} not found`
-      );
+    if (!site) {
+      throw new NotFoundException(`site with id ${site_id} not found`);
     }
 
     return this.database.user.update({
       where: { user_id: userId },
       data: {
-        restaurants: {
+        sites: {
           connectOrCreate: {
             where: {
-              user_id_restaurant_id: {
+              user_id_site_id: {
                 user_id: userId,
-                restaurant_id: restaurantId,
+                site_id: site_id,
               },
             },
             create: {
-              restaurant_id: restaurantId,
+              site_id: site_id,
             },
           },
         },
@@ -77,47 +88,24 @@ export class UserService {
   }
 
   async getUserById(id: number) {
-    const user = await this.database.user.findUnique({
-      where: { user_id: id },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`user with id ${id} not found`);
-    }
-    return await this.database.user.findUnique({
-      where: { user_id: id },
-    });
+    return await this.findUserById(id);
   }
 
   async updateUser(id: number, updateuserDto: UpdateUserDto) {
-    const user = await this.database.user.findUnique({
-      where: { user_id: id },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`user with id ${id} not found`);
-    }
+    const user = await this.findUserById(id);
 
     if (updateuserDto.password) {
-      updateuserDto.password = await bcrypt.hash(
-        updateuserDto.password,
-        roundsOfHashing
-      );
+      updateuserDto.password = await this.hashPassword(updateuserDto.password);
     }
-    // return await this.database.user.update({
-    //   where: { user_id: id },
-    //   data: updateuserDto,
-    // });
+
+    return await this.database.user.update({
+      where: { user_id: id },
+      data: updateuserDto,
+    });
   }
 
   async deleteUser(id: number) {
-    const user = await this.database.user.findUnique({
-      where: { user_id: id },
-    });
-
-    if (!user) {
-      throw new NotFoundException(`user with id ${id} not found`);
-    }
+    const user = await this.findUserById(id);
 
     return await this.database.user.delete({
       where: { user_id: id },

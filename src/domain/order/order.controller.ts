@@ -21,8 +21,6 @@ import {
   ApiResponse,
   ApiParam,
   ApiBearerAuth,
-  ApiCreatedResponse,
-  ApiOkResponse,
 } from "@nestjs/swagger";
 import { NotificationService } from "src/notification/notification.service";
 import { sendNotificationDTO } from "src/notification/dto/send-notification.dto";
@@ -36,7 +34,7 @@ export class OrderController {
     private readonly notificationService: NotificationService
   ) {}
 
-  @Post()
+  @Post("create")
   @ApiOperation({ summary: "Create a new order" })
   @ApiBody({
     type: CreateOrderDto,
@@ -51,13 +49,13 @@ export class OrderController {
   creareOrder(@Body() createOrderDto: CreateOrderDto) {
     const response = this.orderService.creareOrder(createOrderDto);
 
-    const notificationData: sendNotificationDTO = {
-      title: "Order Created",
-      body: `Your order with ID has been successfully created.`,
-      deviceId: "response",
-    };
-
+    // const notificationData: sendNotificationDTO = {
+    //   title: "Order Created",
+    //   body: `Your order with ID has been successfully created.`,
+    //   deviceId: "response",
+    // };
     // this.notificationService.sendPush(notificationData);
+
     return response;
   }
 

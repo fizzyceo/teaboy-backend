@@ -4,9 +4,10 @@ import {
   MenuItemCategory,
 } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
+import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
+
 import { DatabaseService } from "src/database/database.service";
 import { ImagesService } from "src/images/images.service";
-import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
 
 @Injectable()
 export class MenuItemService {
@@ -14,6 +15,22 @@ export class MenuItemService {
     private readonly database: DatabaseService,
     private readonly imagesService: ImagesService
   ) {}
+
+  private async findMenuItemById(id: number) {
+    const menuItem = await this.database.menu_Item.findUnique({
+      where: { menu_item_id: id },
+      include: {
+        item_images: true,
+        categories: true,
+      },
+    });
+
+    if (!menuItem) {
+      throw new NotFoundException(`Menu item with id ${id} not found`);
+    }
+
+    return menuItem;
+  }
 
   async createMenuItem(
     createMenuItemDto: CreateMenuItemDto,
@@ -103,17 +120,7 @@ export class MenuItemService {
   async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
     const { categories, ...menuItemData } = updateMenuItemDto;
 
-    const menuItem = await this.database.menu_Item.findUnique({
-      where: { menu_item_id: id },
-      include: {
-        item_images: true,
-        categories: true,
-      },
-    });
-
-    if (!menuItem) {
-      throw new NotFoundException(`Menu item with id ${id} not found`);
-    }
+    const menuItem = await this.findMenuItemById(id);
 
     const updateData: any = {
       ...menuItemData,
@@ -138,13 +145,7 @@ export class MenuItemService {
   }
 
   async deleteMenuItem(id: number) {
-    const menuItem = await this.database.menu_Item.findUnique({
-      where: { menu_item_id: id },
-    });
-
-    if (!menuItem) {
-      throw new NotFoundException(`Menu item with id ${id} not found`);
-    }
+    const menuItem = await this.findMenuItemById(id);
 
     return await this.database.menu_Item.delete({
       where: { menu_item_id: id },
@@ -152,13 +153,7 @@ export class MenuItemService {
   }
 
   async deleteMenuImage(menuItemId: number, imageId: number) {
-    const menuItem = await this.database.menu_Item.findUnique({
-      where: { menu_item_id: menuItemId },
-    });
-
-    if (!menuItem) {
-      throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
-    }
+    const menuItem = await this.findMenuItemById(menuItemId);
 
     const image = await this.database.itemImages.findUnique({
       where: { item_image_id: imageId },
@@ -181,17 +176,7 @@ export class MenuItemService {
   }
 
   async getMenuItemImages(id: number) {
-    const menuItem = await this.database.menu_Item.findUnique({
-      where: { menu_item_id: id },
-      include: {
-        item_images: true,
-      },
-    });
-
-    if (!menuItem) {
-      throw new NotFoundException(`Menu item with id ${id} not found`);
-    }
-
+    const menuItem = await this.findMenuItemById(id);
     return menuItem.item_images;
   }
 
@@ -199,13 +184,7 @@ export class MenuItemService {
     menuItemId: number,
     createMenuItemOptionDto: CreateMenuItemOption
   ) {
-    const menuItem = await this.database.menu_Item.findUnique({
-      where: { menu_item_id: menuItemId },
-    });
-
-    if (!menuItem) {
-      throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
-    }
+    const menuItem = await this.findMenuItemById(menuItemId);
 
     const { choices, name } = createMenuItemOptionDto;
 

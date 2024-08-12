@@ -49,7 +49,6 @@ export class CreateMenuItemDto {
     type: Number,
     isArray: true,
   })
-  // @IsArray()
   @IsInt({ each: true })
   @IsOptional()
   @Type(() => Number)

@@ -8,5 +8,5 @@ export class CreateMenuDto {
 
   @ApiProperty()
   @IsNumber()
-  restaurant_id: number;
+  space_id: number;
 }

@@ -1,14 +1,14 @@
 import { IsInt, IsNotEmpty } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 
-export class LinkUserToRestaurantDto {
+export class AddUserToSiteDto {
   @ApiProperty({ description: "User id to add" })
   @IsInt()
   @IsNotEmpty()
   userId: number;
 
-  @ApiProperty({ description: "Restaurant id to add" })
+  @ApiProperty({ description: "Site id to add" })
   @IsInt()
   @IsNotEmpty()
-  restaurantId: number;
+  site_id: number;
 }

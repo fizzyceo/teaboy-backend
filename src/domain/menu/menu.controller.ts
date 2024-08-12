@@ -24,14 +24,12 @@ export class MenuController {
   @ApiBody({ type: CreateMenuDto })
   @ApiOperation({
     summary: "Create a new menu",
-    description:
-      "Create a new menu by providing name, description, restaurant_id and menu_items(without images , add them separately , could be added later)",
+    description: "Create a new menu by providing name, description, space_id ",
   })
   createMenu(@Body() createMenuDto: CreateMenuDto) {
     return this.menuService.createMenu(createMenuDto);
   }
 
-  // TODO: only admin should be able to access this route to get all menus , for employees they can access only their restaurant menus
   @Get()
   @ApiOperation({ summary: "Get all menus" })
   getAllMenus() {

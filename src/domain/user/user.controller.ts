@@ -13,7 +13,7 @@ import { UserService } from "./user.service";
 import { ApiBody, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
-import { LinkUserToRestaurantDto } from "./dto/link-user-to-restaurant.dto";
+import { AddUserToSiteDto } from "./dto/add-user-to-site.dto";
 
 @Controller("user")
 @ApiTags("user")
@@ -28,11 +28,9 @@ export class UserController {
   }
 
   @Patch("link")
-  @ApiOperation({ summary: "Add User to Restaurant" })
-  addUserToRestaurant(
-    @Body() linkUserToRestaurantDto: LinkUserToRestaurantDto
-  ) {
-    return this.userService.addUserToRestaurant(linkUserToRestaurantDto);
+  @ApiOperation({ summary: "Add User to Site" })
+  addUserToSite(@Body() addUserToSiteDto: AddUserToSiteDto) {
+    return this.userService.addUserToSite(addUserToSiteDto);
   }
 
   @Get("")

@@ -3,13 +3,11 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
+import * as bcrypt from "bcrypt";
+
 import { DatabaseService } from "src/database/database.service";
 
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { AddUserToSiteDto } from "./dto/add-user-to-site.dto";
-
-import * as bcrypt from "bcrypt";
+import { CreateUserDto, UpdateUserDto, AddUserToSiteDto } from "./dto";
 
 @Injectable()
 export class UserService {

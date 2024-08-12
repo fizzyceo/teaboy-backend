@@ -3,10 +3,10 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { CreateOrderDto } from "./dto/create-order.dto";
-import { UpdateOrderDto } from "./dto/update-order.dto";
+
 import { DatabaseService } from "src/database/database.service";
-import { Order } from "./entities/order.entity";
+
+import { CreateOrderDto, UpdateOrderDto } from "./dto";
 
 @Injectable()
 export class OrderService {

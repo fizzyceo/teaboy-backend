@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateSiteDto } from "./dto/create-site.dto";
-import { UpdateSiteDto } from "./dto/update-site.dto";
+
 import { DatabaseService } from "src/database/database.service";
 import { ImagesService } from "src/images/images.service";
-import { CreateSpaceDto } from "./dto/create-space.dto";
+
+import { CreateSiteDto, CreateSpaceDto, UpdateSiteDto } from "./dto";
 
 @Injectable()
 export class SiteService {

@@ -1,8 +1,9 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateMenuDto } from "./dto/create-menu.dto";
-import { UpdateMenuDto } from "./dto/update-menu.dto";
+
 import { DatabaseService } from "src/database/database.service";
 import { SpaceService } from "../space/space.service";
+
+import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
 @Injectable()
 export class MenuService {

@@ -3,9 +3,10 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { CreateOrderItemDto, OrderStatus } from "./dto/create-order-item.dto";
-import { UpdateOrderItemDto } from "./dto/update-order-item.dto";
+
 import { DatabaseService } from "src/database/database.service";
+
+import { CreateOrderItemDto, UpdateOrderItemDto, OrderStatus } from "./dto";
 
 @Injectable()
 export class OrderItemService {

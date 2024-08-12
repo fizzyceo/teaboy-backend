@@ -1,13 +1,14 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import {
-  CreateMenuItemDto,
-  MenuItemCategory,
-} from "./dto/create-menu-item.dto";
-import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
-import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
 
 import { DatabaseService } from "src/database/database.service";
 import { ImagesService } from "src/images/images.service";
+
+import {
+  CreateMenuItemDto,
+  CreateMenuItemOption,
+  MenuItemCategory,
+  UpdateMenuItemDto,
+} from "./dto";
 
 @Injectable()
 export class MenuItemService {
@@ -38,49 +39,40 @@ export class MenuItemService {
   ) {
     const { menu_id, categories, ...menuItemData } = createMenuItemDto;
 
-    let item_images = [];
+    const item_images =
+      files.length > 0
+        ? await Promise.all(
+            files.map(async (file) => {
+              const imgUrl = await this.imagesService.uploadFile(file);
+              return { image_url: imgUrl.url };
+            })
+          )
+        : [];
 
-    if (files && files.length > 0) {
-      const uploadedImages = await Promise.all(
-        files.map(async (file) => {
-          const imgUrl = await this.imagesService.uploadFile(file);
-          return { image_url: imgUrl.url };
-        })
-      );
-
-      if (uploadedImages) {
-        console.log("Images uploaded successfully");
-      }
-
-      item_images = uploadedImages;
-    }
-
-    const createData: any = {
+    const createData = {
       ...menuItemData,
       menu: {
         connect: {
-          menu_id: menu_id,
+          menu_id,
         },
       },
+      item_images:
+        item_images.length > 0
+          ? {
+              createMany: {
+                data: item_images,
+              },
+            }
+          : undefined,
+      categories:
+        categories && categories.length > 0
+          ? {
+              connect: categories.map((category_id) => ({ category_id })),
+            }
+          : undefined,
     };
 
-    if (item_images.length > 0) {
-      createData.item_images = {
-        createMany: {
-          data: item_images.map((image) => ({
-            image_url: image.image_url,
-          })),
-        },
-      };
-    }
-
-    if (categories && categories.length > 0) {
-      createData.categories = {
-        connect: categories.map((category_id) => ({ category_id })),
-      };
-    }
-
-    return await this.database.menu_Item.create({
+    return this.database.menu_Item.create({
       data: createData,
     });
   }
@@ -98,6 +90,8 @@ export class MenuItemService {
         options: {
           select: {
             menu_item_option_id: true,
+            default_choice: true,
+            default_choice_id: true,
             name: true,
             choices: {
               select: {
@@ -184,9 +178,7 @@ export class MenuItemService {
     menuItemId: number,
     createMenuItemOptionDto: CreateMenuItemOption
   ) {
-    const menuItem = await this.findMenuItemById(menuItemId);
-
-    const { choices, name } = createMenuItemOptionDto;
+    const { choices, name, default_choice } = createMenuItemOptionDto;
 
     const createdOption = await this.database.menu_Item_Option.create({
       data: {
@@ -196,17 +188,43 @@ export class MenuItemService {
             menu_item_id: menuItemId,
           },
         },
-        choices: {
-          createMany: {
-            data: choices.map((choice) => ({
-              name: choice.name,
-            })),
-          },
-        },
       },
     });
 
-    return createdOption;
+    const createdChoices =
+      await this.database.menu_Item_Option_Choice.createMany({
+        data: choices.map((choice) => ({
+          name: choice.name,
+          menu_item_option: {
+            connect: { menu_item_option_id: createdOption.menu_item_option_id },
+          },
+          menu_item_option_id: createdOption.menu_item_option_id,
+        })),
+      });
+
+    let defaultChoiceId = null;
+    if (default_choice) {
+      const defaultChoice = await this.database.menu_Item_Option_Choice.create({
+        data: {
+          name: default_choice.name,
+          menu_item_option: {
+            connect: { menu_item_option_id: createdOption.menu_item_option_id },
+          },
+        },
+      });
+      defaultChoiceId = defaultChoice.menu_item_option_choice_id;
+    }
+
+    const updatedOption = await this.database.menu_Item_Option.update({
+      where: {
+        menu_item_option_id: createdOption.menu_item_option_id,
+      },
+      data: {
+        default_choice_id: defaultChoiceId,
+      },
+    });
+
+    return updatedOption;
   }
 
   async getMenuItemOptions(menuItemId: number) {
@@ -215,6 +233,7 @@ export class MenuItemService {
       include: {
         options: {
           include: {
+            default_choice: true,
             choices: {
               select: {
                 name: true,

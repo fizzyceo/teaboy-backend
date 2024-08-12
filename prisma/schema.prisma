@@ -85,11 +85,7 @@ model Menu {
 
   space_id Int
   space Space @relation(fields: [space_id], references: [space_id],onDelete: Cascade,onUpdate: Cascade)
-  
-
-  // site_id Int
-  // site Site @relation(fields: [site_id], references: [site_id],onDelete: Cascade,onUpdate: Cascade)
-
+ 
   menu_items Menu_Item[]
 
   created_at DateTime @default(now())
@@ -116,15 +112,18 @@ model Menu_Item {
   updated_at DateTime @updatedAt
 }
 
-model Menu_Item_Option{
+model Menu_Item_Option {
   menu_item_option_id Int @id @default(autoincrement())
 
   name String
 
   menu_item_id Int
-  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
-  
-  choices Menu_Item_Option_Choice[]
+  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade, onUpdate: Cascade)
+
+  choices Menu_Item_Option_Choice[] @relation("OptionChoices") 
+
+  default_choice_id Int? @unique
+  default_choice Menu_Item_Option_Choice? @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id], onDelete: SetNull, onUpdate: Cascade) 
 }
 
 model Menu_Item_Option_Choice {
@@ -132,11 +131,14 @@ model Menu_Item_Option_Choice {
 
   name String
 
-  Menu_Item_Option_id Int
-  menu_item_option Menu_Item_Option @relation(fields: [Menu_Item_Option_id], references: [menu_item_option_id],onDelete: Cascade,onUpdate: Cascade)
+  menu_item_option_id Int
+  menu_item_option Menu_Item_Option @relation("OptionChoices", fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade, onUpdate: Cascade)
 
   order_item_choices Order_Item_Choice[]
+
+  Menu_Item_Option Menu_Item_Option[] @relation("DefaultChoice")
 }
+
 
 
 model Order {

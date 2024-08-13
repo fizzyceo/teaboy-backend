@@ -111,6 +111,10 @@ export class SiteService {
 
     return await this.database.space.findMany({
       where: { site_id: id },
+      select: {
+        space_id: true,
+        name: true,
+      },
     });
   }
 

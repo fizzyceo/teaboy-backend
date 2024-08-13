@@ -32,9 +32,9 @@ export class MenuService {
     return await this.database.menu.create({
       data: {
         ...menuData,
-        space: {
+        spaces: {
           connect: {
-            space_id: space_id,
+            space_id: space.space_id,
           },
         },
       },
@@ -42,9 +42,9 @@ export class MenuService {
   }
 
   async getAllMenus() {
-    return await this.database.menu.findMany({
+    const menus = await this.database.menu.findMany({
       include: {
-        space: {
+        spaces: {
           select: {
             space_id: true,
             name: true,
@@ -58,13 +58,25 @@ export class MenuService {
         },
       },
     });
+
+    return menus.map((menu) => ({
+      ...menu,
+      spaces: menu.spaces.map((space) => ({
+        space_id: space.space_id,
+        name: space.name,
+        site_id: space.site.site_id,
+        site_name: space.site.name,
+      })),
+    }));
   }
 
   async getMenuById(id: number) {
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
-      include: {
-        space: {
+      select: {
+        name: true,
+        menu_id: true,
+        spaces: {
           select: {
             space_id: true,
             name: true,
@@ -83,26 +95,24 @@ export class MenuService {
             price: true,
             description: true,
             available: true,
-            categories: {
-              select: {
-                name: true,
-                category_id: true,
-              },
-            },
             item_images: {
               select: {
                 image_url: true,
                 item_image_id: true,
               },
             },
-            options: {
+            menuItem_options: {
               select: {
-                menu_item_option_id: true,
-                name: true,
-                choices: {
+                menu_item_option: {
                   select: {
-                    menu_item_option_choice_id: true,
                     name: true,
+                    menu_item_option_id: true,
+                    choices: {
+                      select: {
+                        menu_item_option_choice_id: true,
+                        name: true,
+                      },
+                    },
                   },
                 },
               },
@@ -127,6 +137,15 @@ export class MenuService {
       include: {
         item_images: true,
         categories: true,
+        menuItem_options: {
+          include: {
+            menu_item_option: {
+              include: {
+                choices: true,
+              },
+            },
+          },
+        },
       },
     });
   }

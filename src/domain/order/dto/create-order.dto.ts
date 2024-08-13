@@ -28,13 +28,9 @@ export class CreateOrderDto {
   @Type(() => OrderItemDto)
   order_items?: OrderItemDto[];
 
-  @ApiProperty({ enum: PaymentMethod, default: PaymentMethod.CASH })
-  @IsEnum(PaymentMethod)
-  payment_method: PaymentMethod;
-
-  @ApiProperty({ enum: PaymentStatus, default: PaymentStatus.PENDING })
-  @IsEnum(PaymentStatus)
-  payment_status: PaymentStatus;
+  @ApiProperty()
+  @IsInt()
+  spaceId: number;
 
   @ApiProperty()
   @IsString()

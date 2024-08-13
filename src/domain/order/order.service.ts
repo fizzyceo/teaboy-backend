@@ -1,5 +1,6 @@
 import {
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -27,37 +28,18 @@ export class OrderService {
   private async getOrderSpaceId(orderId: number): Promise<number> {
     const order = await this.database.order.findUnique({
       where: { order_id: orderId },
-      select: {
-        order_items: {
-          select: {
-            menu_item: {
-              select: {
-                menu: {
-                  select: {
-                    space: {
-                      select: {
-                        space_id: true,
-                        site_id: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
+      select: { spaceId: true },
     });
 
-    if (!order || !order.order_items.length) {
+    if (!order) {
       throw new NotFoundException(`Order with id ${orderId} not found`);
     }
 
-    return order.order_items[0].menu_item.menu.space.space_id;
+    return order.spaceId;
   }
 
   async creareOrder(createOrderDto: CreateOrderDto) {
-    const { order_items, ...orderData } = createOrderDto;
+    const { order_items, spaceId, ...orderData } = createOrderDto;
 
     const menuItemIds = order_items.map((orderItem) => orderItem.menu_item_id);
 
@@ -72,6 +54,8 @@ export class OrderService {
     const existingMenuItemIds = existingMenuItems.map(
       (item) => item.menu_item_id
     );
+
+    const menuId = existingMenuItems[0].menu_id;
 
     const missingMenuItemIds = menuItemIds.filter(
       (id) => !existingMenuItemIds.includes(id)
@@ -90,11 +74,20 @@ export class OrderService {
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: {
+          menu: {
+            connect: {
+              menu_id: menuId,
+            },
+          },
+          space: {
+            connect: {
+              space_id: spaceId,
+            },
+          },
           order_number: Math.floor(Math.random() * 4096)
             .toString(16)
             .padStart(3, "0")
             .toUpperCase(),
-
           ...orderData,
           order_items: {
             create: order_items.map((orderItem) => ({
@@ -131,7 +124,11 @@ export class OrderService {
           some: {
             menu_item: {
               menu: {
-                space_id: space_id,
+                spaces: {
+                  some: {
+                    space_id,
+                  },
+                },
               },
             },
           },

@@ -8,7 +8,6 @@ import * as bcrypt from "bcrypt";
 import { DatabaseService } from "src/database/database.service";
 
 import { CreateUserDto, UpdateUserDto, AddUserToSiteDto } from "./dto";
-import { ROLE_PERMISSIONS } from "./entities/user.config";
 
 @Injectable()
 export class UserService {
@@ -42,13 +41,8 @@ export class UserService {
 
     createUserDto.password = await this.hashPassword(createUserDto.password);
 
-    const permissions = ROLE_PERMISSIONS[createUserDto.role] || {};
-
     return await this.database.user.create({
-      data: {
-        ...createUserDto,
-        ...permissions,
-      },
+      data: createUserDto,
     });
   }
 

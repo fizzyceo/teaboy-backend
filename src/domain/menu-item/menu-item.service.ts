@@ -51,7 +51,9 @@ export class MenuItemService {
   }
 
   async getAllMenuItems() {
-    return this.database.menu_Item.findMany();
+    return this.database.menu_Item.findMany({
+      include: { item_images: true, categories: true },
+    });
   }
 
   async getMenuItemById(id: number) {
@@ -62,15 +64,15 @@ export class MenuItemService {
       include: {
         item_images: true,
         categories: true,
-        options: this.getMenuItemOptionsInclude(),
+        menuItem_options: this.getMenuItemOptionsInclude(),
       },
     });
   }
 
   async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
-    const { categories, ...menuItemData } = updateMenuItemDto;
-
     await this.findMenuItemById(id);
+
+    const { categories, ...menuItemData } = updateMenuItemDto;
 
     const updateData: any = { ...menuItemData };
 
@@ -99,6 +101,7 @@ export class MenuItemService {
     const image = await this.database.itemImages.findUnique({
       where: { item_image_id: imageId },
     });
+
     if (!image) {
       throw new NotFoundException(`Image with id ${imageId} not found`);
     }
@@ -122,32 +125,72 @@ export class MenuItemService {
     menuItemId: number,
     createMenuItemOptionDto: CreateMenuItemOption
   ) {
-    const { choices, name, default_choice } = createMenuItemOptionDto;
+    const { choices, name, default_choice, existing_option_id } =
+      createMenuItemOptionDto;
 
-    const createdOption = await this.database.menu_Item_Option.create({
-      data: {
-        name,
-        menu_item: { connect: { menu_item_id: menuItemId } },
-      },
-    });
+    let createdOption;
 
-    await this.createChoices(choices, createdOption.menu_item_option_id);
+    if (existing_option_id) {
+      createdOption = await this.database.menu_Item_Option.findUnique({
+        where: { menu_item_option_id: existing_option_id },
+        include: { choices: true },
+      });
 
-    const defaultChoiceId = await this.createDefaultChoice(
-      default_choice,
-      createdOption.menu_item_option_id
-    );
+      if (!createdOption) {
+        throw new NotFoundException(
+          `Menu item option with id ${existing_option_id} not found`
+        );
+      }
+      if (default_choice) {
+        const defaultChoice =
+          await this.database.menu_Item_Option_Choice.findFirst({
+            where: {
+              name: default_choice.name,
+              menu_item_option_id: createdOption.menu_item_option_id,
+            },
+          });
 
-    return this.updateMenuItemOption(
-      createdOption.menu_item_option_id,
-      defaultChoiceId
-    );
+        const defaultChoiceId = defaultChoice
+          ? defaultChoice.menu_item_option_choice_id
+          : null;
+
+        await this.updateMenuItemOption(
+          createdOption.menu_item_option_id,
+          defaultChoiceId
+        );
+      }
+    } else {
+      createdOption = await this.database.menu_Item_Option.create({
+        data: {
+          name,
+          option_menuItems: {
+            connect: {
+              menu_item_id_menu_item_option_id: {
+                menu_item_id: menuItemId,
+                menu_item_option_id: createdOption.menu_item_option_id,
+              },
+            },
+          },
+        },
+      });
+
+      await this.createChoices(choices, createdOption.menu_item_option_id);
+
+      if (default_choice) {
+        await this.createDefaultChoice(
+          default_choice,
+          createdOption.menu_item_option_id
+        );
+      }
+    }
+
+    return createdOption;
   }
 
   async getMenuItemOptions(menuItemId: number) {
     const menuItem = await this.database.menu_Item.findUnique({
       where: { menu_item_id: menuItemId },
-      include: { options: this.getMenuItemOptionsInclude() },
+      include: { menuItem_options: this.getMenuItemOptionsInclude() },
     });
 
     if (!menuItem) {
@@ -156,7 +199,7 @@ export class MenuItemService {
 
     return {
       menu_item_id: menuItem.menu_item_id,
-      options: this.formatMenuItemOptions(menuItem.options),
+      menuItem_options: this.formatMenuItemOptions(menuItem.menuItem_options),
     };
   }
 
@@ -211,7 +254,7 @@ export class MenuItemService {
   }
 
   private async createDefaultChoice(
-    default_choice: { name: string } | undefined,
+    default_choice: { name: string },
     menuItemOptionId: number
   ) {
     if (!default_choice) return null;

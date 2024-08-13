@@ -22,4 +22,9 @@ export class CreateMenuItemOption {
   @ValidateNested()
   @Type(() => MenuItemOptionChoice)
   default_choice?: MenuItemOptionChoice;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  existing_option_id?: number;
 }

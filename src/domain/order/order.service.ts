@@ -113,26 +113,31 @@ export class OrderService {
       return order;
     });
 
+    console.log("createdOrder==>", createdOrder);
+
     return createdOrder;
   }
 
   async getAllOrders(user: any) {
-    const { space_id } = user;
+    const { user_id } = user;
     const orders = await this.database.order.findMany({
       where: {
-        order_items: {
-          some: {
-            menu_item: {
-              menu: {
-                spaces: {
-                  some: {
-                    space_id,
+        OR: [
+          { userId: user_id },
+          {
+            menu: {
+              spaces: {
+                some: {
+                  users: {
+                    some: {
+                      user_id: user_id,
+                    },
                   },
                 },
               },
             },
           },
-        },
+        ],
       },
       include: {
         order_items: {

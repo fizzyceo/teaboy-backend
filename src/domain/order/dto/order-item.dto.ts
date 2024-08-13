@@ -17,21 +17,18 @@ enum OrderStatus {
 }
 
 export class OrderItemChoice {
-  // @ApiProperty()
-  // @IsInt()
-  // order_item_id: number;
-
   @ApiProperty()
   @IsInt()
   menu_item_option_choice_id: number;
 }
 
 export class OrderItemDto {
-  // @ApiProperty()
-  // @IsInt()
-  // quantity: number;
+  @ApiProperty({ required: false, default: 1 })
+  @IsInt()
+  @IsOptional()
+  quantity: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false, default: "" })
   @IsString()
   @IsOptional()
   note: string;

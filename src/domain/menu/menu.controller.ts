@@ -7,8 +7,15 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from "@nestjs/common";
-import { ApiTags, ApiBody, ApiOperation, ApiParam } from "@nestjs/swagger";
+import {
+  ApiTags,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+} from "@nestjs/swagger";
 
 import { MenuService } from "./menu.service";
 
@@ -42,8 +49,16 @@ export class MenuController {
     description: "Menu id to fetch",
     required: true,
   })
-  getMenuById(@Param("id", ParseIntPipe) id: number) {
-    return this.menuService.getMenuById(id);
+  @ApiQuery({
+    name: "space_id",
+    description: "Space id to fetch",
+    required: true,
+  })
+  getMenuById(
+    @Param("id", ParseIntPipe) id: number,
+    @Query("space_id", ParseIntPipe) space_id: number
+  ) {
+    return this.menuService.getMenuById(id, space_id);
   }
 
   @Get(":id/items")

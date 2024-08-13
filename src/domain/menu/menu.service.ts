@@ -76,7 +76,7 @@ export class MenuService {
     }));
   }
 
-  async getMenuById(id: number) {
+  async getMenuById(id: number, space_id: number) {
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
@@ -84,14 +84,20 @@ export class MenuService {
         menu_id: true,
         spaces: {
           select: {
-            space_id: true,
             name: true,
+            space_id: true,
             site: {
               select: {
-                site_id: true,
                 name: true,
+                address: true,
+                description: true,
+                image_url: true,
+                phone: true,
               },
             },
+          },
+          where: {
+            space_id: space_id,
           },
         },
         menu_items: {
@@ -113,6 +119,12 @@ export class MenuService {
                   select: {
                     name: true,
                     menu_item_option_id: true,
+                    default_choice: {
+                      select: {
+                        name: true,
+                        menu_item_option_choice_id: true,
+                      },
+                    },
                     choices: {
                       select: {
                         menu_item_option_choice_id: true,
@@ -132,7 +144,25 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
-    return menu;
+    return {
+      ...menu,
+      menu_items: menu.menu_items.map((item) => ({
+        menu_item_id: item.menu_item_id,
+        title: item.title,
+        price: item.price,
+        available: item.available,
+        item_images: item.item_images.map((image) => ({
+          image_url: image.image_url,
+          item_image_id: image.item_image_id,
+        })),
+        options: item.menuItem_options.map((option) => ({
+          name: option.menu_item_option.name,
+          menu_item_option_id: option.menu_item_option.menu_item_option_id,
+          default_choice: option.menu_item_option.default_choice,
+          choices: option.menu_item_option.choices,
+        })),
+      })),
+    };
   }
 
   async getMenuItems(id: number) {

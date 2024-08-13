@@ -64,6 +64,28 @@ export class MenuItemService {
       include: {
         item_images: true,
         categories: true,
+        menuItem_options: {
+          select: {
+            menu_item_option: {
+              select: {
+                menu_item_option_id: true,
+                name: true,
+                default_choice: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                  },
+                },
+                choices: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
   }

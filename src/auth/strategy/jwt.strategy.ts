@@ -15,7 +15,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
   async validate(payload: { email: string; role: string }) {
     const user = await this.dataBaseService.user.findUnique({
       where: { email: payload.email },
+      include: {
+        spaces: true,
+      },
     });
+
+    console.log("user==>", user);
 
     if (!user) {
       throw new UnauthorizedException();

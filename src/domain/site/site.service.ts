@@ -48,8 +48,10 @@ export class SiteService {
 
     return await this.database.menu.findMany({
       where: {
-        space: {
-          site_id: id,
+        sites: {
+          some: {
+            site_id: id,
+          },
         },
       },
     });
@@ -58,9 +60,11 @@ export class SiteService {
   async getSiteEmployees(id: number) {
     const site = await this.findSiteById(id);
 
+    // the site have spaces and each space have employees
+
     return await this.database.user.findMany({
       where: {
-        sites: {
+        spaces: {
           some: {
             site_id: id,
           },

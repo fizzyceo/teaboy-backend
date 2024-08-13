@@ -25,16 +25,22 @@ export class MenuService {
   }
 
   async createMenu(createMenuDto: CreateMenuDto) {
-    const { space_id, ...menuData } = createMenuDto;
+    const { site_id, ...menuData } = createMenuDto;
 
-    const space = await this.spaceService.findSpaceById(space_id);
+    const site = await this.database.site.findUnique({
+      where: { site_id },
+    });
+
+    if (!site) {
+      throw new NotFoundException(`Site with id ${site_id} not found`);
+    }
 
     return await this.database.menu.create({
       data: {
         ...menuData,
-        spaces: {
+        sites: {
           connect: {
-            space_id: space.space_id,
+            site_id: site_id,
           },
         },
       },
@@ -188,5 +194,21 @@ export class MenuService {
     }, []);
 
     return categories;
+  }
+
+  async linkMenuToSpace(menu_id: number, space_id: number) {
+    const menu = await this.findMenuById(menu_id);
+    const space = await this.spaceService.findSpaceById(space_id);
+
+    return await this.database.menu.update({
+      where: { menu_id },
+      data: {
+        spaces: {
+          connect: {
+            space_id,
+          },
+        },
+      },
+    });
   }
 }

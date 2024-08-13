@@ -40,6 +40,7 @@ model Site {
   image_url String?
 
   spaces  Space[]
+  menus   Menu[]  @relation("SiteMenus")
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -68,6 +69,8 @@ model Menu {
 
   menu_items Menu_Item[]  
   spaces Space[] @relation("SpaceMenus")
+  sites Site[] @relation("SiteMenus")
+
   orders Order[]
 
   ask_for_name Boolean @default(false)
@@ -81,7 +84,7 @@ model Menu_Item {
   menu_item_id Int @id @default(autoincrement())
 
   title String
-  description String?
+  description String? @default("")
   price Float
   available Boolean @default(true)
 
@@ -177,6 +180,8 @@ enum OrderStatus {
 model Order_Item {
   order_item_id Int @id @default(autoincrement())
   note String?
+
+  quantity Int?
 
   menu_item_id Int
   menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)

@@ -21,9 +21,10 @@ export class OrderItemChoice {
 }
 
 export class CreateOrderItemDto {
-  // @ApiProperty()
-  // @IsInt()
-  // quantity: number;
+  @ApiProperty({ default: 1 })
+  @IsInt()
+  @IsOptional()
+  quantity: number = 1;
 
   @ApiProperty()
   @IsString()

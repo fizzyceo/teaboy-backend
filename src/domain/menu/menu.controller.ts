@@ -103,4 +103,26 @@ export class MenuController {
   deleteMenu(@Param("id", ParseIntPipe) id: number) {
     return this.menuService.deleteMenu(id);
   }
+
+  @Patch(":menu_id/link-space/:space_id")
+  @ApiOperation({
+    summary: "Link menu to space",
+    description: "Link a menu to a space by providing menu_id and space_id",
+  })
+  @ApiParam({
+    name: "menu_id",
+    description: "Menu id to link",
+    required: true,
+  })
+  @ApiParam({
+    name: "space_id",
+    description: "Space id to link",
+    required: true,
+  })
+  linkMenuToSpace(
+    @Param("menu_id", ParseIntPipe) menuId: number,
+    @Param("space_id", ParseIntPipe) spaceId: number
+  ) {
+    return this.menuService.linkMenuToSpace(menuId, spaceId);
+  }
 }

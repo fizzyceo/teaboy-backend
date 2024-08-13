@@ -6,7 +6,7 @@ export class CreateSiteDto {
   @IsString()
   name: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false, default: "" })
   @IsString()
   @IsOptional()
   description: string;

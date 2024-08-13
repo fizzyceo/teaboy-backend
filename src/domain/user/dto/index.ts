@@ -1,5 +1,5 @@
 import { CreateUserDto } from "./create-user.dto";
 import { UpdateUserDto } from "./update-user.dto";
-import { AddUserToSiteDto } from "./add-user-to-site.dto";
+import { AddUserToSpaceDto } from "./add-user-to-space.dto";
 
-export { CreateUserDto, UpdateUserDto, AddUserToSiteDto };
+export { CreateUserDto, UpdateUserDto, AddUserToSpaceDto };

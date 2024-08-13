@@ -7,7 +7,7 @@ import * as bcrypt from "bcrypt";
 
 import { DatabaseService } from "src/database/database.service";
 
-import { CreateUserDto, UpdateUserDto, AddUserToSiteDto } from "./dto";
+import { CreateUserDto, UpdateUserDto, AddUserToSpaceDto } from "./dto";
 
 @Injectable()
 export class UserService {
@@ -50,35 +50,25 @@ export class UserService {
     return await this.database.user.findMany();
   }
 
-  async addUserToSite(addUserToSite: AddUserToSiteDto) {
-    const { userId, site_id } = addUserToSite;
+  async addUserToSpace(addUserToSpaceDto: AddUserToSpaceDto) {
+    const { userId, spaceId } = addUserToSpaceDto;
 
     const user = await this.findUserById(userId);
 
-    const site = await this.database.site.findUnique({
-      where: {
-        site_id: site_id,
-      },
+    const space = await this.database.space.findUnique({
+      where: { space_id: spaceId },
     });
 
-    if (!site) {
-      throw new NotFoundException(`site with id ${site_id} not found`);
+    if (!space) {
+      throw new NotFoundException(`Space with id ${spaceId} not found`);
     }
 
     return this.database.user.update({
       where: { user_id: userId },
       data: {
-        sites: {
-          connectOrCreate: {
-            where: {
-              user_id_site_id: {
-                user_id: userId,
-                site_id: site_id,
-              },
-            },
-            create: {
-              site_id: site_id,
-            },
+        spaces: {
+          connect: {
+            space_id: spaceId,
           },
         },
       },

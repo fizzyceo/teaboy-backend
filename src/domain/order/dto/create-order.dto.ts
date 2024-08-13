@@ -40,5 +40,10 @@ export class CreateOrderDto {
   @ApiProperty()
   @IsInt()
   @IsOptional()
+  user_id: number;
+
+  @ApiProperty()
+  @IsInt()
+  @IsOptional()
   table_number: number;
 }

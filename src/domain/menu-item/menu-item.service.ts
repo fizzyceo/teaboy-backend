@@ -64,7 +64,6 @@ export class MenuItemService {
       include: {
         item_images: true,
         categories: true,
-        menuItem_options: this.getMenuItemOptionsInclude(),
       },
     });
   }
@@ -133,7 +132,6 @@ export class MenuItemService {
     if (existing_option_id) {
       createdOption = await this.database.menu_Item_Option.findUnique({
         where: { menu_item_option_id: existing_option_id },
-        include: { choices: true },
       });
 
       if (!createdOption) {
@@ -141,34 +139,20 @@ export class MenuItemService {
           `Menu item option with id ${existing_option_id} not found`
         );
       }
-      if (default_choice) {
-        const defaultChoice =
-          await this.database.menu_Item_Option_Choice.findFirst({
-            where: {
-              name: default_choice.name,
-              menu_item_option_id: createdOption.menu_item_option_id,
-            },
-          });
 
-        const defaultChoiceId = defaultChoice
-          ? defaultChoice.menu_item_option_choice_id
-          : null;
-
-        await this.updateMenuItemOption(
-          createdOption.menu_item_option_id,
-          defaultChoiceId
-        );
-      }
+      await this.database.menuItemOptionConnection.create({
+        data: {
+          menu_item_id: menuItemId,
+          menu_item_option_id: existing_option_id,
+        },
+      });
     } else {
       createdOption = await this.database.menu_Item_Option.create({
         data: {
           name,
           option_menuItems: {
-            connect: {
-              menu_item_id_menu_item_option_id: {
-                menu_item_id: menuItemId,
-                menu_item_option_id: createdOption.menu_item_option_id,
-              },
+            create: {
+              menu_item_id: menuItemId,
             },
           },
         },
@@ -177,9 +161,13 @@ export class MenuItemService {
       await this.createChoices(choices, createdOption.menu_item_option_id);
 
       if (default_choice) {
-        await this.createDefaultChoice(
+        const defaultChoiceId = await this.createDefaultChoice(
           default_choice,
           createdOption.menu_item_option_id
+        );
+        await this.updateMenuItemOption(
+          createdOption.menu_item_option_id,
+          defaultChoiceId
         );
       }
     }
@@ -190,17 +178,42 @@ export class MenuItemService {
   async getMenuItemOptions(menuItemId: number) {
     const menuItem = await this.database.menu_Item.findUnique({
       where: { menu_item_id: menuItemId },
-      include: { menuItem_options: this.getMenuItemOptionsInclude() },
+      select: {
+        menu_item_id: true,
+        menuItem_options: {
+          select: {
+            menu_item_option: {
+              select: {
+                menu_item_option_id: true,
+                name: true,
+                default_choice: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                  },
+                },
+                choices: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!menuItem) {
       throw new NotFoundException(`Menu item with id ${menuItemId} not found`);
     }
 
-    return {
-      menu_item_id: menuItem.menu_item_id,
-      menuItem_options: this.formatMenuItemOptions(menuItem.menuItem_options),
-    };
+    const formattedOptions = this.formatMenuItemOptions(
+      menuItem.menuItem_options.map((opt) => opt.menu_item_option)
+    );
+
+    return formattedOptions;
   }
 
   async createMenuItemCategory(category: MenuItemCategory) {
@@ -216,23 +229,6 @@ export class MenuItemService {
         return { image_url: imgUrl.url };
       })
     );
-  }
-
-  private getMenuItemOptionsInclude() {
-    return {
-      select: {
-        menu_item_option_id: true,
-        default_choice: true,
-        default_choice_id: true,
-        name: true,
-        choices: {
-          select: {
-            menu_item_option_choice_id: true,
-            name: true,
-          },
-        },
-      },
-    };
   }
 
   private async createChoices(

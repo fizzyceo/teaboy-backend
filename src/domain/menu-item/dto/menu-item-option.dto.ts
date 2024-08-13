@@ -11,15 +11,18 @@ export class MenuItemOptionChoice {
 export class CreateMenuItemOption {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   name: string;
 
   @ApiProperty({ type: [MenuItemOptionChoice] })
   @ValidateNested({ each: true })
+  @IsOptional()
   @Type(() => MenuItemOptionChoice)
   choices: MenuItemOptionChoice[];
 
   @ApiProperty({ type: MenuItemOptionChoice, required: false })
   @ValidateNested()
+  @IsOptional()
   @Type(() => MenuItemOptionChoice)
   default_choice?: MenuItemOptionChoice;
 

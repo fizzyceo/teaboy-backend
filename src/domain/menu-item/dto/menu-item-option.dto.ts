@@ -1,6 +1,6 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsString, Validate, ValidateNested } from "class-validator";
+import { IsInt, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class MenuItemOptionChoice {
   @ApiProperty()
@@ -11,10 +11,23 @@ export class MenuItemOptionChoice {
 export class CreateMenuItemOption {
   @ApiProperty()
   @IsString()
+  @IsOptional()
   name: string;
 
   @ApiProperty({ type: [MenuItemOptionChoice] })
   @ValidateNested({ each: true })
+  @IsOptional()
   @Type(() => MenuItemOptionChoice)
   choices: MenuItemOptionChoice[];
+
+  @ApiProperty({ type: MenuItemOptionChoice, required: false })
+  @ValidateNested()
+  @IsOptional()
+  @Type(() => MenuItemOptionChoice)
+  default_choice?: MenuItemOptionChoice;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  existing_option_id?: number;
 }

@@ -7,6 +7,8 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
+  Req,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -18,14 +20,21 @@ import {
   ApiOperation,
   ApiResponse,
   ApiParam,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
+import { NotificationService } from "src/notification/notification.service";
+import { sendNotificationDTO } from "src/notification/dto/send-notification.dto";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("order")
 @ApiTags("order")
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly notificationService: NotificationService
+  ) {}
 
-  @Post()
+  @Post("create")
   @ApiOperation({ summary: "Create a new order" })
   @ApiBody({
     type: CreateOrderDto,
@@ -38,21 +47,36 @@ export class OrderController {
   })
   @ApiResponse({ status: 400, description: "Invalid input, object invalid." })
   creareOrder(@Body() createOrderDto: CreateOrderDto) {
-    return this.orderService.creareOrder(createOrderDto);
+    const response = this.orderService.creareOrder(createOrderDto);
+
+    // const notificationData: sendNotificationDTO = {
+    //   title: "Order Created",
+    //   body: `Your order with ID has been successfully created.`,
+    //   deviceId: "response",
+    // };
+    // this.notificationService.sendPush(notificationData);
+
+    return response;
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get all orders" })
   @ApiResponse({
     status: 200,
-    description: "List of all orders",
+    description: "List of all orders related to the authenticated user",
   })
   @ApiResponse({ status: 404, description: "No orders found" })
-  getAllOrders() {
-    return this.orderService.getAllOrders();
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  getAllOrders(@Req() req) {
+    const user = req.user;
+    return this.orderService.getAllOrders(user);
   }
 
   @Get(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get order details by id" })
   @ApiParam({
     name: "id",
@@ -60,11 +84,14 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  getOrderById(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.getOrderById(id);
+  getOrderById(@Param("id", ParseIntPipe) id: number, @Req() req) {
+    const user = req.user;
+    return this.orderService.getOrderById(id, user);
   }
 
   @Patch(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Update order details by id" })
   @ApiBody({ type: UpdateOrderDto })
   @ApiParam({
@@ -75,12 +102,16 @@ export class OrderController {
   })
   updateOrder(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateOrderDto: UpdateOrderDto
+    @Body() updateOrderDto: UpdateOrderDto,
+    @Req() req
   ) {
-    return this.orderService.updateOrder(id, updateOrderDto);
+    const user = req.user;
+    return this.orderService.updateOrder(id, updateOrderDto, user);
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Delete order by id" })
   @ApiParam({
     name: "id",
@@ -88,8 +119,9 @@ export class OrderController {
     required: true,
     type: Number,
   })
-  deleteOrder(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.deleteOrder(id);
+  deleteOrder(@Param("id", ParseIntPipe) id: number, @Req() req) {
+    const user = req.user;
+    return this.orderService.deleteOrder(id, user);
   }
 
   @Post(":id/cancel")

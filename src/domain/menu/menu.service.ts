@@ -1,31 +1,46 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateMenuDto } from "./dto/create-menu.dto";
-import { UpdateMenuDto } from "./dto/update-menu.dto";
+
 import { DatabaseService } from "src/database/database.service";
+import { SpaceService } from "../space/space.service";
+
+import { CreateMenuDto, UpdateMenuDto } from "./dto";
 
 @Injectable()
 export class MenuService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly spaceService: SpaceService
+  ) {}
 
-  async createMenu(createMenuDto: CreateMenuDto) {
-    const { restaurant_id, ...rest } = createMenuDto;
-
-    const restaurant = await this.database.restaurant.findUnique({
-      where: { restaurant_id: restaurant_id },
+  private async findMenuById(id: number) {
+    const menu = await this.database.menu.findUnique({
+      where: { menu_id: id },
     });
 
-    if (!restaurant) {
-      throw new NotFoundException(
-        `Restaurant with id ${createMenuDto.restaurant_id} not found`
-      );
+    if (!menu) {
+      throw new NotFoundException(`Menu with id ${id} not found`);
+    }
+
+    return menu;
+  }
+
+  async createMenu(createMenuDto: CreateMenuDto) {
+    const { site_id, ...menuData } = createMenuDto;
+
+    const site = await this.database.site.findUnique({
+      where: { site_id },
+    });
+
+    if (!site) {
+      throw new NotFoundException(`Site with id ${site_id} not found`);
     }
 
     return await this.database.menu.create({
       data: {
-        ...rest,
-        restaurant: {
+        ...menuData,
+        sites: {
           connect: {
-            restaurant_id: restaurant_id,
+            site_id: site_id,
           },
         },
       },
@@ -33,30 +48,58 @@ export class MenuService {
   }
 
   async getAllMenus() {
-    return await this.database.menu.findMany({
+    const menus = await this.database.menu.findMany({
       include: {
-        restaurant: {
+        spaces: {
           select: {
-            restaurant_id: true,
+            space_id: true,
             name: true,
+            site: {
+              select: {
+                site_id: true,
+                name: true,
+              },
+            },
           },
         },
       },
     });
+
+    return menus.map((menu) => ({
+      ...menu,
+      spaces: menu.spaces.map((space) => ({
+        space_id: space.space_id,
+        name: space.name,
+        site_id: space.site.site_id,
+        site_name: space.site.name,
+      })),
+    }));
   }
 
-  async getMenuById(id: number) {
+  async getMenuById(id: number, space_id: number) {
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
-
-      include: {
-        restaurant: {
+      select: {
+        name: true,
+        menu_id: true,
+        ask_for_name: true,
+        ask_for_table: true,
+        spaces: {
           select: {
-            restaurant_id: true,
             name: true,
-            address: true,
-            phone: true,
-            image_url: true,
+            space_id: true,
+            site: {
+              select: {
+                name: true,
+                address: true,
+                description: true,
+                image_url: true,
+                phone: true,
+              },
+            },
+          },
+          where: {
+            space_id: space_id,
           },
         },
         menu_items: {
@@ -66,26 +109,31 @@ export class MenuService {
             price: true,
             description: true,
             available: true,
-            categories: {
-              select: {
-                name: true,
-                category_id: true,
-              },
-            },
             item_images: {
               select: {
                 image_url: true,
                 item_image_id: true,
               },
             },
-            options: {
+            menuItem_options: {
               select: {
-                menu_item_option_id: true,
-                name: true,
-                choices: {
+                menu_item_option: {
                   select: {
-                    menu_item_option_choice_id: true,
                     name: true,
+                    menu_item_option_id: true,
+                    default_choice: {
+                      select: {
+                        name: true,
+                        menu_item_option_choice_id: true,
+                      },
+                    },
+                    default_choice_id: true,
+                    choices: {
+                      select: {
+                        menu_item_option_choice_id: true,
+                        name: true,
+                      },
+                    },
                   },
                 },
               },
@@ -99,35 +147,51 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
-    return menu;
+    return {
+      ...menu,
+      menu_items: menu.menu_items.map((item) => ({
+        menu_item_id: item.menu_item_id,
+        title: item.title,
+        price: item.price,
+        available: item.available,
+        item_images: item.item_images.map((image) => ({
+          image_url: image.image_url,
+          item_image_id: image.item_image_id,
+        })),
+        options: item.menuItem_options.map((option) => ({
+          name: option.menu_item_option.name,
+          menu_item_option_id: option.menu_item_option.menu_item_option_id,
+          default_choice: option.menu_item_option.default_choice,
+          choices: option.menu_item_option.choices,
+          default_choice_id: option.menu_item_option.default_choice_id,
+        })),
+      })),
+    };
   }
 
   async getMenuItems(id: number) {
-    const menu = await this.database.menu.findUnique({
-      where: { menu_id: id },
-    });
-
-    if (!menu) {
-      throw new NotFoundException(`Menu with id ${id} not found`);
-    }
+    const menu = await this.findMenuById(id);
 
     return await this.database.menu_Item.findMany({
       where: { menu_id: id },
       include: {
         item_images: true,
         categories: true,
+        menuItem_options: {
+          include: {
+            menu_item_option: {
+              include: {
+                choices: true,
+              },
+            },
+          },
+        },
       },
     });
   }
 
   async updateMenu(id: number, updateMenuDto: UpdateMenuDto) {
-    const menu = await this.database.menu.findUnique({
-      where: { menu_id: id },
-    });
-
-    if (!menu) {
-      throw new NotFoundException(`Menu with id ${id} not found`);
-    }
+    const menu = await this.findMenuById(id);
 
     return await this.database.menu.update({
       where: { menu_id: id },
@@ -136,13 +200,7 @@ export class MenuService {
   }
 
   async deleteMenu(id: number) {
-    const menu = await this.database.menu.findUnique({
-      where: { menu_id: id },
-    });
-
-    if (!menu) {
-      throw new NotFoundException(`Menu with id ${id} not found`);
-    }
+    const menu = await this.findMenuById(id);
 
     return await this.database.menu.delete({
       where: { menu_id: id },
@@ -150,13 +208,7 @@ export class MenuService {
   }
 
   async getMenuCategories(id: number) {
-    const menu = await this.database.menu.findUnique({
-      where: { menu_id: id },
-    });
-
-    if (!menu) {
-      throw new NotFoundException(`Menu with id ${id} not found`);
-    }
+    const menu = await this.findMenuById(id);
 
     const menuItems = await this.database.menu_Item.findMany({
       where: { menu_id: id },
@@ -176,5 +228,21 @@ export class MenuService {
     }, []);
 
     return categories;
+  }
+
+  async linkMenuToSpace(menu_id: number, space_id: number) {
+    const menu = await this.findMenuById(menu_id);
+    const space = await this.spaceService.findSpaceById(space_id);
+
+    return await this.database.menu.update({
+      where: { menu_id },
+      data: {
+        spaces: {
+          connect: {
+            space_id,
+          },
+        },
+      },
+    });
   }
 }

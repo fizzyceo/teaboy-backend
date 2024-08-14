@@ -1,15 +1,45 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateOrderDto } from "./dto/create-order.dto";
-import { UpdateOrderDto } from "./dto/update-order.dto";
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
+
 import { DatabaseService } from "src/database/database.service";
-import { Order } from "./entities/order.entity";
+
+import { CreateOrderDto, UpdateOrderDto } from "./dto";
 
 @Injectable()
 export class OrderService {
   constructor(private readonly database: DatabaseService) {}
 
+  private async findOrderById(id: number) {
+    const order = await this.database.order.findUnique({
+      where: { order_id: id },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    return order;
+  }
+
+  private async getOrderSpaceId(orderId: number): Promise<number> {
+    const order = await this.database.order.findUnique({
+      where: { order_id: orderId },
+      select: { spaceId: true },
+    });
+
+    if (!order) {
+      throw new NotFoundException(`Order with id ${orderId} not found`);
+    }
+
+    return order.spaceId;
+  }
+
   async creareOrder(createOrderDto: CreateOrderDto) {
-    const { order_items, ...orderData } = createOrderDto;
+    const { order_items, spaceId, ...orderData } = createOrderDto;
 
     const menuItemIds = order_items.map((orderItem) => orderItem.menu_item_id);
 
@@ -24,6 +54,8 @@ export class OrderService {
     const existingMenuItemIds = existingMenuItems.map(
       (item) => item.menu_item_id
     );
+
+    const menuId = existingMenuItems[0].menu_id;
 
     const missingMenuItemIds = menuItemIds.filter(
       (id) => !existingMenuItemIds.includes(id)
@@ -42,11 +74,20 @@ export class OrderService {
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: {
+          menu: {
+            connect: {
+              menu_id: menuId,
+            },
+          },
+          space: {
+            connect: {
+              space_id: spaceId,
+            },
+          },
           order_number: Math.floor(Math.random() * 4096)
             .toString(16)
             .padStart(3, "0")
             .toUpperCase(),
-
           ...orderData,
           order_items: {
             create: order_items.map((orderItem) => ({
@@ -72,11 +113,32 @@ export class OrderService {
       return order;
     });
 
+    console.log("createdOrder==>", createdOrder);
+
     return createdOrder;
   }
 
-  async getAllOrders() {
+  async getAllOrders(user: any) {
+    const { user_id } = user;
     const orders = await this.database.order.findMany({
+      where: {
+        OR: [
+          { userId: user_id },
+          {
+            menu: {
+              spaces: {
+                some: {
+                  users: {
+                    some: {
+                      user_id: user_id,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
       include: {
         order_items: {
           select: {
@@ -117,6 +179,7 @@ export class OrderService {
         },
       },
     });
+
     return orders.map((order) => ({
       ...order,
       order_items: order.order_items.map((orderItem) => {
@@ -136,7 +199,8 @@ export class OrderService {
     }));
   }
 
-  async getOrderById(id: number) {
+  async getOrderById(id: number, user: any) {
+    const { space_id } = user;
     const order = await this.database.order.findUnique({
       where: { order_id: id },
       include: {
@@ -167,18 +231,17 @@ export class OrderService {
     if (!order) {
       throw new NotFoundException(`Order with id ${id} not found`);
     }
+    const orderSpaceId = await this.getOrderSpaceId(id);
+    if (orderSpaceId !== space_id) {
+      throw new UnauthorizedException("You do not have access to this order");
+    }
 
     return order;
   }
 
-  async updateOrder(id: number, updateOrderDto: UpdateOrderDto) {
-    const order = await this.database.order.findUnique({
-      where: { order_id: id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
+  async updateOrder(id: number, updateOrderDto: UpdateOrderDto, user: any) {
+    const { space_id } = user;
+    const order = await this.findOrderById(id);
 
     return await this.database.order.update({
       where: { order_id: id },
@@ -186,14 +249,9 @@ export class OrderService {
     });
   }
 
-  async deleteOrder(id: number) {
-    const order = await this.database.order.findUnique({
-      where: { order_id: id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
+  async deleteOrder(id: number, user: any) {
+    const { restaurant_id } = user;
+    const order = await this.findOrderById(id);
 
     return await this.database.order.delete({
       where: { order_id: id },
@@ -201,13 +259,7 @@ export class OrderService {
   }
 
   async cancelOrder(id: number) {
-    const order = await this.database.order.findUnique({
-      where: { order_id: id },
-    });
-
-    if (!order) {
-      throw new NotFoundException(`Order with id ${id} not found`);
-    }
+    const order = await this.findOrderById(id);
 
     return await this.database.order_Item.updateMany({
       where: { order_id: id },

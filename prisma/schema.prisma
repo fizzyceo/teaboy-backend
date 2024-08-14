@@ -7,40 +7,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Employee {
-  employee_id Int @id @default(autoincrement())
-  role USER_ROLE 
+enum USER_ROLE {
+  ADMIN
+  TEABOY
+  NORMAL_USER
+}
+
+model User { 
+  user_id Int @id @default(autoincrement())
 
   name String
-  email String
-  phone String?
+  email String @unique
   password String
+  phone String?
+  
+  role USER_ROLE 
 
-  restaurant_id Int
-  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
+  spaces    Space[]   @relation("UserSpaces")
+  orders    Order[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
-enum USER_ROLE {
-  ADMIN
-  WAITER
-  CHEF
-  CASHIER
-}
-
-model Restaurant {
-  restaurant_id Int @id @default(autoincrement())
+model Site {
+  site_id Int @id @default(autoincrement())
 
   name String
-  description String?
+  description String? @default("")
   phone String?
   address String?
   image_url String?
 
-  employees Employee[] 
-  menus Menu[]
+  spaces  Space[]
+  menus   Menu[]  @relation("SiteMenus")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Space {
+  space_id Int @id @default(autoincrement())
+
+  name String
+
+  site_id Int
+  site Site @relation(fields: [site_id], references: [site_id],onDelete: Cascade,onUpdate: Cascade)
+
+  menus   Menu[]   @relation("SpaceMenus")
+  users   User[]   @relation("UserSpaces")
+  orders  Order[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -48,13 +64,17 @@ model Restaurant {
 
 model Menu {
   menu_id Int @id @default(autoincrement())
+
   name String?
-  description String?
 
-  restaurant_id Int
-  restaurant Restaurant @relation(fields: [restaurant_id], references: [restaurant_id],onDelete: Cascade,onUpdate: Cascade)
+  menu_items Menu_Item[]  
+  spaces Space[] @relation("SpaceMenus")
+  sites Site[] @relation("SiteMenus")
 
-  menu_items Menu_Item[]
+  orders Order[]
+
+  ask_for_name Boolean @default(false)
+  ask_for_table Boolean @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -64,31 +84,37 @@ model Menu_Item {
   menu_item_id Int @id @default(autoincrement())
 
   title String
-  description String?
+  description String? @default("")
   price Float
   available Boolean @default(true)
 
   menu_id Int
-  menu Menu @relation(fields: [menu_id], references: [menu_id],onDelete: Cascade,onUpdate: Cascade)
+  menu Menu @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade, onUpdate: Cascade)  // Many-to-one relationship with Menu
 
   categories Category[]
   order_items Order_Item[]
   item_images ItemImages[]
-  options Menu_Item_Option[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  menuItem_options MenuItemOptionConnection[]
 }
 
-model Menu_Item_Option{
+model Menu_Item_Option {
   menu_item_option_id Int @id @default(autoincrement())
 
   name String
 
-  menu_item_id Int
-  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
-  
-  choices Menu_Item_Option_Choice[]
+  choices Menu_Item_Option_Choice[] @relation("OptionChoices")
+
+  default_choice_id Int? @unique
+  default_choice Menu_Item_Option_Choice? @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id], onDelete: SetNull, onUpdate: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  option_menuItems MenuItemOptionConnection[]
 }
 
 model Menu_Item_Option_Choice {
@@ -96,40 +122,52 @@ model Menu_Item_Option_Choice {
 
   name String
 
-  Menu_Item_Option_id Int
-  menu_item_option Menu_Item_Option @relation(fields: [Menu_Item_Option_id], references: [menu_item_option_id],onDelete: Cascade,onUpdate: Cascade)
+  menu_item_option_id Int
+  menu_item_option Menu_Item_Option @relation("OptionChoices", fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade, onUpdate: Cascade)
 
   order_item_choices Order_Item_Choice[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  menu_Item_Option Menu_Item_Option[] @relation("DefaultChoice")
+}
+
+model MenuItemOptionConnection {
+  menu_item_id Int
+  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade, onUpdate: Cascade)
+
+  menu_item_option_id Int
+  menu_item_option Menu_Item_Option @relation(fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([menu_item_id, menu_item_option_id])
 }
 
 
 model Order {
   order_id Int @id @default(autoincrement())
-
   order_number String
 
   customer_name String?
   table_number Int?
 
+  scheduled_at DateTime?
+
   order_items Order_Item[]
 
-  payment_method PaymentMethod
-  payment_status PaymentStatus
+  spaceId     Int
+  space       Space @relation(fields: [spaceId], references: [space_id],onDelete: Cascade,onUpdate: Cascade)
+
+  menuId      Int
+  menu        Menu @relation(fields: [menuId], references: [menu_id],onDelete: Cascade,onUpdate: Cascade)
+
+  userId      Int?    
+  user        User?    @relation(fields: [userId], references: [user_id],onDelete: SetNull,onUpdate: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
-enum PaymentMethod {
-  CASH
-  CARD
-}
-
-enum PaymentStatus {
-  PENDING
-  PAID
-  CANCELLED
-}
 
 enum OrderStatus {
   PENDING
@@ -141,8 +179,9 @@ enum OrderStatus {
 
 model Order_Item {
   order_item_id Int @id @default(autoincrement())
-  // quantity Int
   note String?
+
+  quantity Int?
 
   menu_item_id Int
   menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
@@ -161,7 +200,6 @@ model Order_Item {
 model Order_Item_Choice {
   order_item_choice_id Int @id @default(autoincrement())
 
-  // name String
   order_item_id Int
   order_item Order_Item @relation(fields: [order_item_id], references: [order_item_id],onDelete: Cascade,onUpdate: Cascade)
 

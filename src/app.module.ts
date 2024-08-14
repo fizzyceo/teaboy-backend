@@ -1,22 +1,25 @@
 import { Module } from "@nestjs/common";
 
 import { DatabaseModule } from "./database/database.module";
-import { AuthModule } from "./auth/auth.module";
-import { EmployeeModule } from "./domain/employee/employee.module";
+
 import { MenuModule } from "./domain/menu/menu.module";
 import { MenuItemModule } from "./domain/menu-item/menu-item.module";
 import { OrderModule } from "./domain/order/order.module";
-import { RestaurantModule } from "./domain/restaurant/restaurant.module";
+import { SiteModule } from "./domain/site/site.module";
 import { OrderItemModule } from "./domain/order-item/order-item.module";
 import { ConfigModule } from "@nestjs/config";
 import { ImagesModule } from "./images/images.module";
+import { NotificationModule } from "./notification/notification.module";
+import { AuthModule } from "./auth/auth.module";
+import { UserModule } from "./domain/user/user.module";
+import { SpaceModule } from "./domain/space/space.module";
 
 @Module({
   imports: [
-    RestaurantModule,
-    DatabaseModule,
     AuthModule,
-    EmployeeModule,
+    SiteModule,
+    UserModule,
+    DatabaseModule,
     MenuModule,
     MenuItemModule,
     OrderModule,
@@ -25,6 +28,8 @@ import { ImagesModule } from "./images/images.module";
       isGlobal: true,
     }),
     ImagesModule,
+    SpaceModule,
+    NotificationModule,
   ],
 })
 export class AppModule {}

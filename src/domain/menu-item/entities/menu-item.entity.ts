@@ -4,4 +4,6 @@ export class MenuItem {
   description?: string;
   price: number;
   available: boolean;
+  created_at: Date;
+  updated_at: Date;
 }

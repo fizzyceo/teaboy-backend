@@ -82,6 +82,8 @@ export class MenuService {
       select: {
         name: true,
         menu_id: true,
+        ask_for_name: true,
+        ask_for_table: true,
         spaces: {
           select: {
             name: true,
@@ -125,6 +127,7 @@ export class MenuService {
                         menu_item_option_choice_id: true,
                       },
                     },
+                    default_choice_id: true,
                     choices: {
                       select: {
                         menu_item_option_choice_id: true,
@@ -160,6 +163,7 @@ export class MenuService {
           menu_item_option_id: option.menu_item_option.menu_item_option_id,
           default_choice: option.menu_item_option.default_choice,
           choices: option.menu_item_option.choices,
+          default_choice_id: option.menu_item_option.default_choice_id,
         })),
       })),
     };

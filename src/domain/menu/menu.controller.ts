@@ -20,11 +20,15 @@ import {
 import { MenuService } from "./menu.service";
 
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
+import { EncryptionService } from "src/encryption/encryption.service";
 
 @Controller("menu")
 @ApiTags("menu")
 export class MenuController {
-  constructor(private readonly menuService: MenuService) {}
+  constructor(
+    private readonly menuService: MenuService,
+    private readonly encryptionService: EncryptionService
+  ) {}
 
   @Post("create")
   @ApiBody({ type: CreateMenuDto })
@@ -139,5 +143,31 @@ export class MenuController {
     @Param("space_id", ParseIntPipe) spaceId: number
   ) {
     return this.menuService.linkMenuToSpace(menuId, spaceId);
+  }
+
+  @Get("s/:encryptedToken")
+  async getMenuFromToken(@Param("encryptedToken") encryptedToken: string) {
+    const decryptedData = this.encryptionService.decryptData(encryptedToken);
+    const [menuId, spaceId] = decryptedData.split("-");
+    return this.menuService.getMenuById(parseInt(menuId), parseInt(spaceId));
+  }
+
+  @Get("links/a")
+  async getLinks() {
+    const menus = await this.menuService.getAllMenus();
+    const result = menus.map((menu) =>
+      menu.spaces.map((space) => {
+        const encryptedData = this.encryptionService.encryptData(
+          menu.menu_id.toString(),
+          space.space_id.toString()
+        );
+        return {
+          space_name: space.name,
+          menu_name: menu.name,
+          encrypted: encryptedData,
+        };
+      })
+    );
+    return result.flat();
   }
 }

@@ -1,5 +1,3 @@
-import { USER_ROLE } from "@prisma/client";
-
 export class User {
   user_id: number;
 
@@ -7,7 +5,6 @@ export class User {
   email: string;
   password: string;
   phone?: string;
-  role: USER_ROLE;
 
   can_manage_account: boolean;
   can_manage_menu: boolean;

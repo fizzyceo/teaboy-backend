@@ -9,7 +9,6 @@ import { SiteModule } from "./domain/site/site.module";
 import { OrderItemModule } from "./domain/order-item/order-item.module";
 import { ConfigModule } from "@nestjs/config";
 import { ImagesModule } from "./images/images.module";
-import { NotificationModule } from "./notification/notification.module";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./domain/user/user.module";
 import { SpaceModule } from "./domain/space/space.module";
@@ -29,7 +28,6 @@ import { SpaceModule } from "./domain/space/space.module";
     }),
     ImagesModule,
     SpaceModule,
-    NotificationModule,
   ],
 })
 export class AppModule {}

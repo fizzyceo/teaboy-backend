@@ -126,6 +126,9 @@ export class OrderItemService {
   async getAllOrderItems(status?: string, menu_id?: number) {
     const validStatuses = Object.values(OrderStatus);
 
+    if (!menu_id || !isNaN(menu_id)) {
+    }
+
     const whereConditions: any = {
       ...(status && validStatuses.includes(status as OrderStatus)
         ? { status: status as OrderStatus }
@@ -178,13 +181,15 @@ export class OrderItemService {
                 menu_id: true,
                 name: true,
                 spaces: {
-                  where: {
-                    space_id: menu_id,
-                  },
                   select: {
                     space_id: true,
                     name: true,
                   },
+                  ...(menu_id && {
+                    where: {
+                      space_id: menu_id,
+                    },
+                  }),
                 },
               },
             },
@@ -207,8 +212,11 @@ export class OrderItemService {
       menu_item: {
         ...order.menu_item,
         menu: {
-          menu_id: order.menu_item.menu.spaces[0].space_id,
-          name: order.menu_item.menu.spaces[0].name,
+          menu_id:
+            order.menu_item.menu.spaces?.[0]?.space_id ||
+            order.menu_item.menu.menu_id,
+          name:
+            order.menu_item.menu.spaces?.[0]?.name || order.menu_item.menu.name,
         },
       },
       choices: order.choices.map((choice) => ({

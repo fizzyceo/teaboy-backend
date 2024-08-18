@@ -154,7 +154,7 @@ export class MenuController {
 
   @Get("links/a")
   async getLinks() {
-    const menus = await this.menuService.getAllMenus();
+    const menus = await this.menuService.getAllMenusOld();
     const result = menus.map((menu) =>
       menu.spaces.map((space) => {
         const encryptedData = this.encryptionService.encryptData(

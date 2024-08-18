@@ -52,6 +52,26 @@ export class OrderItemController {
     return this.orderItemService.getAllOrderItems(status, menu_id);
   }
 
+  @Get("new/a/")
+  @ApiOperation({ summary: "Get all order items" })
+  @ApiQuery({
+    name: "status",
+    required: false,
+    description: "Filter order items by status",
+    enum: OrderStatus,
+  })
+  @ApiQuery({
+    name: "menu_id",
+    required: false,
+    description: "filter orders by menu",
+  })
+  getAllOrderItemsNew(
+    @Query("status") status?: string,
+    @Query("menu_id") menu_id?: number
+  ) {
+    return this.orderItemService.getAllOrderItemsNew(status, menu_id);
+  }
+
   @Get(":id")
   @ApiOperation({ summary: "Get order item details by id" })
   @ApiParam({

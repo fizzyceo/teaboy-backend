@@ -72,19 +72,10 @@ export class MenuService {
       },
     });
 
-    return menus.map((menu) =>
+    return menus.flatMap((menu) =>
       menu.spaces.map((space) => ({
-        ask_for_name: menu.ask_for_name,
-        ask_for_table: menu.ask_for_table,
-        created_at: menu.created_at,
-        updated_at: menu.updated_at,
         menu_id: space.space_id,
         name: space.name,
-        space_id: space.space_id,
-        space_name: space.name,
-        site_id: space.site.site_id,
-        site_name: space.site.name,
-        site_image_url: space.site.image_url,
       }))
     );
   }

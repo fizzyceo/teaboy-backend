@@ -89,6 +89,7 @@ export class OrderService {
             .padStart(3, "0")
             .toUpperCase(),
           ...orderData,
+
           order_items: {
             create: order_items.map((orderItem) => ({
               menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
@@ -112,8 +113,6 @@ export class OrderService {
 
       return order;
     });
-
-    console.log("createdOrder==>", createdOrder);
 
     return createdOrder;
   }

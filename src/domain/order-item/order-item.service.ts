@@ -123,11 +123,9 @@ export class OrderItemService {
       })),
     }));
   }
+
   async getAllOrderItems(status?: string, menu_id?: number) {
     const validStatuses = Object.values(OrderStatus);
-
-    if (!menu_id || !isNaN(menu_id)) {
-    }
 
     const whereConditions: any = {
       ...(status && validStatuses.includes(status as OrderStatus)
@@ -135,18 +133,14 @@ export class OrderItemService {
         : {}),
       ...(menu_id && !isNaN(menu_id)
         ? {
-            menu_item: {
-              menu: {
-                spaces: {
-                  some: {
-                    space_id: menu_id,
-                  },
-                },
-              },
+            order: {
+              spaceId: menu_id,
             },
           }
         : {}),
     };
+
+    // console.log("whereCondiion", whereConditions);
 
     const orders = await this.database.order_Item.findMany({
       where: whereConditions,
@@ -156,6 +150,7 @@ export class OrderItemService {
             customer_name: true,
             table_number: true,
             order_number: true,
+            spaceId: true,
           },
         },
         choices: {
@@ -207,16 +202,17 @@ export class OrderItemService {
       },
     });
 
+    // console.log("orders", orders);
+
     return orders.map((order) => ({
       ...order,
       menu_item: {
         ...order.menu_item,
         menu: {
-          menu_id:
-            order.menu_item.menu.spaces?.[0]?.space_id ||
-            order.menu_item.menu.menu_id,
-          name:
-            order.menu_item.menu.spaces?.[0]?.name || order.menu_item.menu.name,
+          menu_id: order.order.spaceId,
+          name: order.menu_item.menu.spaces.find(
+            (space) => space.space_id === order.order.spaceId
+          )?.name,
         },
       },
       choices: order.choices.map((choice) => ({
@@ -238,6 +234,7 @@ export class OrderItemService {
             order_id: true,
             customer_name: true,
             table_number: true,
+            spaceId: true,
           },
         },
         menu_item: {

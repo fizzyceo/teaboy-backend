@@ -161,10 +161,12 @@ export class MenuController {
           menu.menu_id.toString(),
           space.space_id.toString()
         );
+
         return {
           space_name: space.name,
           menu_name: menu.name,
           encrypted: encryptedData,
+          menu_site_image: space.site_image_url,
         };
       })
     );

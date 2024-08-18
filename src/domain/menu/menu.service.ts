@@ -58,6 +58,7 @@ export class MenuService {
               select: {
                 site_id: true,
                 name: true,
+                image_url: true,
               },
             },
           },
@@ -72,6 +73,7 @@ export class MenuService {
         name: space.name,
         site_id: space.site.site_id,
         site_name: space.site.name,
+        site_image_url: space.site.image_url,
       })),
     }));
   }

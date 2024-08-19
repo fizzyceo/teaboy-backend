@@ -56,13 +56,21 @@ export class MenuController {
   @ApiQuery({
     name: "space_id",
     description: "Space id to fetch",
-    required: true,
+    required: false,
+  })
+  @ApiQuery({
+    name: "site_id",
+    description: "Site id to fetch",
+    required: false,
   })
   getMenuById(
     @Param("id", ParseIntPipe) id: number,
-    @Query("space_id", ParseIntPipe) space_id: number
+    @Query("space_id") space_id?: string,
+    @Query("site_id") site_id?: string
   ) {
-    return this.menuService.getMenuById(id, space_id);
+    const spaceId = space_id ? parseInt(space_id, 10) : undefined;
+    const siteId = site_id ? parseInt(site_id, 10) : undefined;
+    return this.menuService.getMenuById(id, spaceId, siteId);
   }
 
   @Get(":id/items")
@@ -143,6 +151,28 @@ export class MenuController {
     @Param("space_id", ParseIntPipe) spaceId: number
   ) {
     return this.menuService.linkMenuToSpace(menuId, spaceId);
+  }
+
+  @Patch(":menu_id/link-site/:site_id")
+  @ApiOperation({
+    summary: "Link menu to site",
+    description: "Link a menu to a site by providing menu_id and site_id",
+  })
+  @ApiParam({
+    name: "menu_id",
+    description: "Menu id to link",
+    required: true,
+  })
+  @ApiParam({
+    name: "site_id",
+    description: "Site id to link",
+    required: true,
+  })
+  linkMenuToSite(
+    @Param("menu_id", ParseIntPipe) menuId: number,
+    @Param("site_id", ParseIntPipe) siteId: number
+  ) {
+    return this.menuService.linkMenuToSite(menuId, siteId);
   }
 
   @Get("s/:encryptedToken")

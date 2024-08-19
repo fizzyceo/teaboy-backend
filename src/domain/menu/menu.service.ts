@@ -25,24 +25,20 @@ export class MenuService {
   }
 
   async createMenu(createMenuDto: CreateMenuDto) {
-    const { site_id, ...menuData } = createMenuDto;
+    const menuData = createMenuDto;
+    // const { site_id, ...menuData } = createMenuDto;
 
-    const site = await this.database.site.findUnique({
-      where: { site_id },
-    });
+    // const site = await this.database.site.findUnique({
+    //   where: { site_id },
+    // });
 
-    if (!site) {
-      throw new NotFoundException(`Site with id ${site_id} not found`);
-    }
+    // if (!site) {
+    //   throw new NotFoundException(`Site with id ${site_id} not found`);
+    // }
 
     return await this.database.menu.create({
       data: {
         ...menuData,
-        sites: {
-          connect: {
-            site_id: site_id,
-          },
-        },
       },
     });
   }
@@ -111,7 +107,7 @@ export class MenuService {
     }));
   }
 
-  async getMenuById(id: number, space_id: number) {
+  async getMenuById(id: number, space_id?: number, site_id?: number) {
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
@@ -119,24 +115,38 @@ export class MenuService {
         menu_id: true,
         ask_for_name: true,
         ask_for_table: true,
-        spaces: {
-          select: {
-            name: true,
-            space_id: true,
-            site: {
+        sites: site_id
+          ? {
               select: {
                 name: true,
-                address: true,
-                description: true,
+                site_id: true,
                 image_url: true,
-                phone: true,
               },
-            },
-          },
-          where: {
-            space_id: space_id,
-          },
-        },
+              where: {
+                site_id: site_id,
+              },
+            }
+          : undefined,
+        spaces: space_id
+          ? {
+              select: {
+                name: true,
+                space_id: true,
+                site: {
+                  select: {
+                    name: true,
+                    address: true,
+                    description: true,
+                    image_url: true,
+                    phone: true,
+                  },
+                },
+              },
+              where: {
+                space_id: space_id,
+              },
+            }
+          : undefined,
         menu_items: {
           select: {
             menu_item_id: true,
@@ -275,6 +285,28 @@ export class MenuService {
         spaces: {
           connect: {
             space_id,
+          },
+        },
+      },
+    });
+  }
+
+  async linkMenuToSite(menu_id: number, site_id: number) {
+    const menu = await this.findMenuById(menu_id);
+    const site = await this.database.site.findUnique({
+      where: { site_id },
+    });
+
+    if (!site) {
+      throw new NotFoundException(`Site with id ${site_id} not found`);
+    }
+
+    return await this.database.menu.update({
+      where: { menu_id },
+      data: {
+        sites: {
+          connect: {
+            site_id,
           },
         },
       },

@@ -59,7 +59,45 @@ export class MenuItemService {
       };
     }
 
-    return this.database.menu_Item.create({ data: createData });
+    return this.database.menu_Item.create({
+      data: createData,
+      select: {
+        menu_item_id: true,
+        title: true,
+        price: true,
+        description: true,
+        available: true,
+        item_images: {
+          select: {
+            image_url: true,
+            item_image_id: true,
+          },
+        },
+        menuItem_options: {
+          select: {
+            menu_item_option: {
+              select: {
+                name: true,
+                menu_item_option_id: true,
+                default_choice: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                  },
+                },
+                default_choice_id: true,
+                choices: {
+                  select: {
+                    menu_item_option_choice_id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   async getAllMenuItems() {

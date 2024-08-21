@@ -315,4 +315,8 @@ export class MenuService {
       },
     });
   }
+
+  async getMenuList() {
+    return await this.database.menu.findMany();
+  }
 }

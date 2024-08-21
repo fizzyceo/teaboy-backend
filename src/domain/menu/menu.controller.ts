@@ -203,4 +203,9 @@ export class MenuController {
     );
     return result.flat();
   }
+
+  @Get("list/a")
+  async getMenuList() {
+    return this.menuService.getMenuList();
+  }
 }

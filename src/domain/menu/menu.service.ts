@@ -26,6 +26,7 @@ export class MenuService {
 
   async createMenu(createMenuDto: CreateMenuDto) {
     const menuData = createMenuDto;
+    console.log("menuData", menuData);
     // const { site_id, ...menuData } = createMenuDto;
 
     // const site = await this.database.site.findUnique({
@@ -111,6 +112,8 @@ export class MenuService {
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
+        created_at: true,
+        updated_at: true,
         name: true,
         menu_id: true,
         ask_for_name: true,

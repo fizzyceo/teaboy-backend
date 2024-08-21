@@ -34,18 +34,30 @@ export class MenuItemService {
   ) {
     const { menu_id, categories, ...menuItemData } = createMenuItemDto;
 
+    const menu = await this.database.menu.findUnique({
+      where: { menu_id },
+    });
+
+    if (!menu) {
+      throw new NotFoundException(`Menu with id ${menu_id} not found`);
+    }
+
     const item_images = await this.uploadMenuImages(files);
 
-    const createData = {
+    const createData: any = {
       ...menuItemData,
       menu: { connect: { menu_id } },
-      item_images: item_images.length
-        ? { createMany: { data: item_images } }
-        : undefined,
-      categories: categories?.length
-        ? { connect: categories.map((id) => ({ category_id: id })) }
-        : undefined,
     };
+
+    if (item_images.length > 0) {
+      createData.item_images = { createMany: { data: item_images } };
+    }
+
+    if (categories && categories.length > 0) {
+      createData.categories = {
+        connect: categories.map((id) => ({ category_id: id })),
+      };
+    }
 
     return this.database.menu_Item.create({ data: createData });
   }

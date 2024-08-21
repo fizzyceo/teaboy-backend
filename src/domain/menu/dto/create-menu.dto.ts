@@ -10,7 +10,7 @@ export class CreateMenuDto {
   @IsBoolean()
   ask_for_table: boolean;
 
-  @ApiProperty({ default: false })
+  @ApiProperty({ default: true })
   @IsBoolean()
   ask_for_name: boolean;
 }

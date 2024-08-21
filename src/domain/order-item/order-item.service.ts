@@ -127,6 +127,10 @@ export class OrderItemService {
   async getAllOrderItems(status?: string, menu_id?: number) {
     const validStatuses = Object.values(OrderStatus);
 
+    // Calculate the date for 24 hours ago
+    const last24Hours = new Date();
+    last24Hours.setHours(last24Hours.getHours() - 24);
+
     const whereConditions: any = {
       ...(status && validStatuses.includes(status as OrderStatus)
         ? { status: status as OrderStatus }
@@ -138,9 +142,10 @@ export class OrderItemService {
             },
           }
         : {}),
+      created_at: {
+        gte: last24Hours,
+      },
     };
-
-    // console.log("whereCondiion", whereConditions);
 
     const orders = await this.database.order_Item.findMany({
       where: whereConditions,
@@ -201,8 +206,6 @@ export class OrderItemService {
         },
       },
     });
-
-    // console.log("orders", orders);
 
     return orders.map((order) => ({
       ...order,

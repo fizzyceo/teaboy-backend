@@ -7,7 +7,12 @@ import * as bcrypt from "bcrypt";
 
 import { DatabaseService } from "src/database/database.service";
 
-import { CreateUserDto, UpdateUserDto, AddUserToSpaceDto } from "./dto";
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  AddUserToSpaceDto,
+  AddUserToSiteDto,
+} from "./dto";
 
 @Injectable()
 export class UserService {
@@ -50,6 +55,32 @@ export class UserService {
     return await this.database.user.findMany();
   }
 
+  async getUserById(id: number) {
+    return await this.findUserById(id);
+  }
+
+  async updateUser(id: number, updateuserDto: UpdateUserDto) {
+    const user = await this.findUserById(id);
+
+    if (updateuserDto.password) {
+      updateuserDto.password = await this.hashPassword(updateuserDto.password);
+    }
+
+    return await this.database.user.update({
+      where: { user_id: id },
+      data: updateuserDto,
+    });
+  }
+
+  async deleteUser(id: number) {
+    const user = await this.findUserById(id);
+
+    return await this.database.user.delete({
+      where: { user_id: id },
+    });
+  }
+
+  // User and Spaces
   async addUserToSpace(addUserToSpaceDto: AddUserToSpaceDto) {
     const { userId, spaceId } = addUserToSpaceDto;
 
@@ -74,29 +105,60 @@ export class UserService {
       },
     });
   }
+  async getUserSpaces(user: any) {
+    const { user_id } = user;
 
-  async getUserById(id: number) {
-    return await this.findUserById(id);
-  }
+    const myUser = await this.findUserById(user_id);
 
-  async updateUser(id: number, updateuserDto: UpdateUserDto) {
-    const user = await this.findUserById(id);
-
-    if (updateuserDto.password) {
-      updateuserDto.password = await this.hashPassword(updateuserDto.password);
-    }
-
-    return await this.database.user.update({
-      where: { user_id: id },
-      data: updateuserDto,
+    return await this.database.space.findMany({
+      where: {
+        users: {
+          some: {
+            user_id: user_id,
+          },
+        },
+      },
     });
   }
 
-  async deleteUser(id: number) {
-    const user = await this.findUserById(id);
+  // User and Sites
+  async addUserToSite(addUserToSite: AddUserToSiteDto) {
+    const { userId, siteId } = addUserToSite;
 
-    return await this.database.user.delete({
-      where: { user_id: id },
+    const user = await this.findUserById(userId);
+
+    const site = await this.database.site.findUnique({
+      where: { site_id: siteId },
+    });
+
+    if (!site) {
+      throw new NotFoundException(`Site with id ${siteId} not found`);
+    }
+
+    return this.database.user.update({
+      where: { user_id: userId },
+      data: {
+        sites: {
+          connect: {
+            site_id: siteId,
+          },
+        },
+      },
+    });
+  }
+  async getUserSites(user: any) {
+    const { user_id } = user;
+
+    const myUser = await this.findUserById(user_id);
+
+    return await this.database.site.findMany({
+      where: {
+        users: {
+          some: {
+            user_id: user_id,
+          },
+        },
+      },
     });
   }
 }

@@ -11,10 +11,7 @@ import {
   UploadedFiles,
 } from "@nestjs/common";
 import { MenuItemService } from "./menu-item.service";
-import {
-  CreateMenuItemDto,
-  MenuItemCategory,
-} from "./dto/create-menu-item.dto";
+import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
 import { UpdateMenuItemDto } from "./dto/update-menu-item.dto";
 
 import {
@@ -123,7 +120,6 @@ export class MenuItemController {
     return this.menuItemService.deleteMenuImage(id, imageId);
   }
 
-  // Menu Item Options
   @Get(":id/options")
   @ApiOperation({ summary: "Get menu item options by id" })
   @ApiParam({
@@ -147,11 +143,5 @@ export class MenuItemController {
     @Body() MenuOption: CreateMenuItemOption
   ) {
     return this.menuItemService.createMenuItemOption(id, MenuOption);
-  }
-
-  @Post("/category/create")
-  @ApiOperation({ summary: "Create menu item category" })
-  createMenuItemCategory(@Body() category: MenuItemCategory) {
-    return this.menuItemService.createMenuItemCategory(category);
   }
 }

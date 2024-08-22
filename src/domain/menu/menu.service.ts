@@ -25,21 +25,9 @@ export class MenuService {
   }
 
   async createMenu(createMenuDto: CreateMenuDto) {
-    const menuData = createMenuDto;
-    console.log("menuData", menuData);
-    // const { site_id, ...menuData } = createMenuDto;
-
-    // const site = await this.database.site.findUnique({
-    //   where: { site_id },
-    // });
-
-    // if (!site) {
-    //   throw new NotFoundException(`Site with id ${site_id} not found`);
-    // }
-
     return await this.database.menu.create({
       data: {
-        ...menuData,
+        ...createMenuDto,
       },
     });
   }
@@ -224,7 +212,6 @@ export class MenuService {
       where: { menu_id: id },
       include: {
         item_images: true,
-        categories: true,
         menuItem_options: {
           include: {
             menu_item_option: {
@@ -253,29 +240,6 @@ export class MenuService {
     return await this.database.menu.delete({
       where: { menu_id: id },
     });
-  }
-
-  async getMenuCategories(id: number) {
-    const menu = await this.findMenuById(id);
-
-    const menuItems = await this.database.menu_Item.findMany({
-      where: { menu_id: id },
-      include: {
-        categories: true,
-      },
-    });
-
-    const categories = menuItems.reduce((acc, item) => {
-      item.categories.forEach((category) => {
-        if (!acc.includes(category)) {
-          acc.push(category);
-        }
-      });
-
-      return acc;
-    }, []);
-
-    return categories;
   }
 
   async linkMenuToSpace(menu_id: number, space_id: number) {

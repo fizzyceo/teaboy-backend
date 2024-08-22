@@ -87,20 +87,6 @@ export class MenuController {
     return this.menuService.getMenuItems(id);
   }
 
-  @Get(":id/categories")
-  @ApiOperation({
-    summary: "Get menu categories for a menu by id",
-    description: "Get all menu categories for a menu by providing menu id",
-  })
-  @ApiParam({
-    name: "id",
-    description: "Menu id to fetch categories",
-    required: true,
-  })
-  getMenuCategories(@Param("id", ParseIntPipe) id: number) {
-    return this.menuService.getMenuCategories(id);
-  }
-
   @Patch(":id")
   @ApiBody({ type: UpdateMenuDto })
   @ApiOperation({

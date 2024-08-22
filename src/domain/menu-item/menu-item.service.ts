@@ -4,7 +4,6 @@ import { ImagesService } from "src/images/images.service";
 import {
   CreateMenuItemDto,
   CreateMenuItemOption,
-  MenuItemCategory,
   UpdateMenuItemDto,
 } from "./dto";
 
@@ -18,7 +17,7 @@ export class MenuItemService {
   private async findMenuItemById(id: number) {
     const menuItem = await this.database.menu_Item.findUnique({
       where: { menu_item_id: id },
-      include: { item_images: true, categories: true },
+      include: { item_images: true },
     });
 
     if (!menuItem) {
@@ -32,7 +31,7 @@ export class MenuItemService {
     createMenuItemDto: CreateMenuItemDto,
     files: Express.Multer.File[]
   ) {
-    const { menu_id, categories, ...menuItemData } = createMenuItemDto;
+    const { menu_id, ...menuItemData } = createMenuItemDto;
 
     const menu = await this.database.menu.findUnique({
       where: { menu_id },
@@ -51,12 +50,6 @@ export class MenuItemService {
 
     if (item_images.length > 0) {
       createData.item_images = { createMany: { data: item_images } };
-    }
-
-    if (categories && categories.length > 0) {
-      createData.categories = {
-        connect: categories.map((id) => ({ category_id: id })),
-      };
     }
 
     return this.database.menu_Item.create({
@@ -102,7 +95,7 @@ export class MenuItemService {
 
   async getAllMenuItems() {
     return this.database.menu_Item.findMany({
-      include: { item_images: true, categories: true },
+      include: { item_images: true },
     });
   }
 
@@ -113,7 +106,6 @@ export class MenuItemService {
       where: { menu_item_id: id },
       include: {
         item_images: true,
-        categories: true,
         menuItem_options: {
           select: {
             menu_item_option: {
@@ -143,20 +135,10 @@ export class MenuItemService {
   async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
     await this.findMenuItemById(id);
 
-    const { categories, ...menuItemData } = updateMenuItemDto;
-
-    const updateData: any = { ...menuItemData };
-
-    if (categories) {
-      updateData.categories = {
-        set: categories.map((id) => ({ category_id: id })),
-      };
-    }
-
     return this.database.menu_Item.update({
       where: { menu_item_id: id },
-      data: updateData,
-      include: { categories: true, item_images: true },
+      data: updateMenuItemDto,
+      include: { item_images: true },
     });
   }
 
@@ -286,10 +268,6 @@ export class MenuItemService {
     );
 
     return formattedOptions;
-  }
-
-  async createMenuItemCategory(category: MenuItemCategory) {
-    return this.database.category.create({ data: category });
   }
 
   private async uploadMenuImages(files: Express.Multer.File[]) {

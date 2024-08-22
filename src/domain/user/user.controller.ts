@@ -9,11 +9,13 @@ import {
   ParseIntPipe,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
-
 import { ApiBody, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { AddUserToSpaceDto } from "./dto/add-user-to-space.dto";
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  AddUserToSpaceDto,
+  AddUserToSiteDto,
+} from "./dto";
 
 @Controller("user")
 @ApiTags("user")
@@ -25,12 +27,6 @@ export class UserController {
   @ApiOperation({ summary: "Create a new User" })
   createUser(@Body() createUserDto: CreateUserDto) {
     return this.userService.createUser(createUserDto);
-  }
-
-  @Patch("link-site")
-  @ApiOperation({ summary: "Add User to Site" })
-  addUserToSpace(@Body() addUserToSpaceeDto: AddUserToSpaceDto) {
-    return this.userService.addUserToSpace(addUserToSpaceeDto);
   }
 
   @Get("")
@@ -74,5 +70,41 @@ export class UserController {
   })
   deleteUser(@Param("id", ParseIntPipe) id: number) {
     return this.userService.deleteUser(id);
+  }
+
+  //  User and Spaces
+  @Patch("link-space")
+  @ApiOperation({ summary: "Add User to Space" })
+  addUserToSpace(@Body() addUserToSpaceDto: AddUserToSpaceDto) {
+    return this.userService.addUserToSpace(addUserToSpaceDto);
+  }
+
+  @Get(":user_id/spaces")
+  @ApiOperation({ summary: "Get all Spaces of a User" })
+  @ApiParam({
+    name: "user_id",
+    description: "User id to fetch",
+    required: true,
+  })
+  getUserSpaces(@Param("user_id", ParseIntPipe) user_id: number) {
+    return this.userService.getUserSpaces(user_id);
+  }
+
+  //  User and Sites
+  @Patch("link-site")
+  @ApiOperation({ summary: "Add User to Site" })
+  addUserToSite(@Body() addUserToSiteDto: AddUserToSiteDto) {
+    return this.userService.addUserToSite(addUserToSiteDto);
+  }
+
+  @Get(":user_id/sites")
+  @ApiOperation({ summary: "Get all Sites of a User" })
+  @ApiParam({
+    name: "user_id",
+    description: "User id to fetch",
+    required: true,
+  })
+  getUserSites(@Param("user_id", ParseIntPipe) user_id: number) {
+    return this.userService.getUserSites(user_id);
   }
 }

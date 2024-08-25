@@ -28,7 +28,7 @@ import { CreateSpaceDto } from "./dto";
 export class SiteController {
   constructor(private readonly siteService: SiteService) {}
 
-  @Post()
+  @Post("create")
   @ApiBody({ type: CreateSiteDto })
   @ApiOperation({ summary: "Create a new site" })
   @UseInterceptors(FileInterceptor("file"))

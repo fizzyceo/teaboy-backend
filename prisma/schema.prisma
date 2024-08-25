@@ -232,6 +232,7 @@ model Call {
 model Kitchen {
   kitchen_id Int     @id @default(autoincrement())
   name       String
+  token       String    @unique
   isOpen     Boolean @default(true)
 
   spaces       Space[]
@@ -254,6 +255,7 @@ model OpeningHours {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
+
 
 enum DayOfWeek {
   MONDAY

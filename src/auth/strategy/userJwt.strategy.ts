@@ -4,7 +4,7 @@ import { ExtractJwt, Strategy } from "passport-jwt";
 import { DatabaseService } from "src/database/database.service";
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
+export class UserJwtStrategy extends PassportStrategy(Strategy, "jwt") {
   constructor(private dataBaseService: DatabaseService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -19,8 +19,6 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         spaces: true,
       },
     });
-
-    console.log("user==>", user);
 
     if (!user) {
       throw new UnauthorizedException();

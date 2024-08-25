@@ -8,6 +8,8 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  Req,
+  UseGuards,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -15,17 +17,19 @@ import {
   ApiOperation,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
 
 import { KitchenService } from "./kitchen.service";
 import { CreateKitchenDto, UpdateKitchenDto } from "./dto";
+import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
 
 @Controller("kitchen")
 @ApiTags("kitchen")
 export class KitchenController {
   constructor(private readonly kitchenService: KitchenService) {}
 
-  @Post()
+  @Post("create")
   @ApiOperation({ summary: "Create a new kitchen" })
   @ApiBody({ type: CreateKitchenDto })
   @ApiOperation({
@@ -40,6 +44,14 @@ export class KitchenController {
   @ApiOperation({ summary: "Get all kitchens" })
   getAllKitchens() {
     return this.kitchenService.getAllKitchens();
+  }
+
+  @Get("/order-items")
+  @UseGuards(KitchenAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get all order items related to a Kitchen" })
+  async getOrderItems(@Req() req) {
+    return await this.kitchenService.getOrderItems(req.user);
   }
 
   @Get(":id")
@@ -76,5 +88,24 @@ export class KitchenController {
   })
   removeKitchen(@Param("id", ParseIntPipe) id: number) {
     return this.kitchenService.removeKitchen(id);
+  }
+
+  @Post(":kitchen_id/link-space/:space_id")
+  @ApiOperation({ summary: "Link kitchen to space" })
+  @ApiParam({
+    name: "kitchen_id",
+    description: "Kitchen id to link",
+    required: true,
+  })
+  @ApiQuery({
+    name: "space_id",
+    description: "Space id to link",
+    required: true,
+  })
+  linkKitchenToSpace(
+    @Param("kitchen_id", ParseIntPipe) kitchenId: number,
+    @Query("space_id", ParseIntPipe) spaceId: number
+  ) {
+    return this.kitchenService.linkKitchenToSpace(kitchenId, spaceId);
   }
 }

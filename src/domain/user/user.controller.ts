@@ -7,15 +7,26 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Req,
+  UseGuards,
+  Query,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
-import { ApiBody, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
 import {
   CreateUserDto,
   UpdateUserDto,
   AddUserToSpaceDto,
   AddUserToSiteDto,
 } from "./dto";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("user")
 @ApiTags("user")
@@ -33,6 +44,52 @@ export class UserController {
   @ApiOperation({ summary: "Get all Users" })
   getAllUsers() {
     return this.userService.getAllUsers();
+  }
+
+  @Patch("link-space")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Add User to Space" })
+  @ApiQuery({
+    name: "spaceId",
+    required: true,
+    description: "Space id to add",
+  })
+  addUserToSpace(@Query("spaceId") spaceId: number, @Req() user: any) {
+    const { userId } = user.user;
+    return this.userService.addUserToSpace(userId, spaceId);
+  }
+
+  @Patch("link-site")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Add User to Site" })
+  @ApiQuery({
+    name: "siteId",
+    required: true,
+    description: "Site id to add",
+  })
+  addUserToSite(@Query("siteId") siteId: number, @Req() user: any) {
+    const { userId } = user.user;
+    return this.userService.addUserToSite(userId, siteId);
+  }
+
+  @Get("/spaces")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get all Spaces of a User" })
+  getUserSpaces(@Req() user: any) {
+    const user_id = user.user;
+    return this.userService.getUserSpaces(user_id);
+  }
+
+  @Get("/sites")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get all Sites of a User" })
+  getUserSites(@Req() user: any) {
+    const user_id = user.user;
+    return this.userService.getUserSites(user_id);
   }
 
   @Get(":id")
@@ -70,41 +127,5 @@ export class UserController {
   })
   deleteUser(@Param("id", ParseIntPipe) id: number) {
     return this.userService.deleteUser(id);
-  }
-
-  //  User and Spaces
-  @Patch("link-space")
-  @ApiOperation({ summary: "Add User to Space" })
-  addUserToSpace(@Body() addUserToSpaceDto: AddUserToSpaceDto) {
-    return this.userService.addUserToSpace(addUserToSpaceDto);
-  }
-
-  @Get(":user_id/spaces")
-  @ApiOperation({ summary: "Get all Spaces of a User" })
-  @ApiParam({
-    name: "user_id",
-    description: "User id to fetch",
-    required: true,
-  })
-  getUserSpaces(@Param("user_id", ParseIntPipe) user_id: number) {
-    return this.userService.getUserSpaces(user_id);
-  }
-
-  //  User and Sites
-  @Patch("link-site")
-  @ApiOperation({ summary: "Add User to Site" })
-  addUserToSite(@Body() addUserToSiteDto: AddUserToSiteDto) {
-    return this.userService.addUserToSite(addUserToSiteDto);
-  }
-
-  @Get(":user_id/sites")
-  @ApiOperation({ summary: "Get all Sites of a User" })
-  @ApiParam({
-    name: "user_id",
-    description: "User id to fetch",
-    required: true,
-  })
-  getUserSites(@Param("user_id", ParseIntPipe) user_id: number) {
-    return this.userService.getUserSites(user_id);
   }
 }

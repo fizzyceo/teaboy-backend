@@ -81,10 +81,8 @@ export class UserService {
   }
 
   // User and Spaces
-  async addUserToSpace(addUserToSpaceDto: AddUserToSpaceDto) {
-    const { userId, spaceId } = addUserToSpaceDto;
-
-    const user = await this.findUserById(userId);
+  async addUserToSpace(userId: number, spaceId: number) {
+    const userExists = await this.findUserById(userId);
 
     const space = await this.database.space.findUnique({
       where: { space_id: spaceId },
@@ -122,10 +120,8 @@ export class UserService {
   }
 
   // User and Sites
-  async addUserToSite(addUserToSite: AddUserToSiteDto) {
-    const { userId, siteId } = addUserToSite;
-
-    const user = await this.findUserById(userId);
+  async addUserToSite(userId: number, siteId: number) {
+    const userExists = await this.findUserById(userId);
 
     const site = await this.database.site.findUnique({
       where: { site_id: siteId },

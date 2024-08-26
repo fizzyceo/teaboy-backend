@@ -41,6 +41,25 @@ export class OrderService {
   async creareOrder(createOrderDto: CreateOrderDto) {
     const { order_items, spaceId, ...orderData } = createOrderDto;
 
+    const orderKitchen = await this.database.kitchen.findFirst({
+      where: {
+        spaces: {
+          some: {
+            space_id: spaceId,
+          },
+        },
+      },
+      select: {
+        isOpen: true,
+      },
+    });
+
+    if (!orderKitchen?.isOpen) {
+      throw new InternalServerErrorException(
+        "Cannot create order, kitchen is closed"
+      );
+    }
+
     const menuItemIds = order_items.map((orderItem) => orderItem.menu_item_id);
 
     const existingMenuItems = await this.database.menu_Item.findMany({

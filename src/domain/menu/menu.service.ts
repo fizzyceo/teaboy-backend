@@ -97,6 +97,19 @@ export class MenuService {
   }
 
   async getMenuById(id: number, space_id?: number, site_id?: number) {
+    const associatedKitchen = await this.database.kitchen.findFirst({
+      where: {
+        spaces: {
+          some: {
+            space_id: space_id,
+          },
+        },
+      },
+      select: {
+        isOpen: true,
+      },
+    });
+
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
@@ -185,6 +198,7 @@ export class MenuService {
 
     return {
       ...menu,
+      isOpen: associatedKitchen.isOpen,
       menu_items: menu.menu_items.map((item) => ({
         menu_item_id: item.menu_item_id,
         title: item.title,

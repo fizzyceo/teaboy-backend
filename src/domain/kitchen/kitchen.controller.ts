@@ -23,6 +23,7 @@ import {
 import { KitchenService } from "./kitchen.service";
 import { CreateKitchenDto, UpdateKitchenDto } from "./dto";
 import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
+import { OrderStatus } from "../order-item/dto";
 
 @Controller("kitchen")
 @ApiTags("kitchen")
@@ -49,9 +50,15 @@ export class KitchenController {
   @Get("/order-items")
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
+  @ApiQuery({
+    name: "status",
+    required: false,
+    description: "Filter order items by status",
+    enum: OrderStatus,
+  })
   @ApiOperation({ summary: "Get all order items related to a Kitchen" })
-  async getOrderItems(@Req() req) {
-    return await this.kitchenService.getOrderItems(req.user);
+  async getOrderItems(@Req() req, @Query("status") status?: string) {
+    return await this.kitchenService.getOrderItems(req.user, status);
   }
 
   @Get(":id")
@@ -65,18 +72,22 @@ export class KitchenController {
     return this.kitchenService.getKitchenById(id);
   }
 
-  @Patch(":id")
-  @ApiOperation({ summary: "Update kitchen details" })
-  @ApiParam({
-    name: "id",
-    description: "Kitchen id to update",
-    required: true,
+  @Patch("/update")
+  @ApiBody({
+    type: UpdateKitchenDto,
+    examples: {
+      example: {
+        value: {
+          isOpen: true,
+        },
+      },
+    },
   })
-  updateKitchen(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateKitchenDto: UpdateKitchenDto
-  ) {
-    return this.kitchenService.updateKitchen(id, updateKitchenDto);
+  @UseGuards(KitchenAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Update kitchen details" })
+  updateKitchen(@Body() updateKitchenDto: UpdateKitchenDto, @Req() req) {
+    return this.kitchenService.updateKitchen(req.user, updateKitchenDto);
   }
 
   @Delete(":id")

@@ -50,11 +50,12 @@ export class KitchenService {
     return kitchen;
   }
 
-  async updateKitchen(id: number, updateKitchenDto: UpdateKitchenDto) {
-    const kitchen = await this.getKitchenById(id);
+  async updateKitchen(kitchen: any, updateKitchenDto: UpdateKitchenDto) {
+    const { kitchen_id } = kitchen;
+    const kitchenExists = await this.getKitchenById(kitchen_id);
 
     return await this.database.kitchen.update({
-      where: { kitchen_id: id },
+      where: { kitchen_id: kitchen_id },
       data: updateKitchenDto,
     });
   }
@@ -95,13 +96,24 @@ export class KitchenService {
 
     const kitchenExists = await this.getKitchenById(kitchen_id);
 
+    const validStatuses = Object.values(OrderStatus);
+
     const orders = await this.database.order_Item.findMany({
       where: {
-        order: {
-          space: {
-            kitchen_id: kitchen_id,
+        AND: [
+          {
+            ...(status && validStatuses.includes(status as OrderStatus)
+              ? { status: status as OrderStatus }
+              : {}),
           },
-        },
+          {
+            order: {
+              space: {
+                kitchen_id: kitchen_id,
+              },
+            },
+          },
+        ],
       },
       include: {
         order: {

@@ -91,12 +91,17 @@ export class KitchenService {
     });
   }
 
-  async getOrderItems(kitchen: any, status?: string) {
+  async getOrderItems(kitchen: any, status?: string, page: number = 1) {
     const { kitchen_id } = kitchen;
 
     const kitchenExists = await this.getKitchenById(kitchen_id);
 
     const validStatuses = Object.values(OrderStatus);
+    const limit = 10;
+
+    page = Math.max(page, 1);
+
+    const skip = (page - 1) * limit;
 
     const orders = await this.database.order_Item.findMany({
       where: {
@@ -115,6 +120,8 @@ export class KitchenService {
           },
         ],
       },
+      skip: skip ? skip : undefined,
+      take: skip ? limit : undefined,
       include: {
         order: {
           select: {

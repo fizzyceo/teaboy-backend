@@ -108,7 +108,7 @@ export class UserService {
 
     const myUser = await this.findUserById(user_id);
 
-    return await this.database.space.findMany({
+    const spaces = await this.database.space.findMany({
       where: {
         users: {
           some: {
@@ -116,7 +116,32 @@ export class UserService {
           },
         },
       },
+
+      select: {
+        space_id: true,
+        name: true,
+        site_id: true,
+        kitchen_id: true,
+        created_at: true,
+        updated_at: true,
+        menus: {
+          select: {
+            menu_id: true,
+          },
+        },
+      },
     });
+
+    return spaces.map((space) => ({
+      space_id: space.space_id,
+      name: space.name,
+      site_id: space.site_id,
+      kitchen_id: space.kitchen_id,
+      created_at: space.created_at,
+      updated_at: space.updated_at,
+      // ...space,
+      menu_ids: space.menus.map((menu) => menu.menu_id),
+    }));
   }
 
   // User and Sites

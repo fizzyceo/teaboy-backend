@@ -56,9 +56,20 @@ export class KitchenController {
     description: "Filter order items by status",
     enum: OrderStatus,
   })
+  @ApiQuery({
+    name: "page",
+    required: false,
+    description: "Page number for pagination",
+    type: Number,
+    example: 1,
+  })
   @ApiOperation({ summary: "Get all order items related to a Kitchen" })
-  async getOrderItems(@Req() req, @Query("status") status?: string) {
-    return await this.kitchenService.getOrderItems(req.user, status);
+  async getOrderItems(
+    @Req() req,
+    @Query("status") status?: string,
+    @Query("page") page: number = 1
+  ) {
+    return await this.kitchenService.getOrderItems(req.user, status, page);
   }
 
   @Get(":id")

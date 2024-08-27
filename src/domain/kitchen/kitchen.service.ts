@@ -123,7 +123,7 @@ export class KitchenService {
       skip: skip ? skip : undefined,
       take: limit,
       orderBy: {
-        created_at: "desc",
+        created_at: "asc",
       },
       include: {
         order: {

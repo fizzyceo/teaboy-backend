@@ -42,10 +42,6 @@ export class OrderService {
   async creareOrder(createOrderDto: CreateOrderDto) {
     const { order_items, spaceId, ...orderData } = createOrderDto;
 
-    if (order_items.length === 0) {
-      throw new BadRequestException("Order must have at least one item");
-    }
-
     const orderKitchen = await this.database.kitchen.findFirst({
       where: {
         spaces: {

@@ -121,7 +121,10 @@ export class KitchenService {
         ],
       },
       skip: skip ? skip : undefined,
-      take: skip ? limit : undefined,
+      take: limit,
+      orderBy: {
+        created_at: "desc",
+      },
       include: {
         order: {
           select: {

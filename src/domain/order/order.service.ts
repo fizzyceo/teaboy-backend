@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -40,6 +41,10 @@ export class OrderService {
 
   async creareOrder(createOrderDto: CreateOrderDto) {
     const { order_items, spaceId, ...orderData } = createOrderDto;
+
+    if (order_items.length === 0) {
+      throw new BadRequestException("Order must have at least one item");
+    }
 
     const orderKitchen = await this.database.kitchen.findFirst({
       where: {
@@ -162,6 +167,7 @@ export class OrderService {
           select: {
             order_item_id: true,
             note: true,
+            quantity: true,
             status: true,
             choices: {
               select: {

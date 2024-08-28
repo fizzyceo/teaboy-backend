@@ -72,21 +72,34 @@ export class KitchenController {
     return await this.kitchenService.getOrderItems(req.user, status, page);
   }
 
-  @Get(":id")
+  @Get("/infos")
   @ApiOperation({ summary: "Get kitchen details by id" })
-  @ApiParam({
-    name: "id",
-    description: "Kitchen id to fetch",
-    required: true,
-  })
-  getKitchenById(@Param("id", ParseIntPipe) id: number) {
-    return this.kitchenService.getKitchenById(id);
+  @UseGuards(KitchenAuthGuard)
+  @ApiBearerAuth()
+  getKitchenById(@Req() req) {
+    return this.kitchenService.getKitchenInfos(req.user);
   }
 
   @Patch("/update")
   @ApiBody({
     type: UpdateKitchenDto,
     description: "Update kitchen details",
+    examples: {
+      example1: {
+        summary: "Example of updating a kitchen",
+        value: {
+          name: "Kitchen 1",
+          isOpen: true,
+          openingHours: [
+            {
+              dayOfWeek: "MONDAY",
+              openTime: "09:00",
+              closeTime: "18:00",
+            },
+          ],
+        },
+      },
+    },
   })
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()

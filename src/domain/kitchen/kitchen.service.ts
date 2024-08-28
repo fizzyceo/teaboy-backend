@@ -11,6 +11,18 @@ import { OrderStatus } from "../order-item/dto";
 export class KitchenService {
   constructor(private readonly database: DatabaseService) {}
 
+  async getKitchenById(kitchen_id: number) {
+    const kitchen = await this.database.kitchen.findUnique({
+      where: { kitchen_id },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
+    }
+
+    return kitchen;
+  }
+
   async createKitchen(createKitchenDto: CreateKitchenDto) {
     const { openingHours, ...kitchenData } = createKitchenDto;
 
@@ -36,16 +48,26 @@ export class KitchenService {
     return await this.database.kitchen.findMany();
   }
 
-  async getKitchenById(id: number) {
+  async getKitchenInfos(req: any) {
+    const { kitchen_id } = req;
     const kitchen = await this.database.kitchen.findUnique({
-      where: { kitchen_id: id },
-      include: {
-        openingHours: true,
-        spaces: true,
+      where: { kitchen_id: kitchen_id },
+      select: {
+        kitchen_id: true,
+        name: true,
+        token: true,
+        openingHours: {
+          select: {
+            openingHours_id: true,
+            dayOfWeek: true,
+            openTime: true,
+            closeTime: true,
+          },
+        },
       },
     });
     if (!kitchen) {
-      throw new NotFoundException(`Kitchen with id ${id} not found`);
+      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
     return kitchen;
   }

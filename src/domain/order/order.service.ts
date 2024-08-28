@@ -40,7 +40,19 @@ export class OrderService {
   }
 
   async creareOrder(createOrderDto: CreateOrderDto) {
-    const { order_items, spaceId, ...orderData } = createOrderDto;
+    const { order_items, user_id, spaceId, ...orderData } = createOrderDto;
+
+    if (user_id) {
+      const user = await this.database.user.findUnique({
+        where: {
+          user_id,
+        },
+      });
+
+      if (!user) {
+        throw new BadRequestException(`User with id ${user_id} not found`);
+      }
+    }
 
     const orderKitchen = await this.database.kitchen.findFirst({
       where: {
@@ -94,6 +106,13 @@ export class OrderService {
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: {
+          user: user_id
+            ? {
+                connect: {
+                  user_id: user_id,
+                },
+              }
+            : undefined,
           menu: {
             connect: {
               menu_id: menuId,
@@ -115,6 +134,7 @@ export class OrderService {
               menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
               note: orderItem.note,
               status: orderItem.status,
+              quantity: orderItem.quantity ? orderItem.quantity : 1,
               choices: {
                 create: orderItem.choices.map((choice) => ({
                   menu_item_option_choice: {

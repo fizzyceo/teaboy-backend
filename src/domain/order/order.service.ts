@@ -218,6 +218,9 @@ export class OrderService {
           },
         },
       },
+      orderBy: {
+        created_at: "asc",
+      },
     });
 
     return orders.map((order) => ({

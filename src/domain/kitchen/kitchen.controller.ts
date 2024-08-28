@@ -86,13 +86,7 @@ export class KitchenController {
   @Patch("/update")
   @ApiBody({
     type: UpdateKitchenDto,
-    examples: {
-      example: {
-        value: {
-          isOpen: true,
-        },
-      },
-    },
+    description: "Update kitchen details",
   })
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()

@@ -49,15 +49,67 @@ export class KitchenService {
     }
     return kitchen;
   }
-
   async updateKitchen(kitchen: any, updateKitchenDto: UpdateKitchenDto) {
     const { kitchen_id } = kitchen;
-    const kitchenExists = await this.getKitchenById(kitchen_id);
 
-    return await this.database.kitchen.update({
-      where: { kitchen_id: kitchen_id },
-      data: updateKitchenDto,
-    });
+    const { openingHours, ...kitchenData } = updateKitchenDto;
+
+    const updatedKitchen = await this.database.$transaction(
+      async (transaction) => {
+        if (openingHours) {
+          // Fetch current opening hours for comparison
+          const currentOpeningHours = await transaction.openingHours.findMany({
+            where: { kitchen_id },
+          });
+
+          const existingDaysOfWeek = currentOpeningHours.map(
+            (hour) => hour.dayOfWeek
+          );
+
+          // Update existing opening hours or create new ones
+          for (const hour of openingHours) {
+            if (existingDaysOfWeek.includes(hour.dayOfWeek)) {
+              // Update existing opening hour
+              await transaction.openingHours.updateMany({
+                where: {
+                  kitchen_id,
+                  dayOfWeek: hour.dayOfWeek,
+                },
+                data: {
+                  openTime: hour.openTime,
+                  closeTime: hour.closeTime,
+                },
+              });
+            } else {
+              // Create new opening hour
+              await transaction.openingHours.create({
+                data: {
+                  kitchen_id,
+                  ...hour,
+                },
+              });
+            }
+          }
+
+          // Delete opening hours that are no longer included in the update
+          const daysToKeep = openingHours.map((hour) => hour.dayOfWeek);
+          await transaction.openingHours.deleteMany({
+            where: {
+              kitchen_id,
+              dayOfWeek: { notIn: daysToKeep },
+            },
+          });
+        }
+
+        // Update the kitchen data
+        return await transaction.kitchen.update({
+          where: { kitchen_id },
+          data: kitchenData,
+        });
+      }
+    );
+
+    return updatedKitchen;
   }
 
   async removeKitchen(id: number) {

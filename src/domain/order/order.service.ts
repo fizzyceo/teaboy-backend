@@ -219,7 +219,7 @@ export class OrderService {
         },
       },
       orderBy: {
-        created_at: "asc",
+        created_at: "desc",
       },
     });
 

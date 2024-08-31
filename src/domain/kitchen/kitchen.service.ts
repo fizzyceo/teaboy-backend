@@ -197,7 +197,7 @@ export class KitchenService {
       skip: skip ? skip : undefined,
       take: limit,
       orderBy: {
-        created_at: "asc",
+        created_at: "desc",
       },
       include: {
         order: {

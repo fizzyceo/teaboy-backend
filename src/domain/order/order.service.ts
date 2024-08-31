@@ -157,8 +157,13 @@ export class OrderService {
     return createdOrder;
   }
 
-  async getAllOrders(user: any) {
+  async getAllOrders(user: any, page: number = 1, limit: number = 5) {
     const { user_id } = user;
+
+    const pageNumber = page > 0 ? page : 1;
+    const pageSize = limit > 0 ? limit : 5;
+
+    const skip = (pageNumber - 1) * pageSize;
     const orders = await this.database.order.findMany({
       where: {
         OR: [
@@ -221,6 +226,8 @@ export class OrderService {
       orderBy: {
         created_at: "desc",
       },
+      skip: skip ? skip : undefined,
+      take: pageSize,
     });
 
     return orders.map((order) => ({

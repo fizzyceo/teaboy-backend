@@ -9,6 +9,7 @@ import {
   ParseIntPipe,
   UseGuards,
   Req,
+  Query,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -21,6 +22,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiBearerAuth,
+  ApiQuery,
 } from "@nestjs/swagger";
 
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
@@ -57,9 +59,27 @@ export class OrderController {
   })
   @ApiResponse({ status: 404, description: "No orders found" })
   @ApiResponse({ status: 401, description: "Unauthorized" })
-  getAllOrders(@Req() req) {
+  @ApiQuery({
+    name: "page",
+    required: false,
+    description: "Page number for pagination",
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: "limit",
+    required: false,
+    description: "Number of orders per page",
+    type: Number,
+    example: 1,
+  })
+  getAllOrders(
+    @Req() req,
+    @Query("page") page: number = 1,
+    @Query("limit") limit: number = 5
+  ) {
     const user = req.user;
-    return this.orderService.getAllOrders(user);
+    return this.orderService.getAllOrders(user, page, limit);
   }
 
   @Get(":id")

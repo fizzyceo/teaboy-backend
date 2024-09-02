@@ -165,7 +165,7 @@ export class KitchenService {
     });
   }
 
-  async getOrderItems(kitchen: any, status?: string, page: number = 1) {
+  async getOrderItems(kitchen: any, status?: string, page?: number) {
     const { kitchen_id } = kitchen;
 
     const kitchenExists = await this.getKitchenById(kitchen_id);
@@ -173,10 +173,24 @@ export class KitchenService {
     const validStatuses = Object.values(OrderStatus);
     const limit = 10;
 
-    page = Math.max(page, 1);
+    const isPendingOrInProgress =
+      status === OrderStatus.PENDING || status === OrderStatus.IN_PROGRESS;
 
-    const skip = (page - 1) * limit;
+    let skip: number | undefined;
+    let take: number | undefined;
+    let createdAtCondition: any = {};
 
+    if (isPendingOrInProgress) {
+      const last24Hours = new Date();
+      last24Hours.setHours(last24Hours.getHours() - 24);
+      createdAtCondition = { created_at: { gte: last24Hours } };
+    } else {
+      page = page && page > 0 ? page : 1;
+      skip = (page - 1) * limit;
+      take = limit;
+    }
+
+    console.log("skip", skip, "take", take);
     const orders = await this.database.order_Item.findMany({
       where: {
         AND: [
@@ -192,10 +206,11 @@ export class KitchenService {
               },
             },
           },
+          createdAtCondition,
         ],
       },
-      skip: skip ? skip : undefined,
-      take: limit,
+      skip,
+      take,
       orderBy: {
         created_at: "desc",
       },

@@ -207,6 +207,7 @@ export class KitchenService {
             order_number: true,
             space: {
               select: {
+                name: true,
                 space_id: true,
                 kitchen_id: true,
               },

@@ -56,7 +56,12 @@ export class UserService {
   }
 
   async getUserById(id: number) {
-    return await this.findUserById(id);
+    const user = await this.findUserById(id);
+    if (user) {
+      const { password, ...userWithoutPassword } = user;
+      return userWithoutPassword;
+    }
+    return null;
   }
 
   async updateUser(id: number, updateuserDto: UpdateUserDto) {
@@ -92,7 +97,7 @@ export class UserService {
       throw new NotFoundException(`Space with id ${spaceId} not found`);
     }
 
-    return this.database.user.update({
+    this.database.user.update({
       where: { user_id: userId },
       data: {
         spaces: {
@@ -102,6 +107,8 @@ export class UserService {
         },
       },
     });
+
+    return space;
   }
   async getUserSpaces(user: any) {
     const { user_id } = user;

@@ -56,8 +56,8 @@ export class UserController {
     description: "Space id to add",
   })
   addUserToSpace(@Query("spaceId") spaceId: number, @Req() user: any) {
-    const { userId } = user.user;
-    return this.userService.addUserToSpace(userId, spaceId);
+    const { user_id } = user.user;
+    return this.userService.addUserToSpace(user_id, spaceId);
   }
 
   @Patch("link-site")
@@ -70,8 +70,8 @@ export class UserController {
     description: "Site id to add",
   })
   addUserToSite(@Query("siteId") siteId: number, @Req() user: any) {
-    const { userId } = user.user;
-    return this.userService.addUserToSite(userId, siteId);
+    const { user_id } = user.user;
+    return this.userService.addUserToSite(user_id, siteId);
   }
 
   @Get("/spaces")
@@ -79,8 +79,7 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all Spaces of a User" })
   getUserSpaces(@Req() user: any) {
-    const user_id = user.user;
-    return this.userService.getUserSpaces(user_id);
+    return this.userService.getUserSpaces(user.user);
   }
 
   @Get("/sites")
@@ -88,44 +87,34 @@ export class UserController {
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all Sites of a User" })
   getUserSites(@Req() user: any) {
-    const user_id = user.user;
-    return this.userService.getUserSites(user_id);
+    return this.userService.getUserSites(user.user);
   }
 
-  @Get(":id")
-  @ApiOperation({ summary: "Get User details by id" })
-  @ApiParam({
-    name: "id",
-    description: "User id to fetch",
-    required: true,
-  })
-  getUserById(@Param("id", ParseIntPipe) id: number) {
-    return this.userService.getUserById(id);
+  @Get("infos")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get my informatiosn as user" })
+  getUserById(@Req() user: any) {
+    const { user_id } = user.user;
+    return this.userService.getUserById(user_id);
   }
 
-  @Patch(":id")
+  @Patch("update")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiBody({ type: UpdateUserDto })
   @ApiOperation({ summary: "Update User details by id" })
-  @ApiParam({
-    name: "id",
-    description: "User id to update",
-    required: true,
-  })
-  updateUser(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
-  ) {
-    return this.userService.updateUser(id, updateUserDto);
+  updateUser(@Req() user: any, @Body() updateUserDto: UpdateUserDto) {
+    const { user_id } = user.user;
+    return this.userService.updateUser(user_id, updateUserDto);
   }
 
-  @Delete(":id")
+  @Delete("delete")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Delete User by id" })
-  @ApiParam({
-    name: "id",
-    description: "User id to delete",
-    required: true,
-  })
-  deleteUser(@Param("id", ParseIntPipe) id: number) {
-    return this.userService.deleteUser(id);
+  deleteUser(@Req() user: any) {
+    const { user_id } = user.user;
+    return this.userService.deleteUser(user_id);
   }
 }

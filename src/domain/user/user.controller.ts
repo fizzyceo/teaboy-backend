@@ -118,4 +118,21 @@ export class UserController {
     const { user_id } = user.user;
     return this.userService.deleteUser(user_id);
   }
+
+  @Get("kitchen-status/:kitchen_id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get Kitchen status by id" })
+  @ApiParam({
+    name: "kitchen_id",
+    required: true,
+    description: "Kitchen id to get status",
+  })
+  getKitchenStatus(
+    @Param("kitchen_id", ParseIntPipe) kitchen_id: number,
+    @Req() req
+  ) {
+    const { user_id } = req.user;
+    return this.userService.getKitchenStatus(kitchen_id, user_id);
+  }
 }

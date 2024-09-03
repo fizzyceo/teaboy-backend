@@ -2,6 +2,7 @@ import {
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
 
@@ -190,6 +191,40 @@ export class UserService {
             user_id: user_id,
           },
         },
+      },
+    });
+  }
+
+  async getKitchenStatus(kitchen_id: number, user_id) {
+    const userCanAccessKitchen = await this.database.user.findFirst({
+      where: {
+        user_id,
+        spaces: {
+          some: {
+            kitchen_id: kitchen_id,
+          },
+        },
+      },
+    });
+
+    if (!userCanAccessKitchen) {
+      throw new UnauthorizedException(
+        `User does not have access to kitchen with id ${kitchen_id}`
+      );
+    }
+
+    const kitchen = await this.database.kitchen.findUnique({
+      where: { kitchen_id },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
+    }
+
+    return await this.database.kitchen.findUnique({
+      where: { kitchen_id },
+      select: {
+        isOpen: true,
       },
     });
   }

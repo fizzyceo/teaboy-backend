@@ -97,7 +97,7 @@ export class UserService {
       throw new NotFoundException(`Space with id ${spaceId} not found`);
     }
 
-    this.database.user.update({
+    return await this.database.user.update({
       where: { user_id: userId },
       data: {
         spaces: {
@@ -106,10 +106,12 @@ export class UserService {
           },
         },
       },
+      include: {
+        spaces: true,
+      },
     });
-
-    return space;
   }
+
   async getUserSpaces(user: any) {
     const { user_id } = user;
 
@@ -146,7 +148,6 @@ export class UserService {
       kitchen_id: space.kitchen_id,
       created_at: space.created_at,
       updated_at: space.updated_at,
-      // ...space,
       menu_ids: space.menus.map((menu) => menu.menu_id),
     }));
   }
@@ -163,7 +164,7 @@ export class UserService {
       throw new NotFoundException(`Site with id ${siteId} not found`);
     }
 
-    return this.database.user.update({
+    return await this.database.user.update({
       where: { user_id: userId },
       data: {
         sites: {
@@ -171,6 +172,9 @@ export class UserService {
             site_id: siteId,
           },
         },
+      },
+      include: {
+        sites: true,
       },
     });
   }

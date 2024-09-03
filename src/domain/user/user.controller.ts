@@ -57,6 +57,7 @@ export class UserController {
   })
   addUserToSpace(@Query("spaceId") spaceId: number, @Req() user: any) {
     const { user_id } = user.user;
+    console.log("link_space", user_id, spaceId);
     return this.userService.addUserToSpace(user_id, spaceId);
   }
 

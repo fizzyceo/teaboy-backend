@@ -45,10 +45,18 @@ model Site {
   updated_at DateTime @updatedAt
 }
 
+enum SPACE_TYPE {
+  MAJLISS
+  OFFICE
+  DEPARTMENT
+}
+
 model Space {
   space_id Int @id @default(autoincrement())
 
   name String
+
+  type SPACE_TYPE @default(DEPARTMENT)
 
   site_id Int
   site    Site @relation(fields: [site_id], references: [site_id], onDelete: Cascade)

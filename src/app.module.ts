@@ -14,6 +14,7 @@ import { UserModule } from "./domain/user/user.module";
 import { SpaceModule } from "./domain/space/space.module";
 import { EncryptionModule } from "./encryption/encryption.module";
 import { KitchenModule } from "./domain/kitchen/kitchen.module";
+import { CallModule } from "./domain/call/call.module";
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { KitchenModule } from "./domain/kitchen/kitchen.module";
     ImagesModule,
     SpaceModule,
     EncryptionModule,
+    CallModule,
   ],
 })
 export class AppModule {}

@@ -227,12 +227,21 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum CALL_STATUS {
+  STARTED
+  ANSWERED
+  COMPLETED
+  FAILED
+}
+
 model Call {
   call_id    Int      @id @default(autoincrement())
   user_id    Int
   User       User     @relation(fields: [user_id], references: [user_id])
   space_id   Int
   Space      Space    @relation(fields: [space_id], references: [space_id])
+
+  status     CALL_STATUS @default(STARTED)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }

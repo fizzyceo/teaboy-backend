@@ -1,10 +1,12 @@
 import { Module } from "@nestjs/common";
 import { CallService } from "./call.service";
-import { CallGateway } from "./call.gateway";
+import { CallController } from "./call.controller";
 import { DatabaseModule } from "src/database/database.module";
+import { AuthModule } from "src/auth/auth.module";
 
 @Module({
-  providers: [CallGateway, CallService],
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, AuthModule],
+  controllers: [CallController],
+  providers: [CallService],
 })
 export class CallModule {}

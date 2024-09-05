@@ -126,14 +126,14 @@ export class KitchenController {
     description: "Kitchen id to link",
     required: true,
   })
-  @ApiQuery({
+  @ApiParam({
     name: "space_id",
     description: "Space id to link",
     required: true,
   })
   linkKitchenToSpace(
     @Param("kitchen_id", ParseIntPipe) kitchenId: number,
-    @Query("space_id", ParseIntPipe) spaceId: number
+    @Param("space_id", ParseIntPipe) spaceId: number
   ) {
     return this.kitchenService.linkKitchenToSpace(kitchenId, spaceId);
   }

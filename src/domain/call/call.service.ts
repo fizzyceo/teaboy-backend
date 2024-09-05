@@ -8,10 +8,6 @@ export class CallService {
   constructor(private readonly database: DatabaseService) {}
 
   async startCall(space_id: number, user_id: number) {
-    // const { space_id, status } = createCallDto;
-
-    console.log("space_id", space_id);
-
     const space = await this.database.space.findFirst({
       where: {
         AND: [
@@ -77,6 +73,18 @@ export class CallService {
       orderBy: {
         created_at: "desc",
       },
+      select: {
+        call_id: true,
+        status: true,
+        updated_at: true,
+        created_at: true,
+        User: {
+          select: {
+            user_id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     return calls;
@@ -115,6 +123,18 @@ export class CallService {
           },
         ],
       },
+      select: {
+        call_id: true,
+        status: true,
+        updated_at: true,
+        created_at: true,
+        User: {
+          select: {
+            user_id: true,
+            name: true,
+          },
+        },
+      },
     });
 
     if (!call) {
@@ -135,6 +155,18 @@ export class CallService {
             },
           },
         ],
+      },
+      select: {
+        call_id: true,
+        status: true,
+        updated_at: true,
+        created_at: true,
+        User: {
+          select: {
+            user_id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -163,6 +195,18 @@ export class CallService {
             },
           },
         ],
+      },
+      select: {
+        call_id: true,
+        status: true,
+        updated_at: true,
+        created_at: true,
+        User: {
+          select: {
+            user_id: true,
+            name: true,
+          },
+        },
       },
     });
 

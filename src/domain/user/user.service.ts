@@ -130,6 +130,7 @@ export class UserService {
       select: {
         space_id: true,
         name: true,
+        type: true,
         site_id: true,
         kitchen_id: true,
         created_at: true,
@@ -146,6 +147,7 @@ export class UserService {
       space_id: space.space_id,
       name: space.name,
       site_id: space.site_id,
+      type: space.type,
       kitchen_id: space.kitchen_id,
       created_at: space.created_at,
       updated_at: space.updated_at,

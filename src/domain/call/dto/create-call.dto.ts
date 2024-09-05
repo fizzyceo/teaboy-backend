@@ -1,7 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsInt } from "class-validator";
 
-enum CALL_STATUS {
+export enum CALL_STATUS {
   STARTED = "STARTED",
   ANSWERED = "ANSWERED",
   COMPLETED = "COMPLETED",

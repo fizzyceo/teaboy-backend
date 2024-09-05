@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateCallDto } from "./dto/create-call.dto";
+import { CALL_STATUS, CreateCallDto } from "./dto/create-call.dto";
 import { UpdateCallDto } from "./dto/update-call.dto";
 import { DatabaseService } from "src/database/database.service";
 
@@ -7,8 +7,8 @@ import { DatabaseService } from "src/database/database.service";
 export class CallService {
   constructor(private readonly database: DatabaseService) {}
 
-  async startCall(createCallDto: CreateCallDto, user_id: number) {
-    const { space_id, status } = createCallDto;
+  async startCall(space_id: number, user_id: number) {
+    // const { space_id, status } = createCallDto;
 
     console.log("space_id", space_id);
 
@@ -33,7 +33,7 @@ export class CallService {
 
     return await this.database.call.create({
       data: {
-        status: status,
+        status: "STARTED",
         Space: {
           connect: {
             space_id: space_id,
@@ -124,11 +124,7 @@ export class CallService {
     return call;
   }
 
-  async updateCallUser(
-    id: number,
-    updateCallDto: UpdateCallDto,
-    user_id: number
-  ) {
+  async updateCallUser(id: number, status: CALL_STATUS, user_id: number) {
     const call = await this.database.call.findFirst({
       where: {
         AND: [
@@ -151,16 +147,12 @@ export class CallService {
         call_id: id,
       },
       data: {
-        ...updateCallDto,
+        status,
       },
     });
   }
 
-  async updateCallKitchen(
-    id: number,
-    updateCallDto: UpdateCallDto,
-    kitchen_id: number
-  ) {
+  async updateCallKitchen(id: number, status: CALL_STATUS, kitchen_id: number) {
     const call = await this.database.call.findFirst({
       where: {
         AND: [
@@ -183,7 +175,7 @@ export class CallService {
         call_id: id,
       },
       data: {
-        ...updateCallDto,
+        status,
       },
     });
   }

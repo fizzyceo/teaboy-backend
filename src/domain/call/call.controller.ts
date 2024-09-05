@@ -9,15 +9,17 @@ import {
   UseGuards,
   Req,
   ParseIntPipe,
+  Query,
 } from "@nestjs/common";
 import { CallService } from "./call.service";
-import { CreateCallDto } from "./dto/create-call.dto";
+import { CALL_STATUS, CreateCallDto } from "./dto/create-call.dto";
 import { UpdateCallDto } from "./dto/update-call.dto";
 import {
   ApiBearerAuth,
   ApiBody,
   ApiOperation,
   ApiParam,
+  ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
@@ -36,10 +38,18 @@ export class CallController {
   })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  startCall(@Body() createCallDto: CreateCallDto, @Req() user: any) {
+  @ApiQuery({
+    name: "space_id",
+    description: "Space id",
+    type: Number,
+    required: true,
+  })
+  startCall(
+    @Query("space_id", ParseIntPipe) space_id: number,
+    @Req() user: any
+  ) {
     const { user_id } = user.user;
-    console.log("Create call", createCallDto);
-    return this.callService.startCall(createCallDto, user_id);
+    return this.callService.startCall(space_id, user_id);
   }
 
   @Get("history")
@@ -93,17 +103,6 @@ export class CallController {
   }
 
   @Patch("/user-update/:call_id")
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        status: {
-          type: "string",
-          example: "ANSWERED",
-        },
-      },
-    },
-  })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
@@ -111,27 +110,22 @@ export class CallController {
     description:
       "You should be authenticated as a user, [STARTED,ANSWERED,COMPLETED,FAILED]",
   })
+  @ApiQuery({
+    name: "status",
+    description: "Call status",
+    enum: CALL_STATUS,
+    required: true,
+  })
   updateCallUser(
     @Param("call_id", ParseIntPipe) call_id: number,
-    @Body() updateCallDto: UpdateCallDto,
+    @Query("status") status: CALL_STATUS,
     @Req() user: any
   ) {
     const { user_id } = user.user;
-    return this.callService.updateCallUser(call_id, updateCallDto, user_id);
+    return this.callService.updateCallUser(call_id, status, user_id);
   }
 
   @Patch("/kitchen-update/:call_id")
-  @ApiBody({
-    schema: {
-      type: "object",
-      properties: {
-        status: {
-          type: "string",
-          example: "ANSWERED",
-        },
-      },
-    },
-  })
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
@@ -139,17 +133,19 @@ export class CallController {
     description:
       "You should be authenticated as a Kitchen, [STARTED,ANSWERED,COMPLETED,FAILED]",
   })
+  @ApiQuery({
+    name: "status",
+    description: "Call status",
+    enum: CALL_STATUS,
+    required: true,
+  })
   updateCallKitchen(
     @Param("call_id", ParseIntPipe) call_id: number,
-    @Body() updateCallDto: UpdateCallDto,
+    @Query("status") status: CALL_STATUS,
     @Req() kitchen: any
   ) {
     const { kitchen_id } = kitchen.user;
-    return this.callService.updateCallKitchen(
-      call_id,
-      updateCallDto,
-      kitchen_id
-    );
+    return this.callService.updateCallKitchen(call_id, status, kitchen_id);
   }
 
   @Delete(":call_id")

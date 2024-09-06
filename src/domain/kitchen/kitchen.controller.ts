@@ -99,6 +99,7 @@ export class KitchenController {
               dayOfWeek: "MONDAY",
               openTime: "09:00",
               closeTime: "18:00",
+              timezone: "+1:00",
             },
           ],
         },

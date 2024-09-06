@@ -39,4 +39,11 @@ export class OpeningHourDto {
     message: "Time must be in HH:mm format",
   })
   closeTime: string;
+
+  @ApiProperty({
+    description: "Timzeone",
+    example: "+00:00",
+  })
+  @IsString()
+  timezone: string;
 }

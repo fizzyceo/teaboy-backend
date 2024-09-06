@@ -94,6 +94,7 @@ export class KitchenController {
         value: {
           name: "Kitchen 1",
           isOpen: true,
+          isWeeklyTimingOn: true,
           openingHours: [
             {
               dayOfWeek: "MONDAY",

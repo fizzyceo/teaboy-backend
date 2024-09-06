@@ -22,4 +22,8 @@ export class CreateKitchenDto {
   @IsArray()
   @Type(() => OpeningHourDto)
   openingHours: OpeningHourDto[];
+
+  @ApiProperty()
+  @IsBoolean()
+  isWeeklyTimingOn: boolean;
 }

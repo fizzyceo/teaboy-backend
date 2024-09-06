@@ -251,6 +251,7 @@ model Kitchen {
   name       String
   token       String    @unique
   isOpen     Boolean @default(true)
+  isWeeklyTimingOn Boolean @default(false)
 
   spaces       Space[]
   Teaboys      User[]

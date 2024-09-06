@@ -118,6 +118,7 @@ export class MenuService {
       },
       select: {
         isOpen: true,
+        isWeeklyTimingOn: true,
         openingHours: {
           select: {
             openingHours_id: true,
@@ -237,15 +238,19 @@ export class MenuService {
         openTime.setHours(Number(openHour), Number(openMinute), 0);
         closeTime.setHours(Number(closeHour), Number(closeMinute), 0);
 
-        if (currentTime >= openTime && currentTime <= closeTime) {
-          isCurrentlyOpen = true;
-        }
+        const currentTimeInRange =
+          currentTime >= openTime && currentTime <= closeTime;
+
+        // Apply the new condition
+        isCurrentlyOpen =
+          associatedKitchen.isOpen &&
+          (!associatedKitchen.isWeeklyTimingOn || currentTimeInRange);
       }
     }
 
     return {
       ...menu,
-      isOpen: isCurrentlyOpen && associatedKitchen.isOpen,
+      isOpen: isCurrentlyOpen,
       openingHours: associatedKitchen.openingHours.map((hours) => ({
         openingHours_id: hours.openingHours_id,
         dayOfWeek: hours.dayOfWeek,

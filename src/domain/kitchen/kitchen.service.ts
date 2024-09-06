@@ -56,6 +56,8 @@ export class KitchenService {
         kitchen_id: true,
         name: true,
         token: true,
+        isOpen: true,
+        isWeeklyTimingOn: true,
         openingHours: {
           select: {
             openingHours_id: true,
@@ -110,29 +112,30 @@ export class KitchenService {
           // Update existing opening hours or create new ones
           for (const hour of openingHours) {
             if (existingDaysOfWeek.includes(hour.dayOfWeek)) {
+              const { timezone, ...HourWithoutTimezone } = hour;
               // Update existing opening hour
               await transaction.openingHours.updateMany({
                 where: {
                   kitchen_id,
-                  dayOfWeek: hour.dayOfWeek,
+                  dayOfWeek: HourWithoutTimezone.dayOfWeek,
                 },
                 data: {
-                  openTime: hour.openTime,
-                  closeTime: hour.closeTime,
+                  openTime: HourWithoutTimezone.openTime,
+                  closeTime: HourWithoutTimezone.closeTime,
                 },
               });
             } else {
+              const { timezone, ...HourWithoutTimezone } = hour;
               // Create new opening hour
               await transaction.openingHours.create({
                 data: {
                   kitchen_id,
-                  ...hour,
+                  ...HourWithoutTimezone,
                 },
               });
             }
           }
 
-          // Delete opening hours that are no longer included in the update
           const daysToKeep = openingHours.map((hour) => hour.dayOfWeek);
           await transaction.openingHours.deleteMany({
             where: {

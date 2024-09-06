@@ -44,7 +44,7 @@ export class KitchenService {
     };
   }
 
-  async getAllKitchens() {
+  async getAllKitchens(user_id: number) {
     return await this.database.kitchen.findMany();
   }
 
@@ -64,13 +64,33 @@ export class KitchenService {
             closeTime: true,
           },
         },
+        spaces: {
+          select: {
+            space_id: true,
+            name: true,
+            menus: {
+              select: {
+                menu_id: true,
+              },
+            },
+          },
+        },
       },
     });
+
     if (!kitchen) {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
-    return kitchen;
+    return {
+      ...kitchen,
+      spaces: kitchen.spaces.map((space) => ({
+        space_id: space.space_id,
+        name: space.name,
+        menu_id: space.menus.length > 0 ? space.menus[0].menu_id : null,
+      })),
+    };
   }
+
   async updateKitchen(kitchen: any, updateKitchenDto: UpdateKitchenDto) {
     const { kitchen_id } = kitchen;
 
@@ -79,7 +99,6 @@ export class KitchenService {
     const updatedKitchen = await this.database.$transaction(
       async (transaction) => {
         if (openingHours) {
-          // Fetch current opening hours for comparison
           const currentOpeningHours = await transaction.openingHours.findMany({
             where: { kitchen_id },
           });
@@ -134,7 +153,7 @@ export class KitchenService {
     return updatedKitchen;
   }
 
-  async removeKitchen(id: number) {
+  async removeKitchen(id: number, user_id: number) {
     const kitchen = await this.getKitchenById(id);
 
     return await this.database.kitchen.delete({
@@ -142,7 +161,11 @@ export class KitchenService {
     });
   }
 
-  async linkKitchenToSpace(kitchenId: number, spaceId: number) {
+  async linkKitchenToSpace(
+    kitchenId: number,
+    spaceId: number,
+    user_id: number
+  ) {
     const kitchen = await this.getKitchenById(kitchenId);
 
     const space = await this.database.space.findUnique({

@@ -24,7 +24,7 @@ export class MenuService {
     return menu;
   }
 
-  async createMenu(createMenuDto: CreateMenuDto) {
+  async createMenu(createMenuDto: CreateMenuDto, user_id: number) {
     return await this.database.menu.create({
       data: {
         ...createMenuDto,
@@ -32,8 +32,19 @@ export class MenuService {
     });
   }
 
-  async getAllMenus() {
+  async getAllMenus(user_id: number) {
     const menus = await this.database.menu.findMany({
+      where: {
+        spaces: {
+          some: {
+            users: {
+              some: {
+                user_id: user_id,
+              },
+            },
+          },
+        },
+      },
       select: {
         menu_id: true,
         name: true,
@@ -107,6 +118,14 @@ export class MenuService {
       },
       select: {
         isOpen: true,
+        openingHours: {
+          select: {
+            openingHours_id: true,
+            dayOfWeek: true,
+            openTime: true,
+            closeTime: true,
+          },
+        },
       },
     });
 
@@ -196,9 +215,43 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
+    const currentTime = new Date();
+    const currentDayOfWeek = currentTime
+      .toLocaleString("en-US", { weekday: "long" })
+      .toUpperCase();
+
+    let isCurrentlyOpen = false;
+
+    if (associatedKitchen?.openingHours) {
+      const todayOpeningHours = associatedKitchen.openingHours.find(
+        (hours) => hours.dayOfWeek === currentDayOfWeek
+      );
+
+      if (todayOpeningHours) {
+        const openTime = new Date();
+        const closeTime = new Date();
+
+        const [openHour, openMinute] = todayOpeningHours.openTime.split(":");
+        const [closeHour, closeMinute] = todayOpeningHours.closeTime.split(":");
+
+        openTime.setHours(Number(openHour), Number(openMinute), 0);
+        closeTime.setHours(Number(closeHour), Number(closeMinute), 0);
+
+        if (currentTime >= openTime && currentTime <= closeTime) {
+          isCurrentlyOpen = true;
+        }
+      }
+    }
+
     return {
       ...menu,
-      isOpen: associatedKitchen.isOpen,
+      isOpen: isCurrentlyOpen && associatedKitchen.isOpen,
+      openingHours: associatedKitchen.openingHours.map((hours) => ({
+        openingHours_id: hours.openingHours_id,
+        dayOfWeek: hours.dayOfWeek,
+        openTime: hours.openTime,
+        closeTime: hours.closeTime,
+      })),
       menu_items: menu.menu_items.map((item) => ({
         menu_item_id: item.menu_item_id,
         title: item.title,
@@ -239,7 +292,7 @@ export class MenuService {
     });
   }
 
-  async updateMenu(id: number, updateMenuDto: UpdateMenuDto) {
+  async updateMenu(id: number, updateMenuDto: UpdateMenuDto, user_id: number) {
     const menu = await this.findMenuById(id);
 
     return await this.database.menu.update({
@@ -248,7 +301,7 @@ export class MenuService {
     });
   }
 
-  async deleteMenu(id: number) {
+  async deleteMenu(id: number, user_id: number) {
     const menu = await this.findMenuById(id);
 
     return await this.database.menu.delete({
@@ -256,7 +309,7 @@ export class MenuService {
     });
   }
 
-  async linkMenuToSpace(menu_id: number, space_id: number) {
+  async linkMenuToSpace(menu_id: number, space_id: number, user_id: number) {
     const menu = await this.findMenuById(menu_id);
     const space = await this.spaceService.findSpaceById(space_id);
 
@@ -272,7 +325,7 @@ export class MenuService {
     });
   }
 
-  async linkMenuToSite(menu_id: number, site_id: number) {
+  async linkMenuToSite(menu_id: number, site_id: number, user_id: number) {
     const menu = await this.findMenuById(menu_id);
     const site = await this.database.site.findUnique({
       where: { site_id },

@@ -24,6 +24,7 @@ import { KitchenService } from "./kitchen.service";
 import { CreateKitchenDto, UpdateKitchenDto } from "./dto";
 import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
 import { OrderStatus } from "../order-item/dto";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("kitchen")
 @ApiTags("kitchen")
@@ -42,9 +43,12 @@ export class KitchenController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get all kitchens" })
-  getAllKitchens() {
-    return this.kitchenService.getAllKitchens();
+  getAllKitchens(@Req() user: any) {
+    const { user_id } = user.user;
+    return this.kitchenService.getAllKitchens(user_id);
   }
 
   @Get("/order-items")
@@ -109,17 +113,22 @@ export class KitchenController {
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Remove kitchen" })
   @ApiParam({
     name: "id",
     description: "Kitchen id to remove",
     required: true,
   })
-  removeKitchen(@Param("id", ParseIntPipe) id: number) {
-    return this.kitchenService.removeKitchen(id);
+  removeKitchen(@Param("id", ParseIntPipe) id: number, @Req() user: any) {
+    const { user_id } = user.user;
+    return this.kitchenService.removeKitchen(id, user_id);
   }
 
   @Post(":kitchen_id/link-space/:space_id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Link kitchen to space" })
   @ApiParam({
     name: "kitchen_id",
@@ -133,8 +142,10 @@ export class KitchenController {
   })
   linkKitchenToSpace(
     @Param("kitchen_id", ParseIntPipe) kitchenId: number,
-    @Param("space_id", ParseIntPipe) spaceId: number
+    @Param("space_id", ParseIntPipe) spaceId: number,
+    @Req() user: any
   ) {
-    return this.kitchenService.linkKitchenToSpace(kitchenId, spaceId);
+    const { user_id } = user.user;
+    return this.kitchenService.linkKitchenToSpace(kitchenId, spaceId, user_id);
   }
 }

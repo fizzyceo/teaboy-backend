@@ -132,7 +132,11 @@ export class MenuItemService {
     });
   }
 
-  async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
+  async updateMenuItem(
+    id: number,
+    updateMenuItemDto: UpdateMenuItemDto,
+    kitchen_id: number
+  ) {
     await this.findMenuItemById(id);
 
     return this.database.menu_Item.update({
@@ -146,27 +150,6 @@ export class MenuItemService {
     await this.findMenuItemById(id);
 
     return this.database.menu_Item.delete({ where: { menu_item_id: id } });
-  }
-
-  async deleteMenuImage(menuItemId: number, imageId: number) {
-    await this.findMenuItemById(menuItemId);
-
-    const image = await this.database.itemImages.findUnique({
-      where: { item_image_id: imageId },
-    });
-
-    if (!image) {
-      throw new NotFoundException(`Image with id ${imageId} not found`);
-    }
-
-    await this.database.itemImages.delete({
-      where: { item_image_id: imageId },
-    });
-
-    return this.database.menu_Item.findUnique({
-      where: { menu_item_id: menuItemId },
-      include: { item_images: true },
-    });
   }
 
   async getMenuItemImages(id: number) {

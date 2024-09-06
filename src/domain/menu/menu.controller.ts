@@ -8,6 +8,8 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseGuards,
+  Req,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -15,12 +17,14 @@ import {
   ApiOperation,
   ApiParam,
   ApiQuery,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
 
 import { MenuService } from "./menu.service";
 
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
 import { EncryptionService } from "src/encryption/encryption.service";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("menu")
 @ApiTags("menu")
@@ -31,19 +35,25 @@ export class MenuController {
   ) {}
 
   @Post("create")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiBody({ type: CreateMenuDto })
   @ApiOperation({
     summary: "Create a new menu",
     description: "Create a new menu by providing name, space_id",
   })
-  createMenu(@Body() createMenuDto: CreateMenuDto) {
-    return this.menuService.createMenu(createMenuDto);
+  createMenu(@Body() createMenuDto: CreateMenuDto, @Req() user: any) {
+    const { user_id } = user.user;
+    return this.menuService.createMenu(createMenuDto, user_id);
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Get all menus" })
-  getAllMenus() {
-    return this.menuService.getAllMenus();
+  getAllMenus(@Req() user: any) {
+    const { user_id } = user.user;
+    return this.menuService.getAllMenus(user_id);
   }
 
   @Get(":id")
@@ -88,6 +98,8 @@ export class MenuController {
   }
 
   @Patch(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiBody({ type: UpdateMenuDto })
   @ApiOperation({
     summary: "Update menu details by id",
@@ -101,23 +113,30 @@ export class MenuController {
   })
   updateMenu(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuDto: UpdateMenuDto
+    @Body() updateMenuDto: UpdateMenuDto,
+    @Req() user: any
   ) {
-    return this.menuService.updateMenu(id, updateMenuDto);
+    const { user_id } = user.user;
+    return this.menuService.updateMenu(id, updateMenuDto, user_id);
   }
 
   @Delete(":id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Delete menu by id" })
   @ApiParam({
     name: "id",
     description: "Menu id to delete",
     required: true,
   })
-  deleteMenu(@Param("id", ParseIntPipe) id: number) {
-    return this.menuService.deleteMenu(id);
+  deleteMenu(@Param("id", ParseIntPipe) id: number, @Req() user: any) {
+    const { user_id } = user.user;
+    return this.menuService.deleteMenu(id, user_id);
   }
 
   @Patch(":menu_id/link-space/:space_id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: "Link menu to space",
     description: "Link a menu to a space by providing menu_id and space_id",
@@ -134,12 +153,16 @@ export class MenuController {
   })
   linkMenuToSpace(
     @Param("menu_id", ParseIntPipe) menuId: number,
-    @Param("space_id", ParseIntPipe) spaceId: number
+    @Param("space_id", ParseIntPipe) spaceId: number,
+    @Req() user: any
   ) {
-    return this.menuService.linkMenuToSpace(menuId, spaceId);
+    const { user_id } = user.user;
+    return this.menuService.linkMenuToSpace(menuId, spaceId, user_id);
   }
 
   @Patch(":menu_id/link-site/:site_id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({
     summary: "Link menu to site",
     description: "Link a menu to a site by providing menu_id and site_id",
@@ -156,9 +179,11 @@ export class MenuController {
   })
   linkMenuToSite(
     @Param("menu_id", ParseIntPipe) menuId: number,
-    @Param("site_id", ParseIntPipe) siteId: number
+    @Param("site_id", ParseIntPipe) siteId: number,
+    @Req() user: any
   ) {
-    return this.menuService.linkMenuToSite(menuId, siteId);
+    const { user_id } = user.user;
+    return this.menuService.linkMenuToSite(menuId, siteId, user_id);
   }
 
   @Get("s/:encryptedToken")

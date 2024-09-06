@@ -9,6 +9,8 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFiles,
+  UseGuards,
+  Req,
 } from "@nestjs/common";
 import { MenuItemService } from "./menu-item.service";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
@@ -20,9 +22,11 @@ import {
   ApiOperation,
   ApiParam,
   ApiConsumes,
+  ApiBearerAuth,
 } from "@nestjs/swagger";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
+import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
 
 @Controller("menu-item")
 @ApiTags("menu-item")
@@ -76,6 +80,8 @@ export class MenuItemController {
   }
 
   @Patch(":id")
+  @UseGuards(KitchenAuthGuard)
+  @ApiBearerAuth()
   @ApiBody({ type: UpdateMenuItemDto })
   @ApiOperation({ summary: "Update menu item details by id" })
   @ApiParam({
@@ -85,39 +91,28 @@ export class MenuItemController {
   })
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuItemDto: UpdateMenuItemDto
+    @Body() updateMenuItemDto: UpdateMenuItemDto,
+    @Req() kitchen: any
   ) {
-    return this.menuItemService.updateMenuItem(id, updateMenuItemDto);
+    const { kitchen_id } = kitchen.user;
+    return this.menuItemService.updateMenuItem(
+      id,
+      updateMenuItemDto,
+      kitchen_id
+    );
   }
 
   @Delete(":id")
+  @UseGuards(KitchenAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Delete menu item by id" })
   @ApiParam({
     name: "id",
     description: "Menu item id to delete",
     required: true,
   })
-  deleteMenuItem(@Param("id", ParseIntPipe) id: number) {
+  deleteMenuItem(@Param("id", ParseIntPipe) id: number, @Req() kitchen: any) {
     return this.menuItemService.deleteMenuItem(id);
-  }
-
-  @Delete(":id/image/:imageId")
-  @ApiOperation({ summary: "Delete menu item image by id" })
-  @ApiParam({
-    name: "id",
-    description: "Menu item id to delete image from",
-    required: true,
-  })
-  @ApiParam({
-    name: "imageId",
-    description: "Image id to delete",
-    required: true,
-  })
-  deleteMenuItemImage(
-    @Param("id", ParseIntPipe) id: number,
-    @Param("imageId", ParseIntPipe) imageId: number
-  ) {
-    return this.menuItemService.deleteMenuImage(id, imageId);
   }
 
   @Get(":id/options")

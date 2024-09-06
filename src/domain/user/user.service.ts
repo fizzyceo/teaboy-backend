@@ -197,7 +197,7 @@ export class UserService {
     });
   }
 
-  async getKitchenStatus(kitchen_id: number, user_id) {
+  async getKitchenStatus(kitchen_id: number, user_id: number) {
     const userCanAccessKitchen = await this.database.user.findFirst({
       where: {
         user_id,
@@ -215,19 +215,81 @@ export class UserService {
       );
     }
 
+    // Fetch the kitchen along with openingHours
     const kitchen = await this.database.kitchen.findUnique({
       where: { kitchen_id },
+      select: {
+        isOpen: true,
+        openingHours: {
+          select: {
+            openingHours_id: true,
+            dayOfWeek: true,
+            openTime: true,
+            closeTime: true,
+          },
+        },
+      },
     });
 
     if (!kitchen) {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
 
-    return await this.database.kitchen.findUnique({
-      where: { kitchen_id },
-      select: {
-        isOpen: true,
-      },
-    });
+    // Determine if the kitchen is currently open based on opening hours
+    const currentTime = new Date();
+    const currentDayOfWeek = currentTime
+      .toLocaleString("en-US", { weekday: "long" })
+      .toUpperCase(); // e.g., "MONDAY"
+
+    let isCurrentlyOpen = false;
+
+    if (kitchen.openingHours && kitchen.openingHours.length > 0) {
+      const todayOpeningHours = kitchen.openingHours.find(
+        (hours) => hours.dayOfWeek === currentDayOfWeek
+      );
+
+      if (todayOpeningHours) {
+        const openTimeParts = todayOpeningHours.openTime.split(":");
+        const closeTimeParts = todayOpeningHours.closeTime.split(":");
+
+        const openTime = new Date(currentTime);
+        openTime.setHours(
+          parseInt(openTimeParts[0], 10),
+          parseInt(openTimeParts[1], 10),
+          0
+        );
+
+        const closeTime = new Date(currentTime);
+        closeTime.setHours(
+          parseInt(closeTimeParts[0], 10),
+          parseInt(closeTimeParts[1], 10),
+          0
+        );
+
+        // Adjust for cases where closeTime is past midnight
+        if (closeTime < openTime) {
+          closeTime.setDate(closeTime.getDate() + 1);
+        }
+
+        // Check if the current time falls within the opening hours
+        if (currentTime >= openTime && currentTime <= closeTime) {
+          isCurrentlyOpen = true;
+        }
+      }
+    }
+
+    // Combine the kitchen's isOpen flag with the current time status
+    const finalIsOpen = kitchen.isOpen && isCurrentlyOpen;
+
+    // Return the kitchen status along with opening hours
+    return {
+      isOpen: finalIsOpen,
+      openingHours: kitchen.openingHours.map((hours) => ({
+        openingHours_id: hours.openingHours_id,
+        dayOfWeek: hours.dayOfWeek,
+        openTime: hours.openTime,
+        closeTime: hours.closeTime,
+      })),
+    };
   }
 }

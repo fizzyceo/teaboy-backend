@@ -337,16 +337,16 @@ export class KitchenService {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
 
-    if (!kitchen.isOpen) {
-      return false;
+    if (!kitchen.isWeeklyTimingOn) {
+      return kitchen.isOpen;
     }
 
-    const currentTime = new Date();
-    const currentDayOfWeek = currentTime
-      .toLocaleString("en-US", { weekday: "long" })
-      .toUpperCase();
+    if (kitchen.openingHours?.length > 0) {
+      const currentTime = new Date();
+      const currentDayOfWeek = currentTime
+        .toLocaleString("en-US", { weekday: "long" })
+        .toUpperCase();
 
-    if (kitchen.isWeeklyTimingOn && kitchen.openingHours?.length > 0) {
       const todayOpeningHours = kitchen.openingHours.find(
         (hours) => hours.dayOfWeek === currentDayOfWeek
       );
@@ -358,9 +358,7 @@ export class KitchenService {
           currentTime
         );
 
-        if (isCurrentlyOpen) {
-          return true;
-        }
+        return kitchen.isOpen && isCurrentlyOpen;
       }
     }
 

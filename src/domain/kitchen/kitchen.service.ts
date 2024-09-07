@@ -337,10 +337,12 @@ export class KitchenService {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
 
+    // If weekly timing is off, return based solely on isOpen
     if (!kitchen.isWeeklyTimingOn) {
       return kitchen.isOpen;
     }
 
+    // If weekly timing is on, check if the current time is within today's opening hours
     if (kitchen.openingHours?.length > 0) {
       const currentTime = new Date();
       const currentDayOfWeek = currentTime
@@ -352,16 +354,15 @@ export class KitchenService {
       );
 
       if (todayOpeningHours) {
-        const isCurrentlyOpen = this.isWithinOpeningHours(
+        return this.isWithinOpeningHours(
           todayOpeningHours.openTime,
           todayOpeningHours.closeTime,
           currentTime
         );
-
-        return kitchen.isOpen && isCurrentlyOpen;
       }
     }
 
+    // If weekly timing is on but no opening hours are defined for today, return false
     return false;
   }
 

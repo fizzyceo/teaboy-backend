@@ -74,6 +74,7 @@ export class CallService {
         created_at: "desc",
       },
       select: {
+        space_id: true,
         call_id: true,
         status: true,
         updated_at: true,
@@ -82,12 +83,30 @@ export class CallService {
           select: {
             user_id: true,
             name: true,
+            spaces: {
+              select: {
+                space_id: true,
+                name: true,
+              },
+            },
           },
         },
       },
     });
 
-    return calls;
+    return calls.map((call) => ({
+      call_id: call.call_id,
+      status: call.status,
+      updated_at: call.updated_at,
+      created_at: call.created_at,
+      User: {
+        user_id: call.User.user_id,
+        name: call.User.name,
+        space: {
+          ...call.User.spaces.find((space) => space.space_id === call.space_id),
+        },
+      },
+    }));
   }
 
   async getCallStatus(id: number, user_id: number) {
@@ -126,12 +145,19 @@ export class CallService {
       select: {
         call_id: true,
         status: true,
+        space_id: true,
         updated_at: true,
         created_at: true,
         User: {
           select: {
             user_id: true,
             name: true,
+            spaces: {
+              select: {
+                space_id: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -141,7 +167,19 @@ export class CallService {
       throw new NotFoundException(`Call with id ${id} not found`);
     }
 
-    return call;
+    return {
+      call_id: call.call_id,
+      status: call.status,
+      updated_at: call.updated_at,
+      created_at: call.created_at,
+      User: {
+        user_id: call.User.user_id,
+        name: call.User.name,
+        space: {
+          ...call.User.spaces.find((space) => space.space_id === call.space_id),
+        },
+      },
+    };
   }
 
   async updateCallUser(id: number, status: CALL_STATUS, user_id: number) {

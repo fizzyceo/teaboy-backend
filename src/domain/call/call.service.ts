@@ -63,7 +63,7 @@ export class CallService {
       );
     }
 
-    return await this.database.call.create({
+    const call = await this.database.call.create({
       data: {
         status: "STARTED",
         Space: {
@@ -78,6 +78,26 @@ export class CallService {
         },
       },
     });
+
+    setTimeout(async () => {
+      const existingCall = await this.database.call.findUnique({
+        where: {
+          call_id: call.call_id,
+        },
+        select: { status: true },
+      });
+
+      if (existingCall && existingCall.status === "STARTED") {
+        await this.database.call.update({
+          where: {
+            call_id: call.call_id,
+          },
+          data: { status: "FAILED" },
+        });
+      }
+    }, 50000);
+
+    return call;
   }
 
   async getKitchenCalls(kitchen_id: number) {

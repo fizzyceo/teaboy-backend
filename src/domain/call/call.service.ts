@@ -95,7 +95,7 @@ export class CallService {
           data: { status: "FAILED" },
         });
       }
-    }, 50000);
+    }, 60000);
 
     return call;
   }

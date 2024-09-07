@@ -1,11 +1,18 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
-import { CALL_STATUS, CreateCallDto } from "./dto/create-call.dto";
-import { UpdateCallDto } from "./dto/update-call.dto";
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
+import { CALL_STATUS } from "./dto/create-call.dto";
 import { DatabaseService } from "src/database/database.service";
+import { KitchenService } from "../kitchen/kitchen.service";
 
 @Injectable()
 export class CallService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly kitchenService: KitchenService
+  ) {}
 
   async startCall(space_id: number, user_id: number) {
     const space = await this.database.space.findFirst({
@@ -25,6 +32,35 @@ export class CallService {
 
     if (!space) {
       throw new NotFoundException(`Space with id ${space_id} not found`);
+    }
+
+    const kitchen = await this.database.kitchen.findFirst({
+      where: {
+        spaces: {
+          some: {
+            space_id: space_id,
+          },
+        },
+      },
+      select: {
+        kitchen_id: true,
+      },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(
+        `No kitchen found for space with id ${space_id}`
+      );
+    }
+
+    const isKitchenOpen = await this.kitchenService.isKitchenCurrentlyOpen(
+      kitchen.kitchen_id
+    );
+
+    if (!isKitchenOpen) {
+      throw new ConflictException(
+        "Cannot start call, kitchen is currently closed."
+      );
     }
 
     return await this.database.call.create({

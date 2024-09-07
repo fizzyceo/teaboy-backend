@@ -8,5 +8,6 @@ import { AuthModule } from "src/auth/auth.module";
   imports: [DatabaseModule, AuthModule],
   controllers: [KitchenController],
   providers: [KitchenService],
+  exports: [KitchenService],
 })
 export class KitchenModule {}

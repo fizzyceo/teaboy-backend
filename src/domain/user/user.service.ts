@@ -14,10 +14,14 @@ import {
   AddUserToSpaceDto,
   AddUserToSiteDto,
 } from "./dto";
+import { KitchenService } from "../kitchen/kitchen.service";
 
 @Injectable()
 export class UserService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly kitchenService: KitchenService
+  ) {}
 
   private readonly roundsOfHashing = 10;
 
@@ -202,9 +206,7 @@ export class UserService {
       where: {
         user_id,
         spaces: {
-          some: {
-            kitchen_id: kitchen_id,
-          },
+          some: { kitchen_id },
         },
       },
     });
@@ -215,69 +217,11 @@ export class UserService {
       );
     }
 
-    // Fetch the kitchen along with openingHours
-    const kitchen = await this.database.kitchen.findUnique({
-      where: { kitchen_id },
-      select: {
-        isOpen: true,
-        openingHours: {
-          select: {
-            openingHours_id: true,
-            dayOfWeek: true,
-            openTime: true,
-            closeTime: true,
-          },
-        },
-      },
-    });
-
-    if (!kitchen) {
-      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
-    }
-
-    const currentTime = new Date();
-    const currentDayOfWeek = currentTime
-      .toLocaleString("en-US", { weekday: "long" })
-      .toUpperCase();
-    let isCurrentlyOpen = false;
-
-    if (kitchen.openingHours && kitchen.openingHours.length > 0) {
-      const todayOpeningHours = kitchen.openingHours.find(
-        (hours) => hours.dayOfWeek === currentDayOfWeek
-      );
-
-      if (todayOpeningHours) {
-        const openTimeParts = todayOpeningHours.openTime.split(":");
-        const closeTimeParts = todayOpeningHours.closeTime.split(":");
-
-        const openTime = new Date(currentTime);
-        openTime.setHours(
-          parseInt(openTimeParts[0], 10),
-          parseInt(openTimeParts[1], 10),
-          0
-        );
-
-        const closeTime = new Date(currentTime);
-        closeTime.setHours(
-          parseInt(closeTimeParts[0], 10),
-          parseInt(closeTimeParts[1], 10),
-          0
-        );
-
-        if (closeTime < openTime) {
-          closeTime.setDate(closeTime.getDate() + 1);
-        }
-
-        if (currentTime >= openTime && currentTime <= closeTime) {
-          isCurrentlyOpen = true;
-        }
-      }
-    }
-
-    const finalIsOpen = kitchen.isOpen && isCurrentlyOpen;
+    const isCurrentlyOpen =
+      await this.kitchenService.isKitchenCurrentlyOpen(kitchen_id);
 
     return {
-      isOpen: finalIsOpen,
+      isOpen: isCurrentlyOpen,
     };
   }
 }

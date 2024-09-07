@@ -4,12 +4,14 @@ import { DatabaseService } from "src/database/database.service";
 import { SpaceService } from "../space/space.service";
 
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
+import { KitchenService } from "../kitchen/kitchen.service";
 
 @Injectable()
 export class MenuService {
   constructor(
     private readonly database: DatabaseService,
-    private readonly spaceService: SpaceService
+    private readonly spaceService: SpaceService,
+    private readonly kitchenService: KitchenService
   ) {}
 
   private async findMenuById(id: number) {
@@ -111,24 +113,20 @@ export class MenuService {
     const associatedKitchen = await this.database.kitchen.findFirst({
       where: {
         spaces: {
-          some: {
-            space_id: space_id,
-          },
+          some: { space_id },
         },
       },
       select: {
-        isOpen: true,
-        isWeeklyTimingOn: true,
-        openingHours: {
-          select: {
-            openingHours_id: true,
-            dayOfWeek: true,
-            openTime: true,
-            closeTime: true,
-          },
-        },
+        kitchen_id: true,
       },
     });
+
+    let isCurrentlyOpen = false;
+    if (associatedKitchen?.kitchen_id) {
+      isCurrentlyOpen = await this.kitchenService.isKitchenCurrentlyOpen(
+        associatedKitchen.kitchen_id
+      );
+    }
 
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
@@ -146,9 +144,7 @@ export class MenuService {
                 site_id: true,
                 image_url: true,
               },
-              where: {
-                site_id: site_id,
-              },
+              where: { site_id },
             }
           : undefined,
         spaces: space_id
@@ -166,9 +162,7 @@ export class MenuService {
                   },
                 },
               },
-              where: {
-                space_id: space_id,
-              },
+              where: { space_id },
             }
           : undefined,
         menu_items: {
@@ -216,47 +210,9 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
-    const currentTime = new Date();
-    const currentDayOfWeek = currentTime
-      .toLocaleString("en-US", { weekday: "long" })
-      .toUpperCase();
-
-    let isCurrentlyOpen = false;
-
-    if (associatedKitchen?.openingHours) {
-      const todayOpeningHours = associatedKitchen.openingHours.find(
-        (hours) => hours.dayOfWeek === currentDayOfWeek
-      );
-
-      if (todayOpeningHours) {
-        const openTime = new Date();
-        const closeTime = new Date();
-
-        const [openHour, openMinute] = todayOpeningHours.openTime.split(":");
-        const [closeHour, closeMinute] = todayOpeningHours.closeTime.split(":");
-
-        openTime.setHours(Number(openHour), Number(openMinute), 0);
-        closeTime.setHours(Number(closeHour), Number(closeMinute), 0);
-
-        const currentTimeInRange =
-          currentTime >= openTime && currentTime <= closeTime;
-
-        // Apply the new condition
-        isCurrentlyOpen =
-          associatedKitchen.isOpen &&
-          (!associatedKitchen.isWeeklyTimingOn || currentTimeInRange);
-      }
-    }
-
     return {
       ...menu,
       isOpen: isCurrentlyOpen,
-      openingHours: associatedKitchen.openingHours.map((hours) => ({
-        openingHours_id: hours.openingHours_id,
-        dayOfWeek: hours.dayOfWeek,
-        openTime: hours.openTime,
-        closeTime: hours.closeTime,
-      })),
       menu_items: menu.menu_items.map((item) => ({
         menu_item_id: item.menu_item_id,
         title: item.title,

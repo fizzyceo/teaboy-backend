@@ -45,7 +45,7 @@ export class OrderController {
   })
   @ApiResponse({ status: 400, description: "Invalid input, object invalid." })
   creareOrder(@Body() createOrderDto: CreateOrderDto) {
-    const response = this.orderService.creareOrder(createOrderDto);
+    const response = this.orderService.createOrder(createOrderDto);
     return response;
   }
 

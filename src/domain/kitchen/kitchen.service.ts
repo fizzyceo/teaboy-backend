@@ -50,8 +50,10 @@ export class KitchenService {
 
   async getKitchenInfos(req: any) {
     const { kitchen_id } = req;
+
+    // Fetch kitchen information including spaces and menus
     const kitchen = await this.database.kitchen.findUnique({
-      where: { kitchen_id: kitchen_id },
+      where: { kitchen_id },
       select: {
         kitchen_id: true,
         name: true,
@@ -80,16 +82,26 @@ export class KitchenService {
       },
     });
 
+    // Throw an error if kitchen not found
     if (!kitchen) {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
+
+    // Prepare response with necessary information
+    const formattedSpaces = kitchen.spaces.map((space) => ({
+      space_id: space.space_id,
+      name: space.name,
+      menu_id: space.menus.length > 0 ? space.menus[0].menu_id : null,
+    }));
+
     return {
-      ...kitchen,
-      spaces: kitchen.spaces.map((space) => ({
-        space_id: space.space_id,
-        name: space.name,
-        menu_id: space.menus.length > 0 ? space.menus[0].menu_id : null,
-      })),
+      kitchen_id: kitchen.kitchen_id,
+      name: kitchen.name,
+      token: kitchen.token,
+      isOpen: kitchen.isOpen,
+      isWeeklyTimingOn: kitchen.isWeeklyTimingOn,
+      openingHours: kitchen.openingHours,
+      spaces: formattedSpaces,
     };
   }
 
@@ -303,5 +315,76 @@ export class KitchenService {
         choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
       })),
     }));
+  }
+
+  async isKitchenCurrentlyOpen(kitchen_id: number): Promise<boolean> {
+    const kitchen = await this.database.kitchen.findUnique({
+      where: { kitchen_id },
+      select: {
+        isOpen: true,
+        isWeeklyTimingOn: true,
+        openingHours: {
+          select: {
+            dayOfWeek: true,
+            openTime: true,
+            closeTime: true,
+          },
+        },
+      },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
+    }
+
+    if (!kitchen.isOpen) {
+      return false;
+    }
+
+    const currentTime = new Date();
+    const currentDayOfWeek = currentTime
+      .toLocaleString("en-US", { weekday: "long" })
+      .toUpperCase();
+
+    if (kitchen.isWeeklyTimingOn && kitchen.openingHours?.length > 0) {
+      const todayOpeningHours = kitchen.openingHours.find(
+        (hours) => hours.dayOfWeek === currentDayOfWeek
+      );
+
+      if (todayOpeningHours) {
+        const isCurrentlyOpen = this.isWithinOpeningHours(
+          todayOpeningHours.openTime,
+          todayOpeningHours.closeTime,
+          currentTime
+        );
+
+        if (isCurrentlyOpen) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  private isWithinOpeningHours(
+    openTimeStr: string,
+    closeTimeStr: string,
+    currentTime: Date
+  ): boolean {
+    const [openHour, openMinute] = openTimeStr.split(":").map(Number);
+    const [closeHour, closeMinute] = closeTimeStr.split(":").map(Number);
+
+    const openTime = new Date(currentTime);
+    openTime.setHours(openHour, openMinute, 0);
+
+    const closeTime = new Date(currentTime);
+    closeTime.setHours(closeHour, closeMinute, 0);
+
+    if (closeTime < openTime) {
+      closeTime.setDate(closeTime.getDate() + 1);
+    }
+
+    return currentTime >= openTime && currentTime <= closeTime;
   }
 }

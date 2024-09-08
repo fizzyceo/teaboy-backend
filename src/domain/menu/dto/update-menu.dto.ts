@@ -1,6 +1,4 @@
-import { OmitType, PartialType } from "@nestjs/swagger";
+import { PartialType } from "@nestjs/swagger";
 import { CreateMenuDto } from "./create-menu.dto";
 
-export class UpdateMenuDto extends PartialType(
-  OmitType(CreateMenuDto, ["site_id"])
-) {}
+export class UpdateMenuDto extends PartialType(CreateMenuDto) {}

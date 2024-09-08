@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x"]
 }
 
 datasource db {
@@ -8,24 +7,22 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum USER_ROLE {
-  ADMIN
-  TEABOY
-  NORMAL_USER
-}
-
-model User { 
+model User {
   user_id Int @id @default(autoincrement())
 
-  name String
-  email String @unique
+  name     String
+  email    String    @unique
   password String
-  phone String?
-  
-  role USER_ROLE 
+  phone    String?
+  role     USER_ROLE
 
-  spaces    Space[]   @relation("UserSpaces")
-  orders    Order[]
+  orders Order[]
+  spaces Space[] @relation("UserSpaces")
+  sites  Site[]  @relation("UserSites")
+  calls  Call[]
+
+  kitchen_id Int?
+  kitchen    Kitchen? @relation(fields: [kitchen_id], references: [kitchen_id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -34,17 +31,24 @@ model User {
 model Site {
   site_id Int @id @default(autoincrement())
 
-  name String
+  name        String
   description String? @default("")
-  phone String?
-  address String?
-  image_url String?
+  phone       String?
+  address     String?
+  image_url   String?
 
-  spaces  Space[]
-  menus   Menu[]  @relation("SiteMenus")
+  spaces Space[]
+  menus  Menu[]  @relation("SiteMenus")
+  users  User[]  @relation("UserSites")
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+enum SPACE_TYPE {
+  MAJLISS
+  OFFICE
+  DEPARTMENT
 }
 
 model Space {
@@ -52,12 +56,18 @@ model Space {
 
   name String
 
-  site_id Int
-  site Site @relation(fields: [site_id], references: [site_id],onDelete: Cascade,onUpdate: Cascade)
+  type SPACE_TYPE @default(DEPARTMENT)
 
-  menus   Menu[]   @relation("SpaceMenus")
-  users   User[]   @relation("UserSpaces")
-  orders  Order[]
+  site_id Int
+  site    Site @relation(fields: [site_id], references: [site_id], onDelete: Cascade)
+
+  kitchen_id Int?
+  kitchen    Kitchen? @relation(fields: [kitchen_id], references: [kitchen_id])
+
+  orders Order[]
+  calls  Call[]
+  menus  Menu[]  @relation("SpaceMenus")
+  users  User[]  @relation("UserSpaces")
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -66,16 +76,14 @@ model Space {
 model Menu {
   menu_id Int @id @default(autoincrement())
 
-  name String?
-
-  menu_items Menu_Item[]  
-  spaces Space[] @relation("SpaceMenus")
-  sites Site[] @relation("SiteMenus")
-
-  orders Order[]
-
-  ask_for_name Boolean @default(false)
+  name          String?
+  ask_for_name  Boolean @default(false)
   ask_for_table Boolean @default(false)
+
+  menu_items Menu_Item[]
+  orders     Order[]
+  sites      Site[]      @relation("SiteMenus")
+  spaces     Space[]     @relation("SpaceMenus")
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -84,22 +92,20 @@ model Menu {
 model Menu_Item {
   menu_item_id Int @id @default(autoincrement())
 
-  title String
+  title       String
   description String? @default("")
-  price Float
-  available Boolean @default(true)
+  price       Float
+  available   Boolean @default(true)
+
+  item_images      ItemImages[]
+  menuItem_options MenuItemOptionConnection[]
+  order_items      Order_Item[]
 
   menu_id Int
-  menu Menu @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade, onUpdate: Cascade)  // Many-to-one relationship with Menu
-
-  categories Category[]
-  order_items Order_Item[]
-  item_images ItemImages[]
+  menu    Menu @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  menuItem_options MenuItemOptionConnection[]
 }
 
 model Menu_Item_Option {
@@ -107,15 +113,14 @@ model Menu_Item_Option {
 
   name String
 
-  choices Menu_Item_Option_Choice[] @relation("OptionChoices")
+  default_choice_id Int?                     @unique
+  default_choice    Menu_Item_Option_Choice? @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id])
 
-  default_choice_id Int? @unique
-  default_choice Menu_Item_Option_Choice? @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id], onDelete: SetNull, onUpdate: Cascade)
+  choices          Menu_Item_Option_Choice[]  @relation("OptionChoices")
+  option_menuItems MenuItemOptionConnection[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  option_menuItems MenuItemOptionConnection[]
 }
 
 model Menu_Item_Option_Choice {
@@ -123,74 +128,62 @@ model Menu_Item_Option_Choice {
 
   name String
 
+  menu_Item_Option Menu_Item_Option? @relation("DefaultChoice")
+
   menu_item_option_id Int
-  menu_item_option Menu_Item_Option @relation("OptionChoices", fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade, onUpdate: Cascade)
+  menu_item_option    Menu_Item_Option @relation("OptionChoices", fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade)
 
   order_item_choices Order_Item_Choice[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
-
-  menu_Item_Option Menu_Item_Option[] @relation("DefaultChoice")
 }
 
 model MenuItemOptionConnection {
   menu_item_id Int
-  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade, onUpdate: Cascade)
+  menu_item    Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
 
   menu_item_option_id Int
-  menu_item_option Menu_Item_Option @relation(fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade, onUpdate: Cascade)
+  menu_item_option    Menu_Item_Option @relation(fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade)
 
   @@id([menu_item_id, menu_item_option_id])
 }
 
-
 model Order {
   order_id Int @id @default(autoincrement())
-  order_number String
 
+  order_number  String
   customer_name String?
-  table_number Int?
+  table_number  Int?
+  scheduled_at  DateTime?
 
-  scheduled_at DateTime?
+  menuId Int
+  menu   Menu @relation(fields: [menuId], references: [menu_id], onDelete: Cascade)
+
+  spaceId Int
+  space   Space @relation(fields: [spaceId], references: [space_id], onDelete: Cascade)
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [user_id])
 
   order_items Order_Item[]
-
-  spaceId     Int
-  space       Space @relation(fields: [spaceId], references: [space_id],onDelete: Cascade,onUpdate: Cascade)
-
-  menuId      Int
-  menu        Menu @relation(fields: [menuId], references: [menu_id],onDelete: Cascade,onUpdate: Cascade)
-
-  userId      Int?    
-  user        User?    @relation(fields: [userId], references: [user_id],onDelete: SetNull,onUpdate: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 }
 
-
-enum OrderStatus {
-  PENDING
-  IN_PROGRESS
-  READY
-  DELIVERED
-  CANCELLED
-}
-
 model Order_Item {
   order_item_id Int @id @default(autoincrement())
-  note String?
 
+  note     String?
   quantity Int?
+  status   OrderStatus
 
   menu_item_id Int
-  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
+  menu_item    Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
 
   order_id Int
-  order Order @relation(fields: [order_id], references: [order_id],onDelete: Cascade,onUpdate: Cascade)
-
-  status OrderStatus
+  order    Order @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
 
   choices Order_Item_Choice[]
 
@@ -201,32 +194,93 @@ model Order_Item {
 model Order_Item_Choice {
   order_item_choice_id Int @id @default(autoincrement())
 
-  order_item_id Int
-  order_item Order_Item @relation(fields: [order_item_id], references: [order_item_id],onDelete: Cascade,onUpdate: Cascade)
-
   menu_item_option_choice_id Int
-  menu_item_option_choice Menu_Item_Option_Choice @relation(fields: [menu_item_option_choice_id], references: [menu_item_option_choice_id],onDelete: Cascade,onUpdate: Cascade)
+  menu_item_option_choice    Menu_Item_Option_Choice @relation(fields: [menu_item_option_choice_id], references: [menu_item_option_choice_id], onDelete: Cascade)
+
+  order_item_id Int
+  order_item    Order_Item @relation(fields: [order_item_id], references: [order_item_id], onDelete: Cascade)
 }
 
-model Category {
-  category_id Int @id @default(autoincrement())
-  
-  name String @unique
-
-  menu_items Menu_Item[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model ItemImages{
+model ItemImages {
   item_image_id Int @id @default(autoincrement())
-  
+
   image_url String
 
   menu_item_id Int
-  menu_item Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id],onDelete: Cascade,onUpdate: Cascade)
+  menu_item    Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+}
+
+enum USER_ROLE {
+  ADMIN
+  TEABOY
+  NORMAL_USER
+}
+
+enum OrderStatus {
+  PENDING
+  IN_PROGRESS
+  READY
+  DELIVERED
+  CANCELLED
+}
+
+enum CALL_STATUS {
+  STARTED
+  ANSWERED
+  COMPLETED
+  FAILED
+}
+
+model Call {
+  call_id    Int      @id @default(autoincrement())
+  user_id    Int
+  User       User     @relation(fields: [user_id], references: [user_id])
+  space_id   Int
+  Space      Space    @relation(fields: [space_id], references: [space_id])
+
+  status     CALL_STATUS @default(STARTED)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model Kitchen {
+  kitchen_id Int     @id @default(autoincrement())
+  name       String
+  token       String    @unique
+  isOpen     Boolean @default(true)
+  isWeeklyTimingOn Boolean @default(false)
+
+  spaces       Space[]
+  Teaboys      User[]
+  openingHours OpeningHours[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+model OpeningHours {
+  openingHours_id Int       @id @default(autoincrement())
+  dayOfWeek       DayOfWeek
+  openTime        String
+  closeTime       String
+
+  kitchen_id Int
+  kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+}
+
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
 }

@@ -7,14 +7,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
-  ValidateNested,
 } from "class-validator";
-
-export class MenuItemCategory {
-  @ApiProperty()
-  @IsString()
-  name: string;
-}
 
 export class CreateMenuItemDto {
   @ApiProperty({
@@ -44,15 +37,15 @@ export class CreateMenuItemDto {
   @Transform(({ value }) => Number(value))
   price: number;
 
-  @ApiProperty({
-    description: "Categories of the menu item",
-    type: Number,
-    isArray: true,
-  })
-  @IsInt({ each: true })
-  @IsOptional()
-  @Type(() => Number)
-  categories: number[];
+  // @ApiProperty({
+  //   description: "Categories of the menu item",
+  //   type: Number,
+  //   isArray: true,
+  // })
+  // @IsInt({ each: true })
+  // @IsOptional()
+  // @Type(() => Number)
+  // categories: number[];
 
   @ApiProperty({
     description: "Availability of the menu item",

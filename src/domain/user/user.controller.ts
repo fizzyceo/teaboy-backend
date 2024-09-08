@@ -7,13 +7,26 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Req,
+  UseGuards,
+  Query,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
-
-import { ApiBody, ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger";
-import { CreateUserDto } from "./dto/create-user.dto";
-import { UpdateUserDto } from "./dto/update-user.dto";
-import { AddUserToSpaceDto } from "./dto/add-user-to-space.dto";
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from "@nestjs/swagger";
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  AddUserToSpaceDto,
+  AddUserToSiteDto,
+} from "./dto";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("user")
 @ApiTags("user")
@@ -27,52 +40,99 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
-  @Patch("link-site")
-  @ApiOperation({ summary: "Add User to Site" })
-  addUserToSpace(@Body() addUserToSpaceeDto: AddUserToSpaceDto) {
-    return this.userService.addUserToSpace(addUserToSpaceeDto);
-  }
-
   @Get("")
   @ApiOperation({ summary: "Get all Users" })
   getAllUsers() {
     return this.userService.getAllUsers();
   }
 
-  @Get(":id")
-  @ApiOperation({ summary: "Get User details by id" })
-  @ApiParam({
-    name: "id",
-    description: "User id to fetch",
+  @Patch("link-space")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Add User to Space" })
+  @ApiQuery({
+    name: "spaceId",
     required: true,
+    description: "Space id to add",
   })
-  getUserById(@Param("id", ParseIntPipe) id: number) {
-    return this.userService.getUserById(id);
+  addUserToSpace(@Query("spaceId") spaceId: number, @Req() user: any) {
+    const { user_id } = user.user;
+    console.log("link_space", user_id, spaceId);
+    return this.userService.addUserToSpace(user_id, spaceId);
   }
 
-  @Patch(":id")
+  @Patch("link-site")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Add User to Site" })
+  @ApiQuery({
+    name: "siteId",
+    required: true,
+    description: "Site id to add",
+  })
+  addUserToSite(@Query("siteId") siteId: number, @Req() user: any) {
+    const { user_id } = user.user;
+    return this.userService.addUserToSite(user_id, siteId);
+  }
+
+  @Get("/spaces")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get all Spaces of a User" })
+  getUserSpaces(@Req() user: any) {
+    return this.userService.getUserSpaces(user.user);
+  }
+
+  @Get("/sites")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get all Sites of a User" })
+  getUserSites(@Req() user: any) {
+    return this.userService.getUserSites(user.user);
+  }
+
+  @Get("infos")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get my informatiosn as user" })
+  getUserById(@Req() user: any) {
+    const { user_id } = user.user;
+    return this.userService.getUserById(user_id);
+  }
+
+  @Patch("update")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiBody({ type: UpdateUserDto })
   @ApiOperation({ summary: "Update User details by id" })
-  @ApiParam({
-    name: "id",
-    description: "User id to update",
-    required: true,
-  })
-  updateUser(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto
-  ) {
-    return this.userService.updateUser(id, updateUserDto);
+  updateUser(@Req() user: any, @Body() updateUserDto: UpdateUserDto) {
+    const { user_id } = user.user;
+    return this.userService.updateUser(user_id, updateUserDto);
   }
 
-  @Delete(":id")
+  @Delete("delete")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @ApiOperation({ summary: "Delete User by id" })
+  deleteUser(@Req() user: any) {
+    const { user_id } = user.user;
+    return this.userService.deleteUser(user_id);
+  }
+
+  @Get("kitchen-status/:kitchen_id")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get Kitchen status by id" })
   @ApiParam({
-    name: "id",
-    description: "User id to delete",
+    name: "kitchen_id",
     required: true,
+    description: "Kitchen id to get status",
   })
-  deleteUser(@Param("id", ParseIntPipe) id: number) {
-    return this.userService.deleteUser(id);
+  getKitchenStatus(
+    @Param("kitchen_id", ParseIntPipe) kitchen_id: number,
+    @Req() req
+  ) {
+    const { user_id } = req.user;
+    return this.userService.getKitchenStatus(kitchen_id, user_id);
   }
 }

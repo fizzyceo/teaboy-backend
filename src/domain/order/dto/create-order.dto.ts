@@ -10,17 +10,6 @@ import {
 } from "class-validator";
 import { OrderItemDto } from "./order-item.dto";
 
-enum PaymentMethod {
-  CASH = "CASH",
-  CARD = "CARD",
-}
-
-enum PaymentStatus {
-  PENDING = "PENDING",
-  PAID = "PAID",
-  CANCELLED = "CANCELLED",
-}
-
 export class CreateOrderDto {
   @ApiProperty({ type: [OrderItemDto] })
   @ValidateNested({ each: true })

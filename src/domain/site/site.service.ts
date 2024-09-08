@@ -130,6 +130,7 @@ export class SiteService {
     return await this.database.space.create({
       data: {
         name,
+        type: spaceData.type,
         site: {
           connect: {
             site_id: siteId,

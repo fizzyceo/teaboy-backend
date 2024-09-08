@@ -1,4 +1,6 @@
 import {
+  BadRequestException,
+  ConflictException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -8,10 +10,14 @@ import {
 import { DatabaseService } from "src/database/database.service";
 
 import { CreateOrderDto, UpdateOrderDto } from "./dto";
+import { KitchenService } from "../kitchen/kitchen.service";
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly database: DatabaseService) {}
+  constructor(
+    private readonly database: DatabaseService,
+    private readonly kitchenService: KitchenService
+  ) {}
 
   private async findOrderById(id: number) {
     const order = await this.database.order.findUnique({
@@ -38,74 +44,29 @@ export class OrderService {
     return order.spaceId;
   }
 
-  async creareOrder(createOrderDto: CreateOrderDto) {
-    const { order_items, spaceId, ...orderData } = createOrderDto;
+  async createOrder(createOrderDto: CreateOrderDto) {
+    const { order_items, user_id, spaceId, ...orderData } = createOrderDto;
 
-    const menuItemIds = order_items.map((orderItem) => orderItem.menu_item_id);
-
-    const existingMenuItems = await this.database.menu_Item.findMany({
-      where: {
-        menu_item_id: {
-          in: menuItemIds,
-        },
-      },
-    });
-
-    const existingMenuItemIds = existingMenuItems.map(
-      (item) => item.menu_item_id
-    );
-
-    const menuId = existingMenuItems[0].menu_id;
-
-    const missingMenuItemIds = menuItemIds.filter(
-      (id) => !existingMenuItemIds.includes(id)
-    );
-
-    if (missingMenuItemIds.length > 0) {
-      console.error(
-        "The following menu_item_ids do not exist:",
-        missingMenuItemIds
-      );
-      throw new Error(
-        `Some menu items do not exist: ${missingMenuItemIds.join(", ")}`
-      );
+    if (user_id) {
+      await this.validateUser(user_id);
     }
+
+    await this.ensureKitchenIsOpen(spaceId);
+
+    const menuId = await this.validateMenuItems(order_items);
 
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: {
-          menu: {
-            connect: {
-              menu_id: menuId,
-            },
-          },
-          space: {
-            connect: {
-              space_id: spaceId,
-            },
-          },
-          order_number: Math.floor(Math.random() * 4096)
-            .toString(16)
-            .padStart(3, "0")
-            .toUpperCase(),
+          user: user_id ? { connect: { user_id } } : undefined,
+          menu: { connect: { menu_id: menuId } },
+          space: { connect: { space_id: spaceId } },
+          order_number: this.generateOrderNumber(),
           ...orderData,
-
           order_items: {
-            create: order_items.map((orderItem) => ({
-              menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
-              note: orderItem.note,
-              status: orderItem.status,
-              choices: {
-                create: orderItem.choices.map((choice) => ({
-                  menu_item_option_choice: {
-                    connect: {
-                      menu_item_option_choice_id:
-                        choice.menu_item_option_choice_id,
-                    },
-                  },
-                })),
-              },
-            })),
+            create: order_items.map((orderItem) =>
+              this.createOrderItem(orderItem)
+            ),
           },
         },
         include: { order_items: true },
@@ -117,8 +78,96 @@ export class OrderService {
     return createdOrder;
   }
 
-  async getAllOrders(user: any) {
+  private async validateUser(user_id: number) {
+    const user = await this.database.user.findUnique({ where: { user_id } });
+
+    if (!user) {
+      throw new BadRequestException(`User with id ${user_id} not found`);
+    }
+  }
+
+  private async ensureKitchenIsOpen(spaceId: number) {
+    const kitchen = await this.database.kitchen.findFirst({
+      where: {
+        spaces: {
+          some: { space_id: spaceId },
+        },
+      },
+      select: { kitchen_id: true },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(
+        `No kitchen found for space with id ${spaceId}`
+      );
+    }
+
+    const isOpen = await this.kitchenService.isKitchenCurrentlyOpen(
+      kitchen.kitchen_id
+    );
+
+    if (!isOpen) {
+      throw new ConflictException("Cannot create order, kitchen is closed");
+    }
+  }
+
+  private async validateMenuItems(order_items: any[]) {
+    const menuItemIds = order_items.map((orderItem) => orderItem.menu_item_id);
+
+    const existingMenuItems = await this.database.menu_Item.findMany({
+      where: {
+        menu_item_id: { in: menuItemIds },
+      },
+    });
+
+    const existingMenuItemIds = existingMenuItems.map(
+      (item) => item.menu_item_id
+    );
+    const missingMenuItemIds = menuItemIds.filter(
+      (id) => !existingMenuItemIds.includes(id)
+    );
+
+    if (missingMenuItemIds.length > 0) {
+      throw new Error(
+        `Some menu items do not exist: ${missingMenuItemIds.join(", ")}`
+      );
+    }
+
+    return existingMenuItems[0].menu_id;
+  }
+
+  private generateOrderNumber(): string {
+    return Math.floor(Math.random() * 4096)
+      .toString(16)
+      .padStart(3, "0")
+      .toUpperCase();
+  }
+
+  private createOrderItem(orderItem: any) {
+    return {
+      menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
+      note: orderItem.note,
+      status: orderItem.status,
+      quantity: orderItem.quantity ?? 1,
+      choices: {
+        create: orderItem.choices.map((choice) => ({
+          menu_item_option_choice: {
+            connect: {
+              menu_item_option_choice_id: choice.menu_item_option_choice_id,
+            },
+          },
+        })),
+      },
+    };
+  }
+
+  async getAllOrders(user: any, page: number = 1, limit: number = 5) {
     const { user_id } = user;
+
+    const pageNumber = page > 0 ? page : 1;
+    const pageSize = limit > 0 ? limit : 5;
+
+    const skip = (pageNumber - 1) * pageSize;
     const orders = await this.database.order.findMany({
       where: {
         OR: [
@@ -143,6 +192,7 @@ export class OrderService {
           select: {
             order_item_id: true,
             note: true,
+            quantity: true,
             status: true,
             choices: {
               select: {
@@ -177,6 +227,11 @@ export class OrderService {
           },
         },
       },
+      orderBy: {
+        created_at: "desc",
+      },
+      skip: skip ? skip : undefined,
+      take: pageSize,
     });
 
     return orders.map((order) => ({

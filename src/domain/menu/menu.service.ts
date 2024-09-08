@@ -4,12 +4,14 @@ import { DatabaseService } from "src/database/database.service";
 import { SpaceService } from "../space/space.service";
 
 import { CreateMenuDto, UpdateMenuDto } from "./dto";
+import { KitchenService } from "../kitchen/kitchen.service";
 
 @Injectable()
 export class MenuService {
   constructor(
     private readonly database: DatabaseService,
-    private readonly spaceService: SpaceService
+    private readonly spaceService: SpaceService,
+    private readonly kitchenService: KitchenService
   ) {}
 
   private async findMenuById(id: number) {
@@ -24,31 +26,27 @@ export class MenuService {
     return menu;
   }
 
-  async createMenu(createMenuDto: CreateMenuDto) {
-    const { site_id, ...menuData } = createMenuDto;
-
-    const site = await this.database.site.findUnique({
-      where: { site_id },
-    });
-
-    if (!site) {
-      throw new NotFoundException(`Site with id ${site_id} not found`);
-    }
-
+  async createMenu(createMenuDto: CreateMenuDto, user_id: number) {
     return await this.database.menu.create({
       data: {
-        ...menuData,
-        sites: {
-          connect: {
-            site_id: site_id,
-          },
-        },
+        ...createMenuDto,
       },
     });
   }
 
-  async getAllMenus() {
+  async getAllMenus(user_id: number) {
     const menus = await this.database.menu.findMany({
+      where: {
+        spaces: {
+          some: {
+            users: {
+              some: {
+                user_id: user_id,
+              },
+            },
+          },
+        },
+      },
       select: {
         menu_id: true,
         name: true,
@@ -111,32 +109,62 @@ export class MenuService {
     }));
   }
 
-  async getMenuById(id: number, space_id: number) {
+  async getMenuById(id: number, space_id?: number, site_id?: number) {
+    const associatedKitchen = await this.database.kitchen.findFirst({
+      where: {
+        spaces: {
+          some: { space_id },
+        },
+      },
+      select: {
+        kitchen_id: true,
+      },
+    });
+
+    let isCurrentlyOpen = false;
+    if (associatedKitchen?.kitchen_id) {
+      isCurrentlyOpen = await this.kitchenService.isKitchenCurrentlyOpen(
+        associatedKitchen.kitchen_id
+      );
+    }
+
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
+        created_at: true,
+        updated_at: true,
         name: true,
         menu_id: true,
         ask_for_name: true,
         ask_for_table: true,
-        spaces: {
-          select: {
-            name: true,
-            space_id: true,
-            site: {
+        sites: site_id
+          ? {
               select: {
                 name: true,
-                address: true,
-                description: true,
+                site_id: true,
                 image_url: true,
-                phone: true,
               },
-            },
-          },
-          where: {
-            space_id: space_id,
-          },
-        },
+              where: { site_id },
+            }
+          : undefined,
+        spaces: space_id
+          ? {
+              select: {
+                name: true,
+                space_id: true,
+                site: {
+                  select: {
+                    name: true,
+                    address: true,
+                    description: true,
+                    image_url: true,
+                    phone: true,
+                  },
+                },
+              },
+              where: { space_id },
+            }
+          : undefined,
         menu_items: {
           select: {
             menu_item_id: true,
@@ -184,6 +212,7 @@ export class MenuService {
 
     return {
       ...menu,
+      isOpen: isCurrentlyOpen,
       menu_items: menu.menu_items.map((item) => ({
         menu_item_id: item.menu_item_id,
         title: item.title,
@@ -211,7 +240,6 @@ export class MenuService {
       where: { menu_id: id },
       include: {
         item_images: true,
-        categories: true,
         menuItem_options: {
           include: {
             menu_item_option: {
@@ -225,7 +253,7 @@ export class MenuService {
     });
   }
 
-  async updateMenu(id: number, updateMenuDto: UpdateMenuDto) {
+  async updateMenu(id: number, updateMenuDto: UpdateMenuDto, user_id: number) {
     const menu = await this.findMenuById(id);
 
     return await this.database.menu.update({
@@ -234,7 +262,7 @@ export class MenuService {
     });
   }
 
-  async deleteMenu(id: number) {
+  async deleteMenu(id: number, user_id: number) {
     const menu = await this.findMenuById(id);
 
     return await this.database.menu.delete({
@@ -242,30 +270,7 @@ export class MenuService {
     });
   }
 
-  async getMenuCategories(id: number) {
-    const menu = await this.findMenuById(id);
-
-    const menuItems = await this.database.menu_Item.findMany({
-      where: { menu_id: id },
-      include: {
-        categories: true,
-      },
-    });
-
-    const categories = menuItems.reduce((acc, item) => {
-      item.categories.forEach((category) => {
-        if (!acc.includes(category)) {
-          acc.push(category);
-        }
-      });
-
-      return acc;
-    }, []);
-
-    return categories;
-  }
-
-  async linkMenuToSpace(menu_id: number, space_id: number) {
+  async linkMenuToSpace(menu_id: number, space_id: number, user_id: number) {
     const menu = await this.findMenuById(menu_id);
     const space = await this.spaceService.findSpaceById(space_id);
 
@@ -279,5 +284,31 @@ export class MenuService {
         },
       },
     });
+  }
+
+  async linkMenuToSite(menu_id: number, site_id: number, user_id: number) {
+    const menu = await this.findMenuById(menu_id);
+    const site = await this.database.site.findUnique({
+      where: { site_id },
+    });
+
+    if (!site) {
+      throw new NotFoundException(`Site with id ${site_id} not found`);
+    }
+
+    return await this.database.menu.update({
+      where: { menu_id },
+      data: {
+        sites: {
+          connect: {
+            site_id,
+          },
+        },
+      },
+    });
+  }
+
+  async getMenuList() {
+    return await this.database.menu.findMany();
   }
 }

@@ -4,7 +4,6 @@ import { ImagesService } from "src/images/images.service";
 import {
   CreateMenuItemDto,
   CreateMenuItemOption,
-  MenuItemCategory,
   UpdateMenuItemDto,
 } from "./dto";
 
@@ -18,7 +17,7 @@ export class MenuItemService {
   private async findMenuItemById(id: number) {
     const menuItem = await this.database.menu_Item.findUnique({
       where: { menu_item_id: id },
-      include: { item_images: true, categories: true },
+      include: { item_images: true },
     });
 
     if (!menuItem) {
@@ -32,27 +31,71 @@ export class MenuItemService {
     createMenuItemDto: CreateMenuItemDto,
     files: Express.Multer.File[]
   ) {
-    const { menu_id, categories, ...menuItemData } = createMenuItemDto;
+    const { menu_id, ...menuItemData } = createMenuItemDto;
+
+    const menu = await this.database.menu.findUnique({
+      where: { menu_id },
+    });
+
+    if (!menu) {
+      throw new NotFoundException(`Menu with id ${menu_id} not found`);
+    }
 
     const item_images = await this.uploadMenuImages(files);
 
-    const createData = {
+    const createData: any = {
       ...menuItemData,
       menu: { connect: { menu_id } },
-      item_images: item_images.length
-        ? { createMany: { data: item_images } }
-        : undefined,
-      categories: categories?.length
-        ? { connect: categories.map((id) => ({ category_id: id })) }
-        : undefined,
     };
 
-    return this.database.menu_Item.create({ data: createData });
+    if (item_images.length > 0) {
+      createData.item_images = { createMany: { data: item_images } };
+    }
+
+    return this.database.menu_Item.create({
+      data: createData,
+      select: {
+        menu_item_id: true,
+        title: true,
+        price: true,
+        description: true,
+        available: true,
+        item_images: {
+          select: {
+            image_url: true,
+            item_image_id: true,
+          },
+        },
+        menuItem_options: {
+          select: {
+            menu_item_option: {
+              select: {
+                name: true,
+                menu_item_option_id: true,
+                default_choice: {
+                  select: {
+                    name: true,
+                    menu_item_option_choice_id: true,
+                  },
+                },
+                default_choice_id: true,
+                choices: {
+                  select: {
+                    menu_item_option_choice_id: true,
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   async getAllMenuItems() {
     return this.database.menu_Item.findMany({
-      include: { item_images: true, categories: true },
+      include: { item_images: true },
     });
   }
 
@@ -63,7 +106,6 @@ export class MenuItemService {
       where: { menu_item_id: id },
       include: {
         item_images: true,
-        categories: true,
         menuItem_options: {
           select: {
             menu_item_option: {
@@ -90,23 +132,17 @@ export class MenuItemService {
     });
   }
 
-  async updateMenuItem(id: number, updateMenuItemDto: UpdateMenuItemDto) {
+  async updateMenuItem(
+    id: number,
+    updateMenuItemDto: UpdateMenuItemDto,
+    kitchen_id: number
+  ) {
     await this.findMenuItemById(id);
-
-    const { categories, ...menuItemData } = updateMenuItemDto;
-
-    const updateData: any = { ...menuItemData };
-
-    if (categories) {
-      updateData.categories = {
-        set: categories.map((id) => ({ category_id: id })),
-      };
-    }
 
     return this.database.menu_Item.update({
       where: { menu_item_id: id },
-      data: updateData,
-      include: { categories: true, item_images: true },
+      data: updateMenuItemDto,
+      include: { item_images: true },
     });
   }
 
@@ -114,27 +150,6 @@ export class MenuItemService {
     await this.findMenuItemById(id);
 
     return this.database.menu_Item.delete({ where: { menu_item_id: id } });
-  }
-
-  async deleteMenuImage(menuItemId: number, imageId: number) {
-    await this.findMenuItemById(menuItemId);
-
-    const image = await this.database.itemImages.findUnique({
-      where: { item_image_id: imageId },
-    });
-
-    if (!image) {
-      throw new NotFoundException(`Image with id ${imageId} not found`);
-    }
-
-    await this.database.itemImages.delete({
-      where: { item_image_id: imageId },
-    });
-
-    return this.database.menu_Item.findUnique({
-      where: { menu_item_id: menuItemId },
-      include: { item_images: true },
-    });
   }
 
   async getMenuItemImages(id: number) {
@@ -236,10 +251,6 @@ export class MenuItemService {
     );
 
     return formattedOptions;
-  }
-
-  async createMenuItemCategory(category: MenuItemCategory) {
-    return this.database.category.create({ data: category });
   }
 
   private async uploadMenuImages(files: Express.Multer.File[]) {

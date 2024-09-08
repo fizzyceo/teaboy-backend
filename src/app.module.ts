@@ -12,11 +12,14 @@ import { ImagesModule } from "./images/images.module";
 import { AuthModule } from "./auth/auth.module";
 import { UserModule } from "./domain/user/user.module";
 import { SpaceModule } from "./domain/space/space.module";
-import { EncryptionModule } from './encryption/encryption.module';
+import { EncryptionModule } from "./encryption/encryption.module";
+import { KitchenModule } from "./domain/kitchen/kitchen.module";
+import { CallModule } from "./domain/call/call.module";
 
 @Module({
   imports: [
     AuthModule,
+    KitchenModule,
     SiteModule,
     UserModule,
     DatabaseModule,
@@ -30,6 +33,7 @@ import { EncryptionModule } from './encryption/encryption.module';
     ImagesModule,
     SpaceModule,
     EncryptionModule,
+    CallModule,
   ],
 })
 export class AppModule {}

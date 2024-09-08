@@ -8,9 +8,10 @@ COPY package*.json ./
 # Install dependencies
 RUN npm install
 
-# Copy the Prisma schema and run `prisma generate`
+# Copy the Prisma schema
 COPY prisma ./prisma/
-RUN npx prisma generate
+# Debug: list files to confirm Prisma schema copy
+RUN ls -la /usr/src/app/prisma
 
 # Copy the rest of the application files
 COPY . .

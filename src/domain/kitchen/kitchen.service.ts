@@ -228,7 +228,6 @@ export class KitchenService {
       take = limit;
     }
 
-    console.log("skip", skip, "take", take);
     const orders = await this.database.order_Item.findMany({
       where: {
         AND: [

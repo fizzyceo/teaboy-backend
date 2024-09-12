@@ -139,6 +139,7 @@ export class CallService {
           select: {
             user_id: true,
             name: true,
+            image_url: true,
             spaces: {
               select: {
                 space_id: true,
@@ -158,6 +159,7 @@ export class CallService {
       User: {
         user_id: call.User.user_id,
         name: call.User.name,
+        image_url: call.User.image_url,
         space: {
           ...call.User.spaces.find((space) => space.space_id === call.space_id),
         },
@@ -208,6 +210,7 @@ export class CallService {
           select: {
             user_id: true,
             name: true,
+            image_url: true,
             spaces: {
               select: {
                 space_id: true,
@@ -231,6 +234,7 @@ export class CallService {
       User: {
         user_id: call.User.user_id,
         name: call.User.name,
+        image_url: call.User.image_url,
         space: {
           ...call.User.spaces.find((space) => space.space_id === call.space_id),
         },
@@ -259,6 +263,7 @@ export class CallService {
           select: {
             user_id: true,
             name: true,
+            image_url: true,
           },
         },
       },
@@ -299,6 +304,7 @@ export class CallService {
           select: {
             user_id: true,
             name: true,
+            image_url: true,
           },
         },
       },

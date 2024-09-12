@@ -170,22 +170,7 @@ export class OrderService {
     const skip = (pageNumber - 1) * pageSize;
     const orders = await this.database.order.findMany({
       where: {
-        OR: [
-          { userId: user_id },
-          {
-            menu: {
-              spaces: {
-                some: {
-                  users: {
-                    some: {
-                      user_id: user_id,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
+        userId: user_id,
       },
       include: {
         order_items: {

@@ -127,7 +127,6 @@ export class OrderItemService {
   async getAllOrderItems(status?: string, menu_id?: number) {
     const validStatuses = Object.values(OrderStatus);
 
-    // Calculate the date for 24 hours ago
     const last24Hours = new Date();
     last24Hours.setHours(last24Hours.getHours() - 24);
 

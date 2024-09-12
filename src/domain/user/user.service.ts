@@ -8,19 +8,16 @@ import * as bcrypt from "bcrypt";
 
 import { DatabaseService } from "src/database/database.service";
 
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  AddUserToSpaceDto,
-  AddUserToSiteDto,
-} from "./dto";
+import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { KitchenService } from "../kitchen/kitchen.service";
+import { ImagesService } from "src/images/images.service";
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly database: DatabaseService,
-    private readonly kitchenService: KitchenService
+    private readonly kitchenService: KitchenService,
+    private readonly imagesService: ImagesService
   ) {}
 
   private readonly roundsOfHashing = 10;
@@ -223,5 +220,21 @@ export class UserService {
     return {
       isOpen: isCurrentlyOpen,
     };
+  }
+
+  async uploadProfileImage(user_id: number, file: Express.Multer.File) {
+    const user = await this.findUserById(user_id);
+
+    const imageUrl = await this.imagesService.uploadFile(file);
+
+    return await this.database.user.update({
+      where: { user_id },
+      data: {
+        image_url: imageUrl ? imageUrl.url : user.image_url,
+      },
+      select: {
+        image_url: true,
+      },
+    });
   }
 }

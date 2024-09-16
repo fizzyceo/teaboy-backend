@@ -203,6 +203,7 @@ export class KitchenService {
   async getOrderItems(kitchen: any, status?: string, page?: number) {
     const { kitchen_id } = kitchen;
 
+    // Check if the kitchen exists
     const kitchenExists = await this.getKitchenById(kitchen_id);
 
     const validStatuses = Object.values(OrderStatus);
@@ -215,6 +216,7 @@ export class KitchenService {
     let take: number | undefined;
     let createdAtCondition: any = {};
 
+    // Apply date condition for orders that are pending or in progress
     if (isPendingOrInProgress) {
       const last24Hours = new Date();
       last24Hours.setHours(last24Hours.getHours() - 24);
@@ -225,6 +227,7 @@ export class KitchenService {
       take = limit;
     }
 
+    // Fetch orders
     const orders = await this.database.order_Item.findMany({
       where: {
         AND: [
@@ -301,7 +304,7 @@ export class KitchenService {
       },
     });
 
-    return orders.map((order) => ({
+    const formattedOrders = orders.map((order) => ({
       ...order,
       choices: order.choices.map((choice) => ({
         option: choice.menu_item_option_choice.menu_item_option.name,
@@ -310,6 +313,83 @@ export class KitchenService {
         choice: choice.menu_item_option_choice.name,
         choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
       })),
+    }));
+
+    // Fetch kitchen calls within the last 24 hours
+    const calls = await this.getKitchenCalls(kitchen_id);
+
+    // Return both orders and calls
+    return {
+      orders: formattedOrders,
+      calls: calls,
+    };
+  }
+
+  // The getKitchenCalls function remains unchanged
+  async getKitchenCalls(kitchen_id: number) {
+    const kitchen = await this.database.kitchen.findFirst({
+      where: {
+        kitchen_id: kitchen_id,
+      },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
+    }
+
+    const last24Hours = new Date();
+    last24Hours.setHours(last24Hours.getHours() - 24);
+    const createdAtCondition = { created_at: { gte: last24Hours } };
+
+    const calls = await this.database.call.findMany({
+      where: {
+        AND: [
+          {
+            Space: {
+              kitchen_id: kitchen_id,
+            },
+          },
+          createdAtCondition,
+        ],
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      select: {
+        space_id: true,
+        call_id: true,
+        status: true,
+        updated_at: true,
+        created_at: true,
+        User: {
+          select: {
+            user_id: true,
+            name: true,
+            image_url: true,
+            spaces: {
+              select: {
+                space_id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return calls.map((call) => ({
+      call_id: call.call_id,
+      status: call.status,
+      updated_at: call.updated_at,
+      created_at: call.created_at,
+      User: {
+        user_id: call.User.user_id,
+        name: call.User.name,
+        image_url: call.User.image_url,
+        space: {
+          ...call.User.spaces.find((space) => space.space_id === call.space_id),
+        },
+      },
     }));
   }
 

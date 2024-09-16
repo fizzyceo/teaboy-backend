@@ -51,7 +51,6 @@ export class KitchenService {
   async getKitchenInfos(req: any) {
     const { kitchen_id } = req;
 
-    // Fetch kitchen information including spaces and menus
     const kitchen = await this.database.kitchen.findUnique({
       where: { kitchen_id },
       select: {
@@ -135,6 +134,7 @@ export class KitchenService {
                 data: {
                   openTime: HourWithoutTimezone.openTime,
                   closeTime: HourWithoutTimezone.closeTime,
+                  timezone: timezone,
                 },
               });
             } else {
@@ -144,6 +144,7 @@ export class KitchenService {
                 data: {
                   kitchen_id,
                   ...HourWithoutTimezone,
+                  timezone: timezone,
                 },
               });
             }
@@ -404,7 +405,7 @@ export class KitchenService {
             dayOfWeek: true,
             openTime: true,
             closeTime: true,
-            timezone: true, // Timezone per opening hour entry
+            timezone: true,
           },
         },
       },

@@ -11,7 +11,7 @@ import { AuthEntity } from "./entity/auth.entity";
 import { LoginDto } from "./dto/login.dto";
 import { UserAuthService } from "./userAuth.service";
 import { KitchenAuthService } from "./kitchenAuth.service";
-import { TokenDto } from "./dto/token.dto";
+import { KitchneTokenDto, TokenDto } from "./dto/token.dto";
 import { RegisterDto } from "./dto/register.dto";
 import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
 import { ResetPasswordDto } from "./dto/resetPassword.dt";
@@ -75,14 +75,14 @@ export class KitchenAuthController {
   @Post("auth")
   @ApiOperation({ summary: "Authenticate a kitchen using a unique token" })
   @ApiBody({
-    type: TokenDto,
+    type: KitchneTokenDto,
     description: "Token required for kitchen authentication",
   })
   @ApiOkResponse({
     description: "Kitchen successfully authenticated, returns access token",
     type: AuthEntity,
   })
-  login(@Body() { token }: TokenDto) {
-    return this.kitchenAuthService.login(token);
+  login(@Body() { token, fcmToken }: KitchneTokenDto) {
+    return this.kitchenAuthService.login(token, fcmToken);
   }
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsString, IsOptional } from "class-validator";
+import { IsString, IsOptional, IsNumber } from "class-validator";
 
 export class CreateSiteDto {
   @ApiProperty()
@@ -20,6 +20,16 @@ export class CreateSiteDto {
   @IsString()
   @IsOptional()
   phone: string;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  latitude: number;
+
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  longitude: number;
 
   @ApiProperty({ type: "string", format: "binary" })
   file: Express.Multer.File;

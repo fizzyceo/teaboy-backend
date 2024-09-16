@@ -26,7 +26,7 @@ export class MenuService {
     return menu;
   }
 
-  async createMenu(createMenuDto: CreateMenuDto, user_id: number) {
+  async createMenu(createMenuDto: CreateMenuDto) {
     return await this.database.menu.create({
       data: {
         ...createMenuDto,
@@ -270,7 +270,7 @@ export class MenuService {
     });
   }
 
-  async linkMenuToSpace(menu_id: number, space_id: number, user_id: number) {
+  async linkMenuToSpace(menu_id: number, space_id: number) {
     const menu = await this.findMenuById(menu_id);
     const space = await this.spaceService.findSpaceById(space_id);
 

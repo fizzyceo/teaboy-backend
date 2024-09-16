@@ -66,6 +66,7 @@ export class KitchenService {
             dayOfWeek: true,
             openTime: true,
             closeTime: true,
+            timezone: true,
           },
         },
         spaces: {
@@ -176,11 +177,7 @@ export class KitchenService {
     });
   }
 
-  async linkKitchenToSpace(
-    kitchenId: number,
-    spaceId: number,
-    user_id: number
-  ) {
+  async linkKitchenToSpace(kitchenId: number, spaceId: number) {
     const kitchen = await this.getKitchenById(kitchenId);
 
     const space = await this.database.space.findUnique({
@@ -327,6 +324,7 @@ export class KitchenService {
             dayOfWeek: true,
             openTime: true,
             closeTime: true,
+            timezone: true, // Timezone per opening hour entry
           },
         },
       },
@@ -336,16 +334,16 @@ export class KitchenService {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
 
-    // If weekly timing is off, return based solely on isOpen
     if (!kitchen.isWeeklyTimingOn) {
       return kitchen.isOpen;
     }
 
-    // If weekly timing is on, check if the current time is within today's opening hours
     if (kitchen.openingHours?.length > 0) {
-      const currentTime = new Date();
-      const currentDayOfWeek = currentTime
-        .toLocaleString("en-US", { weekday: "long" })
+      const currentTimeUTC = new Date();
+      console.log("currentTimeUTC", currentTimeUTC);
+
+      const currentDayOfWeek = currentTimeUTC
+        .toLocaleString("en-US", { weekday: "long", timeZone: "UTC" })
         .toUpperCase();
 
       const todayOpeningHours = kitchen.openingHours.find(
@@ -353,36 +351,61 @@ export class KitchenService {
       );
 
       if (todayOpeningHours) {
-        return this.isWithinOpeningHours(
+        const openTimeUTC = this.convertTimeToUTC(
           todayOpeningHours.openTime,
+          todayOpeningHours.timezone
+        );
+        const closeTimeUTC = this.convertTimeToUTC(
           todayOpeningHours.closeTime,
-          currentTime
+          todayOpeningHours.timezone
+        );
+
+        return this.isWithinOpeningHours(
+          openTimeUTC,
+          closeTimeUTC,
+          currentTimeUTC
         );
       }
     }
 
-    // If weekly timing is on but no opening hours are defined for today, return false
     return false;
   }
 
+  private convertTimeToUTC(timeStr: string, timezone: string): Date {
+    const [sign, hours, minutes] = timezone
+      .match(/([+-])(\d{1,2}):(\d{2})/)!
+      .slice(1);
+    const offset =
+      (parseInt(hours) * 60 + parseInt(minutes)) * (sign === "+" ? -1 : 1);
+
+    const [hour, minute] = timeStr.split(":").map(Number);
+
+    const timeInUTC = new Date();
+    timeInUTC.setUTCHours(hour, minute, 0, 0);
+    timeInUTC.setUTCMinutes(timeInUTC.getUTCMinutes() + offset);
+
+    console.log("timeInUTC", timeInUTC);
+    return timeInUTC;
+  }
+
   private isWithinOpeningHours(
-    openTimeStr: string,
-    closeTimeStr: string,
-    currentTime: Date
+    openTimeUTC: Date,
+    closeTimeUTC: Date,
+    currentTimeUTC: Date
   ): boolean {
-    const [openHour, openMinute] = openTimeStr.split(":").map(Number);
-    const [closeHour, closeMinute] = closeTimeStr.split(":").map(Number);
-
-    const openTime = new Date(currentTime);
-    openTime.setHours(openHour, openMinute, 0);
-
-    const closeTime = new Date(currentTime);
-    closeTime.setHours(closeHour, closeMinute, 0);
-
-    if (closeTime < openTime) {
-      closeTime.setDate(closeTime.getDate() + 1);
+    if (closeTimeUTC < openTimeUTC) {
+      closeTimeUTC.setUTCDate(closeTimeUTC.getUTCDate() + 1);
     }
 
-    return currentTime >= openTime && currentTime <= closeTime;
+    return currentTimeUTC >= openTimeUTC && currentTimeUTC <= closeTimeUTC;
+  }
+
+  async unlinkTablet(kitchen_id: number, fcmToken: string) {
+    return await this.database.kitchenTablet.delete({
+      where: {
+        fcmToken,
+        kitchen_id,
+      },
+    });
   }
 }

@@ -35,16 +35,13 @@ export class MenuController {
   ) {}
 
   @Post("create")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiBody({ type: CreateMenuDto })
   @ApiOperation({
     summary: "Create a new menu",
     description: "Create a new menu by providing name, space_id",
   })
-  createMenu(@Body() createMenuDto: CreateMenuDto, @Req() user: any) {
-    const { user_id } = user.user;
-    return this.menuService.createMenu(createMenuDto, user_id);
+  createMenu(@Body() createMenuDto: CreateMenuDto) {
+    return this.menuService.createMenu(createMenuDto);
   }
 
   @Get()
@@ -135,8 +132,6 @@ export class MenuController {
   }
 
   @Patch(":menu_id/link-space/:space_id")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({
     summary: "Link menu to space",
     description: "Link a menu to a space by providing menu_id and space_id",
@@ -153,11 +148,9 @@ export class MenuController {
   })
   linkMenuToSpace(
     @Param("menu_id", ParseIntPipe) menuId: number,
-    @Param("space_id", ParseIntPipe) spaceId: number,
-    @Req() user: any
+    @Param("space_id", ParseIntPipe) spaceId: number
   ) {
-    const { user_id } = user.user;
-    return this.menuService.linkMenuToSpace(menuId, spaceId, user_id);
+    return this.menuService.linkMenuToSpace(menuId, spaceId);
   }
 
   @Patch(":menu_id/link-site/:site_id")

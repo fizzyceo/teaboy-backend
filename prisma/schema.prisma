@@ -270,6 +270,7 @@ model Kitchen {
   spaces       Space[]
   Teaboys      User[]
   openingHours OpeningHours[]
+  tablets KitchenTablet[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -280,6 +281,8 @@ model OpeningHours {
   dayOfWeek       DayOfWeek
   openTime        String
   closeTime       String
+
+  timezone String?
 
   kitchen_id Int
   kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
@@ -297,4 +300,16 @@ enum DayOfWeek {
   FRIDAY
   SATURDAY
   SUNDAY
+}
+
+model KitchenTablet{
+  kitchenTablet_id Int @id @default(autoincrement())
+
+  kitchen_id Int
+  kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
+
+  fcmToken String @unique
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

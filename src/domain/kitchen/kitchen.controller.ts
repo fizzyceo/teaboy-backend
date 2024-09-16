@@ -129,8 +129,6 @@ export class KitchenController {
   }
 
   @Post(":kitchen_id/link-space/:space_id")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
   @ApiOperation({ summary: "Link kitchen to space" })
   @ApiParam({
     name: "kitchen_id",
@@ -144,10 +142,28 @@ export class KitchenController {
   })
   linkKitchenToSpace(
     @Param("kitchen_id", ParseIntPipe) kitchenId: number,
-    @Param("space_id", ParseIntPipe) spaceId: number,
-    @Req() user: any
+    @Param("space_id", ParseIntPipe) spaceId: number
   ) {
-    const { user_id } = user.user;
-    return this.kitchenService.linkKitchenToSpace(kitchenId, spaceId, user_id);
+    return this.kitchenService.linkKitchenToSpace(kitchenId, spaceId);
+  }
+
+  @Post(":kitchen_id/unlink-tablet")
+  @ApiOperation({ summary: "Unlink tablet from kitchen" })
+  @ApiParam({
+    name: "kitchen_id",
+    description: "Kitchen id to unlink",
+    required: true,
+  })
+  @ApiQuery({
+    name: "fcm_token",
+    required: false,
+    description: "FCM token to unlink",
+    type: String,
+  })
+  unlinkTablet(
+    @Param("kitchen_id", ParseIntPipe) kitchenId: number,
+    @Query("fcm_token") fcmToken?: string
+  ) {
+    return this.kitchenService.unlinkTablet(kitchenId, fcmToken);
   }
 }

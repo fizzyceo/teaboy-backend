@@ -421,7 +421,6 @@ export class KitchenService {
 
     if (kitchen.openingHours?.length > 0) {
       const currentTimeUTC = new Date();
-      console.log("currentTimeUTC", currentTimeUTC);
 
       const currentDayOfWeek = currentTimeUTC
         .toLocaleString("en-US", { weekday: "long", timeZone: "UTC" })
@@ -432,53 +431,65 @@ export class KitchenService {
       );
 
       if (todayOpeningHours) {
-        const openTimeUTC = this.convertTimeToUTC(
-          todayOpeningHours.openTime,
+        const currentKitchenTime = this.convertToKitchenTimezone(
+          currentTimeUTC,
           todayOpeningHours.timezone
         );
-        const closeTimeUTC = this.convertTimeToUTC(
-          todayOpeningHours.closeTime,
-          todayOpeningHours.timezone
-        );
-
         return this.isWithinOpeningHours(
-          openTimeUTC,
-          closeTimeUTC,
-          currentTimeUTC
+          todayOpeningHours.openTime,
+          todayOpeningHours.closeTime,
+          currentKitchenTime
         );
+      } else {
+        return false;
       }
     }
 
     return false;
   }
 
-  private convertTimeToUTC(timeStr: string, timezone: string): Date {
+  private convertToKitchenTimezone(
+    currentTimeUTC: Date,
+    timezone: string
+  ): Date {
     const [sign, hours, minutes] = timezone
-      .match(/([+-])(\d{1,2}):(\d{2})/)!
+      .match(/([+-])(\d{1,2}):(\d{2})/)
       .slice(1);
-    const offset =
-      (parseInt(hours) * 60 + parseInt(minutes)) * (sign === "+" ? -1 : 1);
 
-    const [hour, minute] = timeStr.split(":").map(Number);
+    console.log("sign,hours,minutes", sign, hours, minutes);
+    const offsetInMinutes =
+      (parseInt(hours) * 60 + parseInt(minutes)) * (sign === "+" ? 1 : -1);
+    console.log("offsetInMin", offsetInMinutes);
 
-    const timeInUTC = new Date();
-    timeInUTC.setUTCHours(hour, minute, 0, 0);
-    timeInUTC.setUTCMinutes(timeInUTC.getUTCMinutes() + offset);
+    const localTime = new Date(currentTimeUTC);
+    localTime.setMinutes(localTime.getUTCMinutes() + offsetInMinutes);
 
-    console.log("timeInUTC", timeInUTC);
-    return timeInUTC;
+    return localTime;
   }
 
   private isWithinOpeningHours(
-    openTimeUTC: Date,
-    closeTimeUTC: Date,
-    currentTimeUTC: Date
+    openTimeStr: string,
+    closeTimeStr: string,
+    currentTime: Date
   ): boolean {
-    if (closeTimeUTC < openTimeUTC) {
-      closeTimeUTC.setUTCDate(closeTimeUTC.getUTCDate() + 1);
+    const [openHour, openMinute] = openTimeStr.split(":").map(Number);
+    const [closeHour, closeMinute] = closeTimeStr.split(":").map(Number);
+
+    const openTime = new Date(currentTime);
+    openTime.setHours(openHour, openMinute, 0, 0);
+
+    const closeTime = new Date(currentTime);
+    closeTime.setHours(closeHour, closeMinute, 0, 0);
+
+    if (closeTime < openTime) {
+      closeTime.setDate(closeTime.getDate() + 1);
     }
 
-    return currentTimeUTC >= openTimeUTC && currentTimeUTC <= closeTimeUTC;
+    console.log("currentTime", currentTime);
+    console.log("openTime", openTime);
+    console.log("closeTime", closeTime);
+    console.log("isOpen", currentTime >= openTime && currentTime <= closeTime);
+    return currentTime >= openTime && currentTime <= closeTime;
   }
 
   async unlinkTablet(kitchen_id: number, fcmToken: string) {

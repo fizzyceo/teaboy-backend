@@ -28,16 +28,16 @@ export class KitchenAuthService {
       }
     );
 
-    await this.databaseService.kitchenTablet.create({
-      data: {
-        fcmToken: fcmToken,
-        kitchen: {
-          connect: {
-            kitchen_id: kitchen.kitchen_id,
-          },
-        },
-      },
-    });
+    // await this.databaseService.kitchenTablet.create({
+    //   data: {
+    //     fcmToken: fcmToken,
+    //     kitchen: {
+    //       connect: {
+    //         kitchen_id: kitchen.kitchen_id,
+    //       },
+    //     },
+    //   },
+    // });
 
     return {
       accessToken,

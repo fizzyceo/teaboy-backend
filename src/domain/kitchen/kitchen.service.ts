@@ -493,11 +493,11 @@ export class KitchenService {
   }
 
   async unlinkTablet(kitchen_id: number, fcmToken: string) {
-    return await this.database.kitchenTablet.delete({
-      where: {
-        fcmToken,
-        kitchen_id,
-      },
-    });
+    // return await this.database.kitchenTablet.delete({
+    //   where: {
+    //     fcmToken,
+    //     kitchen_id,
+    //   },
+    // });
   }
 }

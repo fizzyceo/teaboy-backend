@@ -51,7 +51,6 @@ export class KitchenService {
   async getKitchenInfos(req: any) {
     const { kitchen_id } = req;
 
-    // Fetch kitchen information including spaces and menus
     const kitchen = await this.database.kitchen.findUnique({
       where: { kitchen_id },
       select: {
@@ -66,6 +65,7 @@ export class KitchenService {
             dayOfWeek: true,
             openTime: true,
             closeTime: true,
+            timezone: true,
           },
         },
         spaces: {
@@ -134,6 +134,7 @@ export class KitchenService {
                 data: {
                   openTime: HourWithoutTimezone.openTime,
                   closeTime: HourWithoutTimezone.closeTime,
+                  timezone: timezone,
                 },
               });
             } else {
@@ -143,6 +144,7 @@ export class KitchenService {
                 data: {
                   kitchen_id,
                   ...HourWithoutTimezone,
+                  timezone: timezone,
                 },
               });
             }
@@ -176,11 +178,7 @@ export class KitchenService {
     });
   }
 
-  async linkKitchenToSpace(
-    kitchenId: number,
-    spaceId: number,
-    user_id: number
-  ) {
+  async linkKitchenToSpace(kitchenId: number, spaceId: number) {
     const kitchen = await this.getKitchenById(kitchenId);
 
     const space = await this.database.space.findUnique({
@@ -206,6 +204,7 @@ export class KitchenService {
   async getOrderItems(kitchen: any, status?: string, page?: number) {
     const { kitchen_id } = kitchen;
 
+    // Check if the kitchen exists
     const kitchenExists = await this.getKitchenById(kitchen_id);
 
     const validStatuses = Object.values(OrderStatus);
@@ -218,6 +217,7 @@ export class KitchenService {
     let take: number | undefined;
     let createdAtCondition: any = {};
 
+    // Apply date condition for orders that are pending or in progress
     if (isPendingOrInProgress) {
       const last24Hours = new Date();
       last24Hours.setHours(last24Hours.getHours() - 24);
@@ -228,7 +228,7 @@ export class KitchenService {
       take = limit;
     }
 
-    console.log("skip", skip, "take", take);
+    // Fetch orders
     const orders = await this.database.order_Item.findMany({
       where: {
         AND: [
@@ -305,7 +305,7 @@ export class KitchenService {
       },
     });
 
-    return orders.map((order) => ({
+    const formattedOrders = orders.map((order) => ({
       ...order,
       choices: order.choices.map((choice) => ({
         option: choice.menu_item_option_choice.menu_item_option.name,
@@ -314,6 +314,83 @@ export class KitchenService {
         choice: choice.menu_item_option_choice.name,
         choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
       })),
+    }));
+
+    // Fetch kitchen calls within the last 24 hours
+    const calls = await this.getKitchenCalls(kitchen_id);
+
+    // Return both orders and calls
+    return {
+      orders: formattedOrders,
+      calls: calls,
+    };
+  }
+
+  // The getKitchenCalls function remains unchanged
+  async getKitchenCalls(kitchen_id: number) {
+    const kitchen = await this.database.kitchen.findFirst({
+      where: {
+        kitchen_id: kitchen_id,
+      },
+    });
+
+    if (!kitchen) {
+      throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
+    }
+
+    const last24Hours = new Date();
+    last24Hours.setHours(last24Hours.getHours() - 24);
+    const createdAtCondition = { created_at: { gte: last24Hours } };
+
+    const calls = await this.database.call.findMany({
+      where: {
+        AND: [
+          {
+            Space: {
+              kitchen_id: kitchen_id,
+            },
+          },
+          createdAtCondition,
+        ],
+      },
+      orderBy: {
+        created_at: "desc",
+      },
+      select: {
+        space_id: true,
+        call_id: true,
+        status: true,
+        updated_at: true,
+        created_at: true,
+        User: {
+          select: {
+            user_id: true,
+            name: true,
+            image_url: true,
+            spaces: {
+              select: {
+                space_id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return calls.map((call) => ({
+      call_id: call.call_id,
+      status: call.status,
+      updated_at: call.updated_at,
+      created_at: call.created_at,
+      User: {
+        user_id: call.User.user_id,
+        name: call.User.name,
+        image_url: call.User.image_url,
+        space: {
+          ...call.User.spaces.find((space) => space.space_id === call.space_id),
+        },
+      },
     }));
   }
 
@@ -328,6 +405,7 @@ export class KitchenService {
             dayOfWeek: true,
             openTime: true,
             closeTime: true,
+            timezone: true,
           },
         },
       },
@@ -337,16 +415,15 @@ export class KitchenService {
       throw new NotFoundException(`Kitchen with id ${kitchen_id} not found`);
     }
 
-    // If weekly timing is off, return based solely on isOpen
     if (!kitchen.isWeeklyTimingOn) {
       return kitchen.isOpen;
     }
 
-    // If weekly timing is on, check if the current time is within today's opening hours
     if (kitchen.openingHours?.length > 0) {
-      const currentTime = new Date();
-      const currentDayOfWeek = currentTime
-        .toLocaleString("en-US", { weekday: "long" })
+      const currentTimeUTC = new Date();
+
+      const currentDayOfWeek = currentTimeUTC
+        .toLocaleString("en-US", { weekday: "long", timeZone: "UTC" })
         .toUpperCase();
 
       const todayOpeningHours = kitchen.openingHours.find(
@@ -354,16 +431,40 @@ export class KitchenService {
       );
 
       if (todayOpeningHours) {
+        const currentKitchenTime = this.convertToKitchenTimezone(
+          currentTimeUTC,
+          todayOpeningHours.timezone
+        );
         return this.isWithinOpeningHours(
           todayOpeningHours.openTime,
           todayOpeningHours.closeTime,
-          currentTime
+          currentKitchenTime
         );
+      } else {
+        return false;
       }
     }
 
-    // If weekly timing is on but no opening hours are defined for today, return false
     return false;
+  }
+
+  private convertToKitchenTimezone(
+    currentTimeUTC: Date,
+    timezone: string
+  ): Date {
+    const [sign, hours, minutes] = timezone
+      .match(/([+-])(\d{1,2}):(\d{2})/)
+      .slice(1);
+
+    console.log("sign,hours,minutes", sign, hours, minutes);
+    const offsetInMinutes =
+      (parseInt(hours) * 60 + parseInt(minutes)) * (sign === "+" ? 1 : -1);
+    console.log("offsetInMin", offsetInMinutes);
+
+    const localTime = new Date(currentTimeUTC);
+    localTime.setMinutes(localTime.getUTCMinutes() + offsetInMinutes);
+
+    return localTime;
   }
 
   private isWithinOpeningHours(
@@ -375,15 +476,28 @@ export class KitchenService {
     const [closeHour, closeMinute] = closeTimeStr.split(":").map(Number);
 
     const openTime = new Date(currentTime);
-    openTime.setHours(openHour, openMinute, 0);
+    openTime.setHours(openHour, openMinute, 0, 0);
 
     const closeTime = new Date(currentTime);
-    closeTime.setHours(closeHour, closeMinute, 0);
+    closeTime.setHours(closeHour, closeMinute, 0, 0);
 
     if (closeTime < openTime) {
       closeTime.setDate(closeTime.getDate() + 1);
     }
 
+    console.log("currentTime", currentTime);
+    console.log("openTime", openTime);
+    console.log("closeTime", closeTime);
+    console.log("isOpen", currentTime >= openTime && currentTime <= closeTime);
     return currentTime >= openTime && currentTime <= closeTime;
+  }
+
+  async unlinkTablet(kitchen_id: number, fcmToken: string) {
+    // return await this.database.kitchenTablet.delete({
+    //   where: {
+    //     fcmToken,
+    //     kitchen_id,
+    //   },
+    // });
   }
 }

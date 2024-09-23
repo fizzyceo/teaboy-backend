@@ -10,23 +10,22 @@ import {
   Req,
   UseGuards,
   Query,
+  UseInterceptors,
+  UploadedFile,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
   ApiBearerAuth,
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
-import {
-  CreateUserDto,
-  UpdateUserDto,
-  AddUserToSpaceDto,
-  AddUserToSiteDto,
-} from "./dto";
+import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
+import { FileInterceptor } from "@nestjs/platform-express";
 
 @Controller("user")
 @ApiTags("user")
@@ -134,5 +133,21 @@ export class UserController {
   ) {
     const { user_id } = req.user;
     return this.userService.getKitchenStatus(kitchen_id, user_id);
+  }
+
+  @Post("upload-profile")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UploadProfileDto })
+  @ApiOperation({ summary: "Create a new site" })
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  createSite(
+    @Body() uploadProfileDto: UploadProfileDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any
+  ) {
+    const { user_id } = req.user;
+    return this.userService.uploadProfileImage(user_id, file);
   }
 }

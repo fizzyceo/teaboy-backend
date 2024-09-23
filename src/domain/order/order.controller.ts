@@ -143,4 +143,66 @@ export class OrderController {
   cancelOrder(@Param("id", ParseIntPipe) id: number) {
     return this.orderService.cancelOrder(id);
   }
+
+  @Get("report/general")
+  @ApiOperation({ summary: "Get Order report with optional filters" })
+  @ApiQuery({
+    name: "from",
+    required: true,
+    description: "Start date for report",
+    type: Date,
+    example: "2021-09-01",
+  })
+  @ApiQuery({
+    name: "to",
+    required: true,
+    description: "End date for report",
+    type: Date,
+    example: "2021-09-30",
+  })
+  @ApiQuery({
+    name: "kitchen_id",
+    required: false,
+    description: "Kitchen ID for report (optional)",
+    type: Number,
+    example: 1,
+  })
+  @ApiQuery({
+    name: "site_id",
+    required: false,
+    description: "Site ID for report (optional)",
+    type: Number,
+    example: 2,
+  })
+  @ApiQuery({
+    name: "space_id",
+    required: false,
+    description: "Space ID for report (optional)",
+    type: Number,
+    example: 3,
+  })
+  @ApiQuery({
+    name: "user_id",
+    required: false,
+    description: "User ID for report (optional)",
+    type: Number,
+    example: 123,
+  })
+  getOrderReport(
+    @Query("from") from: Date,
+    @Query("to") to: Date,
+    @Query("kitchen_id") kitchenId?: number,
+    @Query("site_id") siteId?: number,
+    @Query("space_id") spaceId?: number,
+    @Query("user_id") userId?: number
+  ) {
+    const filters = {
+      kitchen_id: kitchenId,
+      site_id: siteId,
+      space_id: spaceId,
+      user_id: userId,
+    };
+
+    return this.orderService.orderReport(from, to, filters);
+  }
 }

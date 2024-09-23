@@ -7,3 +7,14 @@ export class TokenDto {
   @ApiProperty()
   token: string;
 }
+
+export class KitchneTokenDto {
+  @IsString()
+  @IsNotEmpty()
+  @ApiProperty()
+  token: string;
+
+  @IsString()
+  @IsNotEmpty()
+  fcmToken: string;
+}

@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { DatabaseService } from "src/database/database.service";
 import { AuthEntity } from "./entity/auth.entity";
@@ -14,7 +10,7 @@ export class KitchenAuthService {
     private readonly jwtService: JwtService
   ) {}
 
-  async login(token: string): Promise<AuthEntity> {
+  async login(token: string, fcmToken: string): Promise<AuthEntity> {
     const kitchen = await this.databaseService.kitchen.findUnique({
       where: { token },
     });
@@ -31,6 +27,17 @@ export class KitchenAuthService {
         expiresIn: "1y",
       }
     );
+
+    // await this.databaseService.kitchenTablet.create({
+    //   data: {
+    //     fcmToken: fcmToken,
+    //     kitchen: {
+    //       connect: {
+    //         kitchen_id: kitchen.kitchen_id,
+    //       },
+    //     },
+    //   },
+    // });
 
     return {
       accessToken,

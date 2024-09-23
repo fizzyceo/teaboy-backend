@@ -15,6 +15,7 @@ import { SpaceModule } from "./domain/space/space.module";
 import { EncryptionModule } from "./encryption/encryption.module";
 import { KitchenModule } from "./domain/kitchen/kitchen.module";
 import { CallModule } from "./domain/call/call.module";
+import { MailerModule } from "@nestjs-modules/mailer";
 
 @Module({
   imports: [
@@ -34,6 +35,19 @@ import { CallModule } from "./domain/call/call.module";
     SpaceModule,
     EncryptionModule,
     CallModule,
+    MailerModule.forRoot({
+      transport: {
+        host: process.env.MAIL_APP_HOST,
+        port: 587,
+        auth: {
+          user: process.env.MAIL_APP_EMAIL,
+          pass: process.env.MAIL_APP_PASSWORD,
+        },
+      },
+      defaults: {
+        from: `"Teaboy" <${process.env.MAIL_APP_EMAIL}>`,
+      },
+    }),
   ],
 })
 export class AppModule {}

@@ -170,22 +170,7 @@ export class OrderService {
     const skip = (pageNumber - 1) * pageSize;
     const orders = await this.database.order.findMany({
       where: {
-        OR: [
-          { userId: user_id },
-          {
-            menu: {
-              spaces: {
-                some: {
-                  users: {
-                    some: {
-                      user_id: user_id,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
+        userId: user_id,
       },
       include: {
         order_items: {
@@ -319,5 +304,90 @@ export class OrderService {
       where: { order_id: id },
       data: { status: "CANCELLED" },
     });
+  }
+
+  async orderReport(
+    from: Date,
+    to: Date,
+    filters: {
+      kitchen_id?: number;
+      site_id?: number;
+      space_id?: number;
+      user_id?: number;
+    }
+  ) {
+    // Build dynamic where conditions based on optional filters
+    const whereClause: any = {
+      created_at: {
+        gte: new Date(from),
+        lte: new Date(to),
+      },
+    };
+
+    if (filters.kitchen_id) {
+      whereClause.space = { kitchen_id: filters.kitchen_id };
+    }
+
+    if (filters.site_id) {
+      whereClause.space = { ...whereClause.space, site_id: filters.site_id };
+    }
+
+    if (filters.space_id) {
+      whereClause.space = { ...whereClause.space, space_id: filters.space_id };
+    }
+
+    if (filters.user_id) {
+      whereClause.userId = filters.user_id;
+    }
+
+    const orders = await this.database.order.findMany({
+      where: whereClause,
+      include: {
+        order_items: {
+          select: {
+            menu_item_id: true,
+            quantity: true,
+            menu_item: {
+              select: {
+                title: true,
+                item_images: {
+                  select: {
+                    image_url: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    let totalOrders = 0;
+    let totalItems = 0;
+
+    const ordersWithPrepTime = orders.map((order) => {
+      const preparationTime =
+        (new Date(order.updated_at).getTime() -
+          new Date(order.created_at).getTime()) /
+        1000;
+      const orderItemsCount = order.order_items.reduce(
+        (acc, item) => acc + item.quantity,
+        0
+      );
+
+      totalOrders += 1;
+      totalItems += orderItemsCount;
+
+      return {
+        ...order,
+        preparationTime: Math.round(preparationTime),
+      };
+    });
+
+    return {
+      orders: ordersWithPrepTime,
+      totalOrders,
+      totalItems,
+    };
   }
 }

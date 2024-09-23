@@ -16,6 +16,17 @@ model User {
   phone    String?
   role     USER_ROLE
 
+  image_url   String? 
+
+  // email verification
+  isVerified            Boolean   @default(false) 
+  verificationToken     String?    @unique
+  verificationExpires   DateTime? 
+
+  resetPasswordToken    String?   @unique
+  resetPasswordExpires  DateTime? 
+
+
   orders Order[]
   spaces Space[] @relation("UserSpaces")
   sites  Site[]  @relation("UserSites")
@@ -36,6 +47,9 @@ model Site {
   phone       String?
   address     String?
   image_url   String?
+
+  latitude  Float?
+  longitude Float? 
 
   spaces Space[]
   menus  Menu[]  @relation("SiteMenus")
@@ -256,6 +270,7 @@ model Kitchen {
   spaces       Space[]
   Teaboys      User[]
   openingHours OpeningHours[]
+  tablets KitchenTablet[]
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -266,6 +281,8 @@ model OpeningHours {
   dayOfWeek       DayOfWeek
   openTime        String
   closeTime       String
+
+  timezone String?
 
   kitchen_id Int
   kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
@@ -283,4 +300,16 @@ enum DayOfWeek {
   FRIDAY
   SATURDAY
   SUNDAY
+}
+
+model KitchenTablet{
+  kitchenTablet_id Int @id @default(autoincrement())
+
+  kitchen_id Int
+  kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
+
+  fcmToken String @unique
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }

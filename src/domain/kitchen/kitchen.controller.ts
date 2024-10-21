@@ -10,6 +10,7 @@ import {
   Query,
   Req,
   UseGuards,
+  Headers,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -46,9 +47,9 @@ export class KitchenController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all kitchens" })
-  getAllKitchens(@Req() user: any) {
+  getAllKitchens(@Req() user: any, @Headers("LANG") lang: string) {
     const { user_id } = user.user;
-    return this.kitchenService.getAllKitchens(user_id);
+    return this.kitchenService.getAllKitchens(user_id, lang);
   }
 
   @Get("/order-items")
@@ -70,18 +71,25 @@ export class KitchenController {
   @ApiOperation({ summary: "Get all order items related to a Kitchen" })
   async getOrderItems(
     @Req() req,
+    @Headers("LANG") lang: string,
+
     @Query("status") status?: string,
     @Query("page") page: number = 1
   ) {
-    return await this.kitchenService.getOrderItems(req.user, status, page);
+    return await this.kitchenService.getOrderItems(
+      lang,
+      req.user,
+      status,
+      page
+    );
   }
 
   @Get("/infos")
   @ApiOperation({ summary: "Get kitchen details by id" })
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
-  getKitchenById(@Req() req) {
-    return this.kitchenService.getKitchenInfos(req.user);
+  getKitchenById(@Req() req, @Headers("LANG") lang: string) {
+    return this.kitchenService.getKitchenInfos(req.user, lang);
   }
 
   @Patch("/update")

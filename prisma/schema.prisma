@@ -10,14 +10,19 @@ datasource db {
 model User {
   user_id Int @id @default(autoincrement())
 
-  name     String
+  name     String?
   email    String    @unique
-  password String
+  password String?
   phone    String?
-  role     USER_ROLE
+  
+  role     USER_ROLE @default(NORMAL_USER)
+
+  signedUp Boolean? 
+
+  canCallTeaboy Boolean? @default(true)
 
   image_url   String? 
-
+  isDeleted Boolean? @default(false)
   // email verification
   isVerified            Boolean   @default(false) 
   verificationToken     String?    @unique
@@ -31,29 +36,47 @@ model User {
   spaces Space[] @relation("UserSpaces")
   sites  Site[]  @relation("UserSites")
   calls  Call[]
-
+ 
   kitchen_id Int?
   kitchen    Kitchen? @relation(fields: [kitchen_id], references: [kitchen_id])
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+
+  Entreprise Entreprise[]
+}
+
+
+model Entreprise{
+  ent_id Int @id @default(autoincrement())
+  image_url String
+  name String
+  owner_id Int
+  owner User @relation(fields: [owner_id], references: [user_id])
+
+  Site Site[]
 }
 
 model Site {
   site_id Int @id @default(autoincrement())
 
   name        String
+  name_ar     String?
+
   description String? @default("")
   phone       String?
   address     String?
+  address_ar String?
   image_url   String?
 
   latitude  Float?
   longitude Float? 
-
+  owner_id Int? 
   spaces Space[]
   menus  Menu[]  @relation("SiteMenus")
   users  User[]  @relation("UserSites")
+  ent_id Int?
+  entreprise Entreprise? @relation(fields: [ent_id], references: [ent_id], onDelete: Cascade)
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
@@ -65,11 +88,12 @@ enum SPACE_TYPE {
   DEPARTMENT
 }
 
+
 model Space {
   space_id Int @id @default(autoincrement())
 
   name String
-
+  name_ar String?
   type SPACE_TYPE @default(DEPARTMENT)
 
   site_id Int
@@ -77,7 +101,9 @@ model Space {
 
   kitchen_id Int?
   kitchen    Kitchen? @relation(fields: [kitchen_id], references: [kitchen_id])
+  default_lang String? @default("EN")
 
+  links SpaceUserLink[]
   orders Order[]
   calls  Call[]
   menus  Menu[]  @relation("SpaceMenus")
@@ -87,10 +113,22 @@ model Space {
   updated_at DateTime @updatedAt
 }
 
+
+model SpaceUserLink {
+  link_id Int @id @default(autoincrement())
+  space_id Int
+  space Space @relation(fields:[space_id], references: [space_id], onDelete: Cascade)
+
+  user_email String
+
+
+}
+
 model Menu {
   menu_id Int @id @default(autoincrement())
 
   name          String?
+  name_ar          String?
   ask_for_name  Boolean @default(false)
   ask_for_table Boolean @default(false)
 
@@ -107,6 +145,7 @@ model Menu_Item {
   menu_item_id Int @id @default(autoincrement())
 
   title       String
+  title_ar     String?
   description String? @default("")
   price       Float
   available   Boolean @default(true)
@@ -126,7 +165,7 @@ model Menu_Item_Option {
   menu_item_option_id Int @id @default(autoincrement())
 
   name String
-
+  name_ar  String?
   default_choice_id Int?                     @unique
   default_choice    Menu_Item_Option_Choice? @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id])
 
@@ -141,6 +180,7 @@ model Menu_Item_Option_Choice {
   menu_item_option_choice_id Int @id @default(autoincrement())
 
   name String
+  name_ar String?
 
   menu_Item_Option Menu_Item_Option? @relation("DefaultChoice")
 
@@ -251,9 +291,9 @@ enum CALL_STATUS {
 model Call {
   call_id    Int      @id @default(autoincrement())
   user_id    Int
-  User       User     @relation(fields: [user_id], references: [user_id])
+  User       User     @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
   space_id   Int
-  Space      Space    @relation(fields: [space_id], references: [space_id])
+  Space      Space    @relation(fields: [space_id], references: [space_id],onDelete: Cascade)
 
   status     CALL_STATUS @default(STARTED)
   created_at DateTime @default(now())
@@ -263,6 +303,7 @@ model Call {
 model Kitchen {
   kitchen_id Int     @id @default(autoincrement())
   name       String
+  name_ar    String?
   token       String    @unique
   isOpen     Boolean @default(true)
   isWeeklyTimingOn Boolean @default(false)

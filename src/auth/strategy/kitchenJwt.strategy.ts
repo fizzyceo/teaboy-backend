@@ -17,7 +17,7 @@ export class KitchenJwtStrategy extends PassportStrategy(
 
   async validate(payload: { kitchen_id: number }) {
     const kitchen = await this.databaseService.kitchen.findUnique({
-      where: { kitchen_id: payload.kitchen_id },
+      where: { kitchen_id: payload?.kitchen_id },
     });
 
     if (!kitchen) {

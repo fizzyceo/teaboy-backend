@@ -6,6 +6,9 @@ export class CreateMenuDto {
   @IsOptional()
   name: string;
 
+  @IsOptional()
+  name_ar: string;
+
   @ApiProperty({ default: false })
   @IsBoolean()
   ask_for_table: boolean;

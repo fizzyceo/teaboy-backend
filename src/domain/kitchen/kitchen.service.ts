@@ -44,11 +44,11 @@ export class KitchenService {
     };
   }
 
-  async getAllKitchens(user_id: number) {
+  async getAllKitchens(user_id: number, lang: string) {
     return await this.database.kitchen.findMany();
   }
 
-  async getKitchenInfos(req: any) {
+  async getKitchenInfos(req: any, lang: string) {
     const { kitchen_id } = req;
 
     const kitchen = await this.database.kitchen.findUnique({
@@ -56,6 +56,7 @@ export class KitchenService {
       select: {
         kitchen_id: true,
         name: true,
+        name_ar: true,
         token: true,
         isOpen: true,
         isWeeklyTimingOn: true,
@@ -72,6 +73,7 @@ export class KitchenService {
           select: {
             space_id: true,
             name: true,
+            name_ar: true,
             menus: {
               select: {
                 menu_id: true,
@@ -90,13 +92,13 @@ export class KitchenService {
     // Prepare response with necessary information
     const formattedSpaces = kitchen.spaces.map((space) => ({
       space_id: space.space_id,
-      name: space.name,
+      name: lang === "AR" && space.name_ar ? space.name_ar : space.name,
       menu_id: space.menus.length > 0 ? space.menus[0].menu_id : null,
     }));
 
     return {
       kitchen_id: kitchen.kitchen_id,
-      name: kitchen.name,
+      name: lang === "AR" && kitchen.name_ar ? kitchen.name_ar : kitchen.name,
       token: kitchen.token,
       isOpen: kitchen.isOpen,
       isWeeklyTimingOn: kitchen.isWeeklyTimingOn,
@@ -201,7 +203,12 @@ export class KitchenService {
     });
   }
 
-  async getOrderItems(kitchen: any, status?: string, page?: number) {
+  async getOrderItems(
+    lang: string,
+    kitchen: any,
+    status?: string,
+    page?: number
+  ) {
     const { kitchen_id } = kitchen;
 
     // Check if the kitchen exists
@@ -258,9 +265,11 @@ export class KitchenService {
             customer_name: true,
             table_number: true,
             order_number: true,
+
             space: {
               select: {
                 name: true,
+                name_ar: true,
                 space_id: true,
                 kitchen_id: true,
               },
@@ -272,10 +281,12 @@ export class KitchenService {
             menu_item_option_choice: {
               select: {
                 name: true,
+                name_ar: true,
                 menu_item_option_choice_id: true,
                 menu_item_option: {
                   select: {
                     name: true,
+                    name_ar: true,
                     menu_item_option_id: true,
                   },
                 },
@@ -292,6 +303,7 @@ export class KitchenService {
               },
             },
             title: true,
+            title_ar: true,
             available: true,
             description: true,
             price: true,
@@ -308,10 +320,17 @@ export class KitchenService {
     const formattedOrders = orders.map((order) => ({
       ...order,
       choices: order.choices.map((choice) => ({
-        option: choice.menu_item_option_choice.menu_item_option.name,
+        option:
+          lang === "AR" &&
+          choice.menu_item_option_choice.menu_item_option.name_ar
+            ? choice.menu_item_option_choice.menu_item_option.name_ar
+            : choice.menu_item_option_choice.menu_item_option.name,
         option_id:
           choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
-        choice: choice.menu_item_option_choice.name,
+        choice:
+          lang === "AR" && choice.menu_item_option_choice.name_ar
+            ? choice.menu_item_option_choice.name_ar
+            : choice.menu_item_option_choice.name,
         choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
       })),
     }));

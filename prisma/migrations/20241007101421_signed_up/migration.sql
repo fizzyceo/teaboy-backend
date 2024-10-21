@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN     "isDeleted" BOOLEAN DEFAULT false,
+ADD COLUMN     "signedUp" BOOLEAN,
+ALTER COLUMN "name" DROP NOT NULL,
+ALTER COLUMN "password" DROP NOT NULL;

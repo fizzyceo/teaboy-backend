@@ -4,6 +4,7 @@ export class Menu {
   menu_id: number;
 
   name?: string;
+  name_ar?: string;
   space_id: number;
 
   menu_items: MenuItem[];

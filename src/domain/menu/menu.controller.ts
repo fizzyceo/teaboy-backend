@@ -10,6 +10,7 @@ import {
   Query,
   UseGuards,
   Req,
+  Headers,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -44,13 +45,22 @@ export class MenuController {
     return this.menuService.createMenu(createMenuDto);
   }
 
+  @Get("v2")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get detailed menus v2" })
+  getAllMenusv2(@Req() user: any, @Headers("LANG") lang: string) {
+    const { user_id } = user.user;
+    return this.menuService.getAllMenusv2(user_id, lang);
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all menus" })
-  getAllMenus(@Req() user: any) {
-    const { user_id } = user.user;
-    return this.menuService.getAllMenus(user_id);
+  getAllMenus(@Req() req: any, @Headers("LANG") lang: string) {
+    const { user_id } = req.user;
+    return this.menuService.getAllMenus(user_id, lang);
   }
 
   @Get(":id")
@@ -71,13 +81,14 @@ export class MenuController {
     required: false,
   })
   getMenuById(
+    @Headers("LANG") lang: string,
     @Param("id", ParseIntPipe) id: number,
     @Query("space_id") space_id?: string,
     @Query("site_id") site_id?: string
   ) {
     const spaceId = space_id ? parseInt(space_id, 10) : undefined;
     const siteId = site_id ? parseInt(site_id, 10) : undefined;
-    return this.menuService.getMenuById(id, spaceId, siteId);
+    return this.menuService.getMenuById(id, spaceId, siteId, lang);
   }
 
   @Get(":id/items")
@@ -90,8 +101,11 @@ export class MenuController {
     description: "Menu id to fetch items",
     required: true,
   })
-  getMenuItems(@Param("id", ParseIntPipe) id: number) {
-    return this.menuService.getMenuItems(id);
+  getMenuItems(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
+    return this.menuService.getMenuItems(id, lang);
   }
 
   @Patch(":id")
@@ -126,9 +140,10 @@ export class MenuController {
     description: "Menu id to delete",
     required: true,
   })
-  deleteMenu(@Param("id", ParseIntPipe) id: number, @Req() user: any) {
-    const { user_id } = user.user;
-    return this.menuService.deleteMenu(id, user_id);
+  deleteMenu(@Param("id", ParseIntPipe) id: number) {
+    //, @Req() user: any
+    // const { user_id } = user.user;
+    return this.menuService.deleteMenu(id); //, user_id
   }
 
   @Patch(":menu_id/link-space/:space_id")
@@ -180,14 +195,22 @@ export class MenuController {
   }
 
   @Get("s/:encryptedToken")
-  async getMenuFromToken(@Param("encryptedToken") encryptedToken: string) {
+  async getMenuFromToken(
+    @Headers("LANG") lang: string,
+    @Param("encryptedToken") encryptedToken: string
+  ) {
     const decryptedData = this.encryptionService.decryptData(encryptedToken);
     const [menuId, spaceId] = decryptedData.split("-");
-    return this.menuService.getMenuById(parseInt(menuId), parseInt(spaceId));
+    return this.menuService.getMenuById(
+      parseInt(menuId),
+      parseInt(spaceId),
+      null,
+      lang
+    );
   }
 
   @Get("links/a")
-  async getLinks() {
+  async getLinks(@Headers("LANG") lang: string) {
     const menus = await this.menuService.getAllMenusOld();
     const result = menus.map((menu) =>
       menu.spaces.map((space) => {
@@ -199,7 +222,7 @@ export class MenuController {
         return {
           space_name: space.name,
           space_id: space.space_id,
-          menu_name: menu.name,
+          menu_name: lang === "AR" && menu.name_ar ? menu.name_ar : menu.name,
           encrypted: encryptedData,
           menu_site_image: space.site_image_url,
         };
@@ -209,7 +232,9 @@ export class MenuController {
   }
 
   @Get("list/a")
-  async getMenuList() {
-    return this.menuService.getMenuList();
+  async getMenuList(@Headers("LANG") lang: string) {
+    return this.menuService.getMenuList(lang);
   }
 }
+
+//getmenubyId to AR

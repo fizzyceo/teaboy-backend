@@ -6,6 +6,7 @@ export class Site {
   image_url?: string;
   location?: string;
   address?: string;
+  address_ar?: string;
 
   employees: any[];
   spaces: any[];

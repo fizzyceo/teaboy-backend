@@ -23,9 +23,21 @@ export class UserService {
   private readonly roundsOfHashing = 10;
 
   private async checkIfUserExists(email: string) {
-    const user = await this.database.user.findUnique({ where: { email } });
+    const user = await this.database.user.findUnique({
+      where: { email, signedUp: true },
+    });
     if (user) {
       throw new ConflictException("Email already exists");
+    }
+  }
+  private async checkIfUserIsInvited(email: string) {
+    const user = await this.database.user.findUnique({
+      where: { email },
+    });
+    if (user) {
+      return user.user_id;
+    } else {
+      return null;
     }
   }
 
@@ -45,12 +57,18 @@ export class UserService {
 
   async createUser(createUserDto: CreateUserDto) {
     await this.checkIfUserExists(createUserDto.email);
+    const isInvited = await this.checkIfUserIsInvited(createUserDto.email);
 
-    createUserDto.password = await this.hashPassword(createUserDto.password);
+    if (isInvited) {
+      const { email, ...rest } = createUserDto;
+      return await this.updateUser(isInvited, { ...rest, signedUp: true });
+    } else {
+      createUserDto.password = await this.hashPassword(createUserDto.password);
 
-    return await this.database.user.create({
-      data: createUserDto,
-    });
+      return await this.database.user.create({
+        data: { ...createUserDto, signedUp: true },
+      });
+    }
   }
 
   async getAllUsers() {
@@ -72,7 +90,8 @@ export class UserService {
     if (updateuserDto.password) {
       updateuserDto.password = await this.hashPassword(updateuserDto.password);
     }
-
+    if (updateuserDto.signedUp) {
+    }
     return await this.database.user.update({
       where: { user_id: id },
       data: updateuserDto,
@@ -112,6 +131,108 @@ export class UserService {
         spaces: true,
       },
     });
+  }
+
+  async addUserToSpace2(userEmail: string, spaceId: number) {
+    // Find the user by email
+    const user = await this.database.user.findFirst({
+      where: {
+        email: userEmail,
+      },
+      include: {
+        spaces: true, // Include spaces to check if the user is already linked
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${userEmail} not found`);
+    }
+
+    // Find the space by id
+    const space = await this.database.space.findUnique({
+      where: { space_id: spaceId },
+    });
+
+    if (!space) {
+      throw new NotFoundException(`Space with id ${spaceId} not found`);
+    }
+
+    // Check if the user is already connected to the space
+    const isAlreadyLinked = user.spaces.some((s) => s.space_id === spaceId);
+    if (isAlreadyLinked) {
+      throw new ConflictException(
+        `User with email ${userEmail} is already linked to space with id ${spaceId}`
+      );
+    }
+
+    // If not linked, connect the user to the space
+    return await this.database.user.update({
+      where: { email: userEmail },
+      data: {
+        spaces: {
+          connect: {
+            space_id: spaceId,
+          },
+        },
+      },
+      include: {
+        spaces: true,
+      },
+    });
+  }
+
+  async removeUserFromSpace(userEmail: string, spaceId: number) {
+    const user = await this.database.user.findFirst({
+      where: {
+        email: userEmail,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${userEmail} not found`);
+    }
+
+    const space = await this.database.space.findUnique({
+      where: { space_id: spaceId },
+    });
+
+    if (!space) {
+      throw new NotFoundException(`Space with id ${spaceId} not found`);
+    }
+
+    return await this.database.user.update({
+      where: { email: userEmail },
+      data: {
+        spaces: {
+          disconnect: {
+            space_id: spaceId,
+          },
+        },
+      },
+      include: {
+        spaces: true,
+      },
+    });
+  }
+
+  async getAllSpaceLinks() {
+    const spaces = await this.database.space.findMany({
+      include: {
+        users: true, // Assuming the `space` model has a `users` relationship
+      },
+    });
+
+    if (!spaces || spaces.length === 0) {
+      throw new NotFoundException(`No spaces found`);
+    }
+
+    return spaces.map((space) => ({
+      space_name: space.name,
+      space_id: space.space_id,
+      users: space.users.map((user) => ({
+        user_email: user.email,
+      })),
+    }));
   }
 
   async getUserSpaces(user: any) {

@@ -9,6 +9,9 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
+  Headers,
+  UseGuards,
+  Req,
 } from "@nestjs/common";
 import { SiteService } from "./site.service";
 import { CreateSiteDto } from "./dto/create-site.dto";
@@ -22,6 +25,7 @@ import {
 } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { CreateSpaceDto } from "./dto";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
 @Controller("site")
 @ApiTags("site")
@@ -33,17 +37,20 @@ export class SiteController {
   @ApiOperation({ summary: "Create a new site" })
   @UseInterceptors(FileInterceptor("file"))
   @ApiConsumes("multipart/form-data")
+  @UseGuards(JwtAuthGuard)
   createSite(
+    @Req() req: any,
     @Body() createRestaurantDto: CreateSiteDto,
     @UploadedFile() file: Express.Multer.File
   ) {
-    return this.siteService.createSite(createRestaurantDto, file);
+    const { user_id } = req.user;
+    return this.siteService.createSite(createRestaurantDto, file, user_id);
   }
 
   @Get()
   @ApiOperation({ summary: "Get all sites" })
-  getAllSites() {
-    return this.siteService.getAllSites();
+  getAllSites(@Headers("LANG") lang: string) {
+    return this.siteService.getAllSites(lang);
   }
 
   @Get(":id")
@@ -53,8 +60,11 @@ export class SiteController {
     description: "Site id to fetch",
     required: true,
   })
-  getSiteById(@Param("id", ParseIntPipe) id: number) {
-    return this.siteService.getSiteById(id);
+  getSiteById(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
+    return this.siteService.getSiteById(id, lang);
   }
 
   @Get(":id/menus")
@@ -64,8 +74,11 @@ export class SiteController {
     description: "Site id to fetch menus",
     required: true,
   })
-  getSiteMenus(@Param("id", ParseIntPipe) id: number) {
-    return this.siteService.getSiteMenus(id);
+  getSiteMenus(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
+    return this.siteService.getSiteMenus(id, lang);
   }
 
   @Get(":id/employees")
@@ -75,7 +88,10 @@ export class SiteController {
     description: "site id to fetch employees",
     required: true,
   })
-  getSiteEmployees(@Param("id", ParseIntPipe) id: number) {
+  getSiteEmployees(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
     return this.siteService.getSiteEmployees(id);
   }
 
@@ -86,8 +102,11 @@ export class SiteController {
     description: "site id to fetch spaces",
     required: true,
   })
-  getSiteSpaces(@Param("id", ParseIntPipe) id: number) {
-    return this.siteService.getSiteSpaces(id);
+  getSiteSpaces(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
+    return this.siteService.getSiteSpaces(id, lang);
   }
 
   @Post(":id/spaces")

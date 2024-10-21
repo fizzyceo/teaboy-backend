@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsInt, IsString } from "class-validator";
+import { IsEnum, IsInt, IsOptional, IsString } from "class-validator";
 
 enum SPACE_TYPE {
   MAJLISS = "MAJLISS",
@@ -15,6 +15,14 @@ export class CreateSpaceDto {
   })
   @IsString()
   name: string;
+
+  @IsString()
+  @IsOptional()
+  name_ar?: string;
+
+  @IsString()
+  @IsOptional()
+  default_lang?: string;
 
   @ApiProperty({ enum: SPACE_TYPE })
   @IsEnum(SPACE_TYPE)

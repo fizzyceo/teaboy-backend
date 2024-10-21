@@ -74,12 +74,12 @@ export class OrderController {
     example: 1,
   })
   getAllOrders(
-    @Req() req,
+    @Req() user: any,
     @Query("page") page: number = 1,
     @Query("limit") limit: number = 5
   ) {
-    const user = req.user;
-    return this.orderService.getAllOrders(user, page, limit);
+    const { user_id } = user.user;
+    return this.orderService.getAllOrders(user_id, page, limit);
   }
 
   @Get(":id")

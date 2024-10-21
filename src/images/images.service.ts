@@ -17,7 +17,7 @@ export class ImagesService {
         }
       );
 
-      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+      streamifier.createReadStream(file?.buffer).pipe(uploadStream);
     });
   }
 }

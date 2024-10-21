@@ -161,8 +161,8 @@ export class OrderService {
     };
   }
 
-  async getAllOrders(user: any, page: number = 1, limit: number = 5) {
-    const { user_id } = user;
+  async getAllOrders(user_id: any, page: number = 1, limit: number = 5) {
+    // const { user_id } = user;
 
     const pageNumber = page > 0 ? page : 1;
     const pageSize = limit > 0 ? limit : 5;
@@ -340,6 +340,7 @@ export class OrderService {
       whereClause.userId = filters.user_id;
     }
 
+    //select title if header LANG = 'EN', title_ar if header LANG =='AR'
     const orders = await this.database.order.findMany({
       where: whereClause,
       include: {

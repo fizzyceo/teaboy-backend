@@ -11,6 +11,7 @@ import {
   UploadedFiles,
   UseGuards,
   Req,
+  Headers,
 } from "@nestjs/common";
 import { MenuItemService } from "./menu-item.service";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
@@ -53,8 +54,8 @@ export class MenuItemController {
     summary: "Get all menu items",
     description: "Get All menu items , this should be later be modified",
   })
-  getAllMenuItems() {
-    return this.menuItemService.getAllMenuItems();
+  getAllMenuItems(@Headers("LANG") lang: string) {
+    return this.menuItemService.getAllMenuItems(lang);
   }
 
   @Get(":id")
@@ -64,8 +65,11 @@ export class MenuItemController {
     description: "Menu item id to fetch",
     required: true,
   })
-  getMenuItemById(@Param("id", ParseIntPipe) id: number) {
-    return this.menuItemService.getMenuItemById(id);
+  getMenuItemById(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
+    return this.menuItemService.getMenuItemById(id, lang);
   }
 
   @Get(":id/images")
@@ -80,7 +84,7 @@ export class MenuItemController {
   }
 
   @Patch(":id")
-  @UseGuards(KitchenAuthGuard)
+  // @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
   @ApiBody({ type: UpdateMenuItemDto })
   @ApiOperation({ summary: "Update menu item details by id" })
@@ -91,19 +95,17 @@ export class MenuItemController {
   })
   updateMenuItem(
     @Param("id", ParseIntPipe) id: number,
-    @Body() updateMenuItemDto: UpdateMenuItemDto,
-    @Req() kitchen: any
+    @Body() updateMenuItemDto: UpdateMenuItemDto
+    // @Req() kitchen: any
   ) {
-    const { kitchen_id } = kitchen.user;
-    return this.menuItemService.updateMenuItem(
-      id,
-      updateMenuItemDto,
-      kitchen_id
-    );
+    // console.log(kitchen, id);
+
+    // const { kitchen_id } = kitchen.user;
+    return this.menuItemService.updateMenuItem(id, updateMenuItemDto, null);
   }
 
   @Delete(":id")
-  @UseGuards(KitchenAuthGuard)
+  // @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Delete menu item by id" })
   @ApiParam({
@@ -122,8 +124,11 @@ export class MenuItemController {
     description: "Menu item id to fetch options",
     required: true,
   })
-  getMenuItemOptions(@Param("id", ParseIntPipe) id: number) {
-    return this.menuItemService.getMenuItemOptions(id);
+  getMenuItemOptions(
+    @Param("id", ParseIntPipe) id: number,
+    @Headers("LANG") lang: string
+  ) {
+    return this.menuItemService.getMenuItemOptions(id, lang);
   }
 
   @Post(":id/options")

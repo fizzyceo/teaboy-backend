@@ -6,6 +6,10 @@ export class MenuItemOptionChoice {
   @ApiProperty()
   @IsString()
   name: string;
+
+  @IsString()
+  @IsOptional()
+  name_ar: string;
 }
 
 export class CreateMenuItemOption {
@@ -13,6 +17,10 @@ export class CreateMenuItemOption {
   @IsString()
   @IsOptional()
   name: string;
+
+  @IsString()
+  @IsOptional()
+  name_ar: string;
 
   @ApiProperty({ type: [MenuItemOptionChoice] })
   @ValidateNested({ each: true })

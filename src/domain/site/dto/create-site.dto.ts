@@ -6,6 +6,11 @@ export class CreateSiteDto {
   @IsString()
   name: string;
 
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  name_ar?: string;
+
   @ApiProperty({ required: false, default: "" })
   @IsString()
   @IsOptional()
@@ -15,6 +20,11 @@ export class CreateSiteDto {
   @IsString()
   @IsOptional()
   address: string;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  address_ar: string;
 
   @ApiProperty()
   @IsString()

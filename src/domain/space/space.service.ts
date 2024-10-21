@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 
 import { DatabaseService } from "src/database/database.service";
+import { CreateSpaceDto } from "../space/dto/create-space.dto";
 
 @Injectable()
 export class SpaceService {
@@ -16,5 +17,28 @@ export class SpaceService {
     }
 
     return space;
+  }
+
+  async getAllSpaces() {
+    const spaces = await this.database.space.findMany({});
+    return spaces;
+  }
+
+  async getSpacesForSite(site_id: number) {
+    const spaces = await this.database.space.findMany({
+      where: {
+        site_id: site_id,
+      },
+    });
+
+    return spaces;
+  }
+
+  async createSpace(createSpaceDto: CreateSpaceDto) {
+    return await this.database.space.create({
+      data: {
+        ...createSpaceDto,
+      },
+    });
   }
 }

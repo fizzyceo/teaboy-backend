@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   HttpStatus,
   Injectable,
   NotFoundException,
@@ -7,13 +8,15 @@ import {
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { DatabaseService } from "src/database/database.service";
-import { AuthEntity } from "./entity/auth.entity";
+import { AuthEntity, AuthEntity2 } from "./entity/auth.entity";
 import * as bcrypt from "bcrypt";
 import * as crypto from "crypto";
 import { MailerService } from "@nestjs-modules/mailer";
 import { RegisterDto } from "./dto/register.dto";
 import { ForgotPasswordDto } from "./dto/forgotPassword.dto";
 import { ResetPasswordDto } from "./dto/resetPassword.dt";
+import { UserService } from "src/domain/user/user.service";
+import { template1 } from "src/email-template/template-1";
 
 @Injectable()
 export class UserAuthService {
@@ -22,8 +25,26 @@ export class UserAuthService {
     private readonly jwtService: JwtService,
     private readonly mailerService: MailerService
   ) {}
+  private async checkIfUserExists(email: string) {
+    const user = await this.databaseService.user.findUnique({
+      where: { email, signedUp: true },
+    });
+    if (user) {
+      throw new ConflictException("Email already exists");
+    }
+  }
+  private async checkIfUserIsInvited(email: string) {
+    const user = await this.databaseService.user.findUnique({
+      where: { email, signedUp: false },
+    });
+    if (user) {
+      return user.user_id;
+    } else {
+      return null;
+    }
+  }
 
-  async login(email: string, password: string): Promise<AuthEntity> {
+  async login(email: string, pass: string): Promise<AuthEntity2> {
     const user = await this.databaseService.user.findUnique({
       where: { email },
     });
@@ -38,18 +59,30 @@ export class UserAuthService {
       );
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(pass, user.password);
 
     if (!isPasswordValid) {
       throw new UnauthorizedException("Invalid password");
     }
-
+    const {
+      password,
+      role,
+      isDeleted,
+      isVerified,
+      verificationExpires,
+      verificationToken,
+      resetPasswordExpires,
+      resetPasswordToken,
+      ...rest
+    } = user;
     return {
       accessToken: this.jwtService.sign({
         user_id: user.user_id,
         email: user.email,
         role: user.role,
       }),
+      success: true,
+      user: rest, // You should return the user data minus the password
     };
   }
 
@@ -59,33 +92,64 @@ export class UserAuthService {
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     try {
-      await this.databaseService.user.create({
-        data: {
-          name: registerDto.name,
-          email: registerDto.email,
-          role: registerDto.role,
-          phone: registerDto.phone,
-          password: hashedPassword,
-          verificationToken: verificationToken,
-          verificationExpires: verificationExpires,
-        },
-      });
+      // Check if the user already exists
+      await this.checkIfUserExists(registerDto.email);
 
-      await this.mailerService.sendMail({
-        to: registerDto.email,
-        subject: "Email Verification",
-        html: `Hello ${registerDto.name},<br><br>
-         Thank you for registering. Please click the link below to verify your email address:<br>
-         <a href="${process.env.FRONTEND_URL}/auth/validate-email/${verificationToken}">Verify Email</a><br><br>
-         If you did not register, please ignore this email.`,
-      });
+      // Check if the user was invited
+      const isInvited = await this.checkIfUserIsInvited(registerDto.email);
 
+      if (isInvited) {
+        await this.databaseService.user.update({
+          where: { user_id: isInvited },
+          data: {
+            name: registerDto.name,
+            phone: registerDto.phone,
+            password: hashedPassword,
+            verificationToken: verificationToken,
+            verificationExpires: verificationExpires,
+            signedUp: true,
+          },
+        });
+      } else {
+        await this.databaseService.user.create({
+          data: {
+            name: registerDto.name,
+            email: registerDto.email,
+            role: registerDto.role,
+            phone: registerDto.phone,
+            password: hashedPassword,
+            verificationToken: verificationToken,
+            verificationExpires: verificationExpires,
+            signedUp: true,
+          },
+        });
+      }
+
+      // Attempt to send verification email
+      try {
+        await this.mailerService.sendMail({
+          to: registerDto.email,
+          subject: "Email Verification",
+          html: template1(
+            registerDto.name,
+            process.env.FRONTEND_URL,
+            verificationToken
+          ),
+        });
+      } catch (emailError) {
+        console.error("Error sending verification email:", emailError);
+        // You could return a specific message here, but don’t fail the registration
+      }
+
+      // Return success response, even if the email fails
       return {
-        message: "Signup successful, please check your email for verification",
+        message:
+          "Signup successful. If email verification fails, please contact support.",
         token: verificationToken,
       };
     } catch (error) {
-      console.log(error);
+      console.error("Registration failed:", error);
+      throw new Error("Registration failed.");
     }
   }
 

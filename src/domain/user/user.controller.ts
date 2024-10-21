@@ -12,6 +12,7 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  UnauthorizedException,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
@@ -26,6 +27,7 @@ import {
 import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
+import { LinkingSpace } from "./dto/create-user.dto";
 
 @Controller("user")
 @ApiTags("user")
@@ -45,6 +47,7 @@ export class UserController {
     return this.userService.getAllUsers();
   }
 
+  //1
   @Patch("link-space")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -56,8 +59,42 @@ export class UserController {
   })
   addUserToSpace(@Query("spaceId") spaceId: number, @Req() user: any) {
     const { user_id } = user.user;
-    console.log("link_space", user_id, spaceId);
     return this.userService.addUserToSpace(user_id, spaceId);
+  }
+
+  @Post("link-space2")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  addUserToSpace2(@Body() LinkingSpace: LinkingSpace, @Req() user: any) {
+    const { user_id, role } = user.user;
+
+    if (
+      role.toUpperCase() !== "ADMIN" ||
+      role.toUpperCase() !== "SUPER_ADMIN"
+    ) {
+      throw new UnauthorizedException("you are not authorized");
+    }
+    return this.userService.addUserToSpace2(
+      LinkingSpace.email,
+      LinkingSpace.space_id
+    );
+  }
+  @Post("unlink-space2")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  removeUserFromSpace(@Body() LinkingSpace: LinkingSpace, @Req() user: any) {
+    const { user_id, role } = user.user;
+
+    if (
+      role.toUpperCase() !== "ADMIN" ||
+      role.toUpperCase() !== "SUPER_ADMIN"
+    ) {
+      throw new UnauthorizedException("you are not authorized");
+    }
+    return this.userService.removeUserFromSpace(
+      LinkingSpace.email,
+      LinkingSpace.space_id
+    );
   }
 
   @Patch("link-site")
@@ -72,6 +109,14 @@ export class UserController {
   addUserToSite(@Query("siteId") siteId: number, @Req() user: any) {
     const { user_id } = user.user;
     return this.userService.addUserToSite(user_id, siteId);
+  }
+  @Get("get-all-space-links")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getAllSpaceLinks() {
+    const allSpaceLinks = await this.userService.getAllSpaceLinks();
+
+    return allSpaceLinks;
   }
 
   @Get("/spaces")
@@ -149,5 +194,12 @@ export class UserController {
   ) {
     const { user_id } = req.user;
     return this.userService.uploadProfileImage(user_id, file);
+  }
+  @Delete()
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  deleteCurrentUser(@Req() req: any) {
+    const { user_id } = req.user;
+    return this.userService.deleteUser(user_id);
   }
 }

@@ -18,6 +18,10 @@ export class CreateMenuItemDto {
   @IsString()
   title: string;
 
+  @IsString()
+  // @IsOptional()
+  title_ar: string;
+
   @ApiProperty({
     description: "Description of the menu item",
     example: "Delicious burger",

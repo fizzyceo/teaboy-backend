@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsOptional,
+  IsString,
   ValidateNested,
 } from "class-validator";
 import { OpeningHourDto } from "./opening-hour.dto";
@@ -11,7 +12,12 @@ import { Type } from "class-transformer";
 export class CreateKitchenDto {
   @ApiProperty()
   @IsOptional()
+  @IsString()
   name: string;
+
+  @IsOptional()
+  @IsString()
+  name_ar: string;
 
   @ApiProperty()
   @IsBoolean()

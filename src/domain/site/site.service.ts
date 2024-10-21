@@ -4,6 +4,7 @@ import { DatabaseService } from "src/database/database.service";
 import { ImagesService } from "src/images/images.service";
 
 import { CreateSiteDto, CreateSpaceDto, UpdateSiteDto } from "./dto";
+import { formatSiteResponse } from "src/utils/formatting-ar";
 
 @Injectable()
 export class SiteService {
@@ -24,29 +25,55 @@ export class SiteService {
     return site;
   }
 
-  async createSite(createSiteDto: CreateSiteDto, file: Express.Multer.File) {
+  async createSite(
+    createSiteDto: CreateSiteDto,
+    file: Express.Multer.File,
+    user_id: number
+  ) {
     const imageUrl = await this.imagesService.uploadFile(file);
 
     return await this.database.site.create({
       data: {
         ...createSiteDto,
+        // owner_id:user_id,
         image_url: imageUrl.url,
       },
     });
   }
 
-  async getAllSites() {
-    return await this.database.site.findMany();
+  async getAllSites(lang: string) {
+    const sites = await this.database.site.findMany();
+
+    return sites.map((site) => {
+      return formatSiteResponse(site, lang);
+    });
   }
 
-  async getSiteById(id: number) {
-    return await this.findSiteById(id);
+  async updateSpaces() {
+    const updatedSpaces = await this.database.space.updateMany({
+      where: {
+        default_lang: {
+          not: "EN", // or null if you want to update only those that are null
+        },
+      },
+      data: {
+        default_lang: "EN",
+      },
+    });
   }
 
-  async getSiteMenus(id: number) {
+  async getSiteById(id: number, lang: string) {
     const site = await this.findSiteById(id);
 
-    return await this.database.menu.findMany({
+    this.updateSpaces();
+
+    return formatSiteResponse(site, lang);
+  }
+
+  async getSiteMenus(id: number, lang: string) {
+    // const site = await this.findSiteById(id);
+
+    const menus = await this.database.menu.findMany({
       where: {
         sites: {
           some: {
@@ -55,6 +82,11 @@ export class SiteService {
         },
       },
     });
+    return menus.map((menu) => {
+      return formatSiteResponse(menu, lang);
+    });
+
+    // return menus;
   }
 
   async getSiteEmployees(id: number) {
@@ -110,16 +142,27 @@ export class SiteService {
     };
   }
 
-  async getSiteSpaces(id: number) {
-    const site = await this.findSiteById(id);
+  async getSiteSpaces(id: number, lang: string) {
+    // const site = await this.findSiteById(id);
 
-    return await this.database.space.findMany({
+    const spaces = await this.database.space.findMany({
       where: { site_id: id },
       select: {
         space_id: true,
+        type: true,
+        default_lang: true,
         name: true,
+        name_ar: true,
       },
     });
+    spaces.map((space) => ({
+      space_id: space.space_id,
+      name: lang?.toUpperCase() === "AR" ? space.name_ar : space.name,
+      default_lang: space.default_lang,
+      name_ar: space.name_ar,
+    }));
+
+    return spaces;
   }
 
   async createSiteSpace(siteId: number, spaceData: CreateSpaceDto) {
@@ -131,6 +174,8 @@ export class SiteService {
       data: {
         name,
         type: spaceData.type,
+        default_lang: spaceData.default_lang,
+        name_ar: spaceData.name_ar,
         site: {
           connect: {
             site_id: siteId,

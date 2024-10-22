@@ -16,6 +16,7 @@ import { KitchenModule } from "./domain/kitchen/kitchen.module";
 import { CallModule } from "./domain/call/call.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { EntrepriseModule } from "./domain/entreprise/entreprise.module";
+import { V2Module } from './v2/v2.module';
 
 @Module({
   imports: [
@@ -51,6 +52,8 @@ import { EntrepriseModule } from "./domain/entreprise/entreprise.module";
         from: `"ClickOrder" <${process.env.MAIL_APP_EMAIL}>`,
       },
     }),
+
+    V2Module,
 
     // MailerModule.forRoot({
     //   transport: {

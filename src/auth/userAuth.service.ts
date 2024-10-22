@@ -81,7 +81,6 @@ export class UserAuthService {
         email: user.email,
         role: user.role,
       }),
-      success: true,
       user: rest, // You should return the user data minus the password
     };
   }

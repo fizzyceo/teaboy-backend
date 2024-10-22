@@ -3,15 +3,17 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
+
 enum UserRole {
   ADMIN = "ADMIN",
   TEABOY = "TEABOY",
   NORMAL_USER = "NORMAL_USER",
 }
-class User {
+export class CreateUserDto {
   @ApiProperty()
   @IsString()
   name: string;
@@ -31,23 +33,25 @@ class User {
   canCallTeaboy?: boolean;
 
   @ApiProperty()
+  @IsString()
+  password: string;
+
+  @ApiProperty()
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @ApiProperty({ enum: UserRole })
+  @IsEnum(UserRole)
+  role: UserRole;
 }
 
-export class AuthEntity {
+export class LinkingSpace {
   @ApiProperty()
-  accessToken: string;
-}
-export class AuthEntity2 {
-  @ApiProperty()
-  accessToken: string;
+  @IsEmail()
+  email: string;
 
   @ApiProperty()
-  @IsOptional()
-  success?: boolean;
-
-  @ApiProperty()
-  user: User;
+  @IsNumber()
+  space_id: number;
 }

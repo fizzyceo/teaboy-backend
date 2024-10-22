@@ -9,6 +9,7 @@ import * as swaggerUi from "swagger-ui-express";
 import * as morgan from "morgan";
 import * as compression from "compression";
 import helmet from "helmet";
+import { HttpExceptionFilter } from "./utils/expection-filter";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -42,7 +43,12 @@ async function bootstrap() {
     },
   };
   app.use("/api", swaggerUi.serve, swaggerUi.setup(document, options));
+  const documentV2 = SwaggerModule.createDocument(app, {
+    ...config,
+  });
 
+  app.use("/api/v2", swaggerUi.serve, swaggerUi.setup(documentV2, options));
+  app.useGlobalFilters(new HttpExceptionFilter());
   await app.listen(process.env.PORT || 3000);
 }
 bootstrap();

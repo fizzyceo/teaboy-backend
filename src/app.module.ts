@@ -41,7 +41,7 @@ import { EntrepriseModule } from "./domain/entreprise/entreprise.module";
     MailerModule.forRoot({
       transport: {
         host: process.env.MAIL_APP_HOST,
-        port: 465,
+        port: parseInt(process.env.EMAIL_PORT),
         auth: {
           user: process.env.MAIL_APP_USERNAME,
           pass: process.env.MAIL_APP_PASSWORD,

@@ -6,6 +6,7 @@ import {
   CreateMenuItemOption,
   UpdateMenuItemDto,
 } from "./dto";
+import { UpdateMenuItemOption } from "./dto/menu-item-option.dto";
 
 @Injectable()
 export class MenuItemService {
@@ -204,6 +205,180 @@ export class MenuItemService {
   async getMenuItemImages(id: number) {
     const menuItem = await this.findMenuItemById(id);
     return menuItem.item_images;
+  }
+
+  async deleteMenuItemOption(menuItemId: number, optionId: number) {
+    const existingOption = await this.database.menu_Item_Option.findUnique({
+      where: { menu_item_option_id: optionId },
+    });
+
+    if (!existingOption) {
+      throw new NotFoundException(
+        `Menu item option with id ${optionId} not found`
+      );
+    }
+
+    // Optionally, you may want to remove associated choices or connections before deleting
+    await this.database.menu_Item_Option_Choice.deleteMany({
+      where: { menu_item_option_id: optionId },
+    });
+
+    await this.database.menu_Item_Option.delete({
+      where: { menu_item_option_id: optionId },
+    });
+
+    return {
+      message: `Menu item option with id ${optionId} deleted successfully`,
+    };
+  }
+
+  async updateOption(
+    menuItemId: number,
+    updateMenuItemOptionDto: UpdateMenuItemOption,
+    optionId: number
+  ) {
+    const { choices, name, name_ar, default_choice } = updateMenuItemOptionDto;
+
+    // Find the existing menu item option by ID
+    const existingOption = await this.database.menu_Item_Option.findUnique({
+      where: { menu_item_option_id: optionId },
+      include: { choices: true },
+    });
+
+    if (!existingOption) {
+      throw new NotFoundException(
+        `Menu item option with id ${optionId} not found`
+      );
+    }
+
+    // Update the option's name and name_ar
+    await this.database.menu_Item_Option.update({
+      where: { menu_item_option_id: optionId },
+      data: {
+        name,
+        name_ar,
+      },
+    });
+
+    // Handle choices
+    if (choices) {
+      // Store existing choice IDs for deletion check
+      const existingChoiceIds = existingOption.choices.map(
+        (choice) => choice.menu_item_option_choice_id
+      );
+
+      // Update or create choices
+      await Promise.all(
+        choices.map(async (choice) => {
+          if (choice.menu_item_option_choice_id) {
+            // Update existing choice
+            await this.database.menu_Item_Option_Choice.update({
+              where: {
+                menu_item_option_choice_id: choice.menu_item_option_choice_id,
+              },
+              data: {
+                name: choice.name,
+                name_ar: choice.name_ar,
+              },
+            });
+          } else {
+            // Check if a choice with the same name already exists
+            const existingChoice =
+              await this.database.menu_Item_Option_Choice.findFirst({
+                where: {
+                  name: choice.name,
+                  menu_item_option_id: optionId,
+                },
+              });
+
+            if (!existingChoice) {
+              // Create new choice
+              await this.database.menu_Item_Option_Choice.create({
+                data: {
+                  name: choice.name,
+                  name_ar: choice.name_ar,
+                  menu_item_option_id: optionId,
+                },
+              });
+            }
+          }
+        })
+      );
+
+      // Delete choices that are not in the updated choices list
+      await Promise.all(
+        existingOption.choices.map(async (existingChoice) => {
+          if (
+            !choices.find(
+              (choice) =>
+                choice.menu_item_option_choice_id ===
+                existingChoice.menu_item_option_choice_id
+            )
+          ) {
+            await this.database.menu_Item_Option_Choice.delete({
+              where: {
+                menu_item_option_choice_id:
+                  existingChoice.menu_item_option_choice_id,
+              },
+            });
+          }
+        })
+      );
+    }
+
+    // Update default choice if provided
+    if (default_choice) {
+      let defaultChoiceId = default_choice.menu_item_option_choice_id;
+
+      if (!defaultChoiceId) {
+        // Check if a default choice with the same name already exists
+        const existingDefaultChoice =
+          await this.database.menu_Item_Option_Choice.findFirst({
+            where: {
+              name: default_choice.name,
+              menu_item_option_id: optionId,
+            },
+          });
+
+        if (!existingDefaultChoice) {
+          // Create new default choice
+          const newDefaultChoice =
+            await this.database.menu_Item_Option_Choice.create({
+              data: {
+                name: default_choice.name,
+                name_ar: default_choice.name_ar,
+                menu_item_option_id: optionId,
+              },
+            });
+          defaultChoiceId = newDefaultChoice.menu_item_option_choice_id;
+        } else {
+          // If it exists, use the existing choice ID
+          defaultChoiceId = existingDefaultChoice.menu_item_option_choice_id;
+        }
+      } else {
+        // Check if the default choice exists in the database
+        const existingDefaultChoice =
+          await this.database.menu_Item_Option_Choice.findUnique({
+            where: {
+              menu_item_option_choice_id: defaultChoiceId,
+            },
+          });
+
+        if (!existingDefaultChoice) {
+          throw new NotFoundException(`Default choice not found`);
+        }
+      }
+
+      // Update the option to set the default choice
+      await this.database.menu_Item_Option.update({
+        where: { menu_item_option_id: optionId },
+        data: {
+          default_choice_id: defaultChoiceId,
+        },
+      });
+    }
+
+    return existingOption; // Return the updated option
   }
 
   async createMenuItemOption(

@@ -12,6 +12,7 @@ import {
   UseGuards,
   Req,
   Headers,
+  Put,
 } from "@nestjs/common";
 import { MenuItemService } from "./menu-item.service";
 import { CreateMenuItemDto } from "./dto/create-menu-item.dto";
@@ -26,7 +27,10 @@ import {
   ApiBearerAuth,
 } from "@nestjs/swagger";
 import { FilesInterceptor } from "@nestjs/platform-express";
-import { CreateMenuItemOption } from "./dto/menu-item-option.dto";
+import {
+  CreateMenuItemOption,
+  UpdateMenuItemOption,
+} from "./dto/menu-item-option.dto";
 import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
 
 @Controller("menu-item")
@@ -143,5 +147,33 @@ export class MenuItemController {
     @Body() MenuOption: CreateMenuItemOption
   ) {
     return this.menuItemService.createMenuItemOption(id, MenuOption);
+  }
+
+  @Delete(":id/options/:optionId")
+  @ApiOperation({ summary: "Delete a menu item option by id" })
+  @ApiParam({
+    name: "id",
+    description: "Menu item id associated with the option",
+    required: true,
+  })
+  @ApiParam({
+    name: "optionId",
+    description: "ID of the menu item option to delete",
+    required: true,
+  })
+  async deleteMenuItemOption(
+    @Param("id", ParseIntPipe) id: number,
+    @Param("optionId", ParseIntPipe) optionId: number
+  ) {
+    return this.menuItemService.deleteMenuItemOption(id, optionId);
+  }
+
+  @Put(":menuid/options/:optionid")
+  updateMenuItemOptions(
+    @Param("menuid", ParseIntPipe) menuid: number,
+    @Param("optionid", ParseIntPipe) optionid: number,
+    @Body() MenuOption: UpdateMenuItemOption
+  ) {
+    return this.menuItemService.updateOption(menuid, MenuOption, optionid);
   }
 }

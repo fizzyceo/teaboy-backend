@@ -62,9 +62,10 @@ export class CallController {
   })
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
-  getKitchenCalls(@Req() kitchen: any) {
+  async getKitchenCalls(@Req() kitchen: any) {
     const { kitchen_id } = kitchen.user;
-    return this.callService.getKitchenCalls(kitchen_id);
+    const resp = await this.callService.getKitchenCalls(kitchen_id);
+    return formatSuccessResponse(resp);
   }
 
   @Get("status/:call_id")
@@ -80,12 +81,13 @@ export class CallController {
     type: Number,
     required: true,
   })
-  getCallStatus(
+  async getCallStatus(
     @Param("call_id", ParseIntPipe) call_id: number,
     @Req() user: any
   ) {
     const { user_id } = user.user;
-    return this.callService.getCallStatus(call_id, user_id);
+    const resp = await this.callService.getCallStatus(call_id, user_id);
+    return formatSuccessResponse(resp);
   }
 
   @Get("details/:call_id")
@@ -96,12 +98,13 @@ export class CallController {
     description:
       "Get call details by id, you should be authenticated as a kitchen",
   })
-  getCallDetails(
+  async getCallDetails(
     @Param("call_id", ParseIntPipe) call_id: number,
     @Req() kitchen: any
   ) {
     const { kitchen_id } = kitchen.user;
-    return this.callService.getCallDetails(call_id, kitchen_id);
+    const resp = await this.callService.getCallDetails(call_id, kitchen_id);
+    return formatSuccessResponse(resp);
   }
 
   @Patch("/user-update/:call_id")

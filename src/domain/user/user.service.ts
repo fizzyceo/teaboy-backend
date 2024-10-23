@@ -90,8 +90,7 @@ export class UserService {
     if (updateuserDto.password) {
       updateuserDto.password = await this.hashPassword(updateuserDto.password);
     }
-    if (updateuserDto.signedUp) {
-    }
+
     return await this.database.user.update({
       where: { user_id: id },
       data: updateuserDto,

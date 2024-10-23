@@ -232,7 +232,7 @@ export class OrderService {
       order_items: order.order_items.map((orderItem) => {
         const transformedChoices = orderItem.choices.map((choice) => ({
           option:
-            lang.toLowerCase() === "ar" &&
+            lang?.toLowerCase() === "ar" &&
             choice.menu_item_option_choice.menu_item_option.name_ar
               ? choice.menu_item_option_choice.menu_item_option.name_ar
               : choice.menu_item_option_choice.menu_item_option.name,
@@ -240,7 +240,7 @@ export class OrderService {
           option_id:
             choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
           choice:
-            lang.toLowerCase() === "ar" &&
+            lang?.toLowerCase() === "ar" &&
             choice.menu_item_option_choice.name_ar
               ? choice.menu_item_option_choice.name_ar
               : choice.menu_item_option_choice.name,

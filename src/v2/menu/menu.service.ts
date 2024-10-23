@@ -321,6 +321,7 @@ export class MenuService {
       title_ar: item.title_ar,
       price: item.price,
       available: item.available,
+      description: item.description,
       item_images: item.item_images.map((image) => ({
         image_url: image.image_url,
         item_image_id: image.item_image_id,

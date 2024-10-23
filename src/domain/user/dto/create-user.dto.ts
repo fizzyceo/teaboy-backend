@@ -45,6 +45,47 @@ export class CreateUserDto {
   @IsEnum(UserRole)
   role: UserRole;
 }
+export class UpdateUserByAdminDto {
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  signedUp?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  canCallTeaboy?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiProperty({ enum: UserRole })
+  @IsOptional()
+  @IsEnum(UserRole)
+  role?: UserRole;
+}
 
 export class LinkingSpace {
   @ApiProperty()

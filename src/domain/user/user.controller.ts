@@ -27,7 +27,7 @@ import {
 import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { LinkingSpace } from "./dto/create-user.dto";
+import { LinkingSpace, UpdateUserByAdminDto } from "./dto/create-user.dto";
 
 @Controller("user")
 @ApiTags("user")
@@ -152,6 +152,21 @@ export class UserController {
   updateUser(@Req() user: any, @Body() updateUserDto: UpdateUserDto) {
     const { user_id } = user.user;
     return this.userService.updateUser(user_id, updateUserDto);
+  }
+  @Patch("update/:userId")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiBody({ type: UpdateUserByAdminDto })
+  @ApiOperation({ summary: "Update User details by id" })
+  updateUserByAdmin(
+    @Req() user: any,
+    @Body() updateUserDto: UpdateUserByAdminDto,
+    @Param("userId", ParseIntPipe) userId: number
+  ) {
+    const { role } = user.user;
+    if (role !== "SUPER_ADMIN") throw new UnauthorizedException();
+
+    return this.userService.updateUser(userId, updateUserDto);
   }
 
   @Delete("delete")

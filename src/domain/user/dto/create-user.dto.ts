@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { LANGUAGE, OS_TYPE } from "@prisma/client";
 import {
   IsBoolean,
   IsEmail,
@@ -13,6 +14,7 @@ enum UserRole {
   TEABOY = "TEABOY",
   NORMAL_USER = "NORMAL_USER",
 }
+
 export class CreateUserDto {
   @ApiProperty()
   @IsString()
@@ -38,12 +40,27 @@ export class CreateUserDto {
 
   @ApiProperty()
   @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+
+  @ApiProperty()
+  @IsOptional()
   @IsString()
   phone?: string;
 
   @ApiProperty({ enum: UserRole })
   @IsEnum(UserRole)
   role: UserRole;
+
+  @ApiProperty({ enum: LANGUAGE })
+  @IsOptional()
+  @IsEnum(LANGUAGE)
+  userLanguage?: LANGUAGE;
+
+  @ApiProperty({ enum: OS_TYPE })
+  @IsOptional()
+  @IsEnum(OS_TYPE)
+  phoneOS?: OS_TYPE;
 }
 export class UpdateUserByAdminDto {
   @ApiProperty()
@@ -81,10 +98,24 @@ export class UpdateUserByAdminDto {
   @IsString()
   phone?: string;
 
+  @ApiProperty()
+  @IsOptional()
+  image_url?: any;
+
   @ApiProperty({ enum: UserRole })
   @IsOptional()
   @IsEnum(UserRole)
   role?: UserRole;
+
+  @ApiProperty({ enum: LANGUAGE })
+  @IsOptional()
+  @IsEnum(LANGUAGE)
+  userLanguage?: LANGUAGE;
+
+  @ApiProperty({ enum: OS_TYPE })
+  @IsOptional()
+  @IsEnum(OS_TYPE)
+  phoneOS?: OS_TYPE;
 }
 
 export class LinkingSpace {

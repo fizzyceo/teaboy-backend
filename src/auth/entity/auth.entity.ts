@@ -1,4 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
+import { LANGUAGE, OS_TYPE } from "@prisma/client";
 import {
   IsBoolean,
   IsEmail,
@@ -6,6 +7,15 @@ import {
   IsOptional,
   IsString,
 } from "class-validator";
+// enum LANGUAGE {
+//   EN = "EN",
+//   AR = "AR",
+// }
+// enum OS_TYPE {
+//   android = "android",
+//   ios = "ios",
+// }
+
 enum UserRole {
   ADMIN = "ADMIN",
   TEABOY = "TEABOY",
@@ -29,6 +39,16 @@ class User {
   @IsOptional()
   @IsBoolean()
   canCallTeaboy?: boolean;
+
+  @ApiProperty({ enum: OS_TYPE })
+  @IsOptional()
+  @IsEnum(OS_TYPE)
+  phoneOS?: OS_TYPE;
+
+  @ApiProperty({ enum: LANGUAGE })
+  @IsOptional()
+  @IsEnum(LANGUAGE)
+  userLanguage?: LANGUAGE;
 
   @ApiProperty()
   @IsOptional()

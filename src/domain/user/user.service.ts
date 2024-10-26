@@ -11,6 +11,7 @@ import { DatabaseService } from "src/database/database.service";
 import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { KitchenService } from "../kitchen/kitchen.service";
 import { ImagesService } from "src/images/images.service";
+import { UpdateUserByAdminDto } from "./dto/create-user.dto";
 
 @Injectable()
 export class UserService {
@@ -94,6 +95,20 @@ export class UserService {
     return await this.database.user.update({
       where: { user_id: id },
       data: updateuserDto,
+    });
+  }
+  async updateUserByAdmin(id: number, updateUserByAdmin: UpdateUserByAdminDto) {
+    const user = await this.findUserById(id);
+
+    if (updateUserByAdmin.password) {
+      updateUserByAdmin.password = await this.hashPassword(
+        updateUserByAdmin.password
+      );
+    }
+
+    return await this.database.user.update({
+      where: { user_id: id },
+      data: updateUserByAdmin,
     });
   }
 

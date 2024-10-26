@@ -13,6 +13,7 @@ import {
   UseInterceptors,
   UploadedFile,
   UnauthorizedException,
+  UploadedFiles,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
@@ -69,7 +70,7 @@ export class UserController {
     const { user_id, role } = user.user;
 
     if (
-      role.toUpperCase() !== "ADMIN" ||
+      role.toUpperCase() !== "ADMIN" &&
       role.toUpperCase() !== "SUPER_ADMIN"
     ) {
       throw new UnauthorizedException("you are not authorized");
@@ -86,7 +87,7 @@ export class UserController {
     const { user_id, role } = user.user;
 
     if (
-      role.toUpperCase() !== "ADMIN" ||
+      role.toUpperCase() !== "ADMIN" &&
       role.toUpperCase() !== "SUPER_ADMIN"
     ) {
       throw new UnauthorizedException("you are not authorized");
@@ -161,12 +162,15 @@ export class UserController {
   updateUserByAdmin(
     @Req() user: any,
     @Body() updateUserDto: UpdateUserByAdminDto,
+    @UploadedFiles() files: Express.Multer.File[],
+
     @Param("userId", ParseIntPipe) userId: number
   ) {
     const { role } = user.user;
+
     if (role !== "SUPER_ADMIN") throw new UnauthorizedException();
 
-    return this.userService.updateUser(userId, updateUserDto);
+    return this.userService.updateUserByAdmin(userId, updateUserDto);
   }
 
   @Delete("delete")
@@ -176,6 +180,20 @@ export class UserController {
   deleteUser(@Req() user: any) {
     const { user_id } = user.user;
     return this.userService.deleteUser(user_id);
+  }
+
+  @Delete("delete/:userId")
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Delete User by id" })
+  deleteUserByAdmin(
+    @Req() user: any,
+    @Param("userId", ParseIntPipe) userId: number
+  ) {
+    const { role } = user.user;
+    if (role !== "SUPER_ADMIN") throw new UnauthorizedException();
+
+    return this.userService.deleteUser(userId);
   }
 
   @Get("kitchen-status/:kitchen_id")

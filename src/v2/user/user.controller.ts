@@ -84,9 +84,10 @@ export class UserController {
     const { user_id, role } = user.user;
 
     if (
-      role.toUpperCase() !== "ADMIN" ||
+      role.toUpperCase() !== "ADMIN" &&
       role.toUpperCase() !== "SUPER_ADMIN"
     ) {
+      console.log(role.toUpperCase());
       throw new UnauthorizedException("you are not authorized");
     }
     return this.userService.addUserToSpace2(
@@ -101,7 +102,7 @@ export class UserController {
     const { user_id, role } = user.user;
 
     if (
-      role.toUpperCase() !== "ADMIN" ||
+      role.toUpperCase() !== "ADMIN" &&
       role.toUpperCase() !== "SUPER_ADMIN"
     ) {
       throw new UnauthorizedException("you are not authorized");

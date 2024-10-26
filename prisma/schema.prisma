@@ -31,7 +31,9 @@ model User {
   resetPasswordToken    String?   @unique
   resetPasswordExpires  DateTime? 
 
-
+  phoneOS     OS_TYPE? @default(android)
+  userLanguage LANGUAGE? @default(EN)
+  
   orders Order[]
   spaces Space[] @relation("UserSpaces")
   sites  Site[]  @relation("UserSites")
@@ -272,6 +274,15 @@ enum USER_ROLE {
   ADMIN
   TEABOY
   NORMAL_USER
+}
+enum LANGUAGE {
+  EN
+  AR
+}
+enum OS_TYPE {
+  android
+  ios
+
 }
 
 enum OrderStatus {

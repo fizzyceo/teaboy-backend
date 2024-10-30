@@ -58,7 +58,7 @@ export class UserSpaceLinkController {
       // Handle potential errors during the linking process
       return {
         statusCode: 500,
-        message: "Internal server error",
+        message: "Error Creating the link",
         error: error.message,
       };
     }

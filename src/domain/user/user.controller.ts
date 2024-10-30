@@ -42,11 +42,11 @@ export class UserController {
     return this.userService.createUser(createUserDto);
   }
 
-  @Get("")
-  @ApiOperation({ summary: "Get all Users" })
-  getAllUsers() {
-    return this.userService.getAllUsers();
-  }
+  // @Get("")
+  // @ApiOperation({ summary: "Get all Users" })
+  // getAllUsers() {
+  //   return this.userService.getAllUsers();
+  // }
 
   //1
   @Patch("link-space")

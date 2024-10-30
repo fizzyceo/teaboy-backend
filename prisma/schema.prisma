@@ -128,8 +128,9 @@ model SpaceUserLink {
 
 model Menu {
   menu_id Int @id @default(autoincrement())
-
-  name          String?
+  currency         String? @default("$")
+  currency_ar      String? 
+  name             String?
   name_ar          String?
   ask_for_name  Boolean @default(false)
   ask_for_table Boolean @default(false)

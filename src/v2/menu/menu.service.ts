@@ -53,6 +53,8 @@ export class MenuService {
         name: true,
         name_ar: true,
         ask_for_name: true,
+        currency: true,
+        currency_ar: true,
         ask_for_table: true,
 
         created_at: true,
@@ -77,7 +79,10 @@ export class MenuService {
     return menus.flatMap((menu) =>
       menu.spaces.map((space) => ({
         menu_id: space.space_id,
-        name: lang === "AR" && space.name_ar ? space.name_ar : space.name, // Conditional logic based on LANG
+        name:
+          lang?.toUpperCase() === "AR" && space.name_ar
+            ? space.name_ar
+            : space.name, // Conditional logic based on LANG
       }))
     );
   }
@@ -148,6 +153,7 @@ export class MenuService {
             space_id: true,
             name: true,
             name_ar: true,
+
             site: {
               select: {
                 site_id: true,
@@ -201,6 +207,8 @@ export class MenuService {
         updated_at: true,
         name: true,
         name_ar: true,
+        currency: true,
+        currency_ar: true,
         menu_id: true,
         ask_for_name: true,
         ask_for_table: true,
@@ -220,6 +228,7 @@ export class MenuService {
               select: {
                 name: true,
                 name_ar: true,
+
                 default_lang: true,
                 kitchen_id: true,
                 site_id: true,
@@ -285,18 +294,15 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
-    const { name, name_ar, spaces, ...rest } = menu;
+    const { name, name_ar, spaces, currency, currency_ar, ...rest } = menu;
     const currentLang = lang?.toUpperCase() === "AR" ? "ar" : "en";
-
-    // Helper function to get the correct name based on language
-    const getName = (enName: string, arName: string) =>
-      currentLang === "ar" ? arName : enName;
 
     // Transform spaces
     const transformedSpaces = spaces.map((space) => ({
       space_id: space.space_id,
       name: currentLang === "ar" && space.name_ar ? space.name_ar : space.name,
       name_ar: space.name_ar,
+
       default_lang: space.default_lang,
       kitchen_id: space.kitchen_id,
       site_id: space.site_id,
@@ -320,6 +326,7 @@ export class MenuService {
       title: currentLang === "ar" && item.title_ar ? item.title_ar : item.title,
       title_ar: item.title_ar,
       price: item.price,
+
       available: item.available,
       description: item.description,
       item_images: item.item_images.map((image) => ({
@@ -359,6 +366,8 @@ export class MenuService {
       ...rest,
       name: currentLang === "ar" && name_ar ? name_ar : name,
       name_ar: name_ar,
+      currency: currentLang === "ar" && currency_ar ? currency_ar : currency,
+      currency_ar: currency_ar,
       isOpen: isCurrentlyOpen,
       spaces: transformedSpaces,
       menu_items: transformedMenuItems,

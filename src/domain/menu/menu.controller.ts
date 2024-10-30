@@ -223,7 +223,15 @@ export class MenuController {
           space_name: space.name,
           space_id: space.space_id,
           menu_id: menu.menu_id,
-          menu_name: lang === "AR" && menu.name_ar ? menu.name_ar : menu.name,
+          currency:
+            lang?.toUpperCase() === "AR" && menu.currency_ar
+              ? menu.currency_ar
+              : menu.currency,
+          currency_ar: menu.currency_ar,
+          menu_name:
+            lang?.toUpperCase() === "AR" && menu.name_ar
+              ? menu.name_ar
+              : menu.name,
           encrypted: encryptedData,
           menu_site_image: space.site_image_url,
         };

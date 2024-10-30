@@ -90,66 +90,65 @@ export class UserAuthService {
     const verificationToken = crypto.randomBytes(32).toString("hex");
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    try {
-      // Check if the user already exists
-      await this.checkIfUserExists(registerDto.email);
+    // Check if the user already exists
+    await this.checkIfUserExists(registerDto.email);
 
-      // Check if the user was invited
-      const isInvited = await this.checkIfUserIsInvited(registerDto.email);
+    // Check if the user was invited
+    const isInvited = await this.checkIfUserIsInvited(registerDto.email);
 
-      if (isInvited) {
-        await this.databaseService.user.update({
-          where: { user_id: isInvited },
-          data: {
-            name: registerDto.name,
-            phone: registerDto.phone,
-            password: hashedPassword,
-            verificationToken: verificationToken,
-            verificationExpires: verificationExpires,
-            signedUp: true,
-          },
-        });
-      } else {
-        await this.databaseService.user.create({
-          data: {
-            name: registerDto.name,
-            email: registerDto.email,
-            role: registerDto.role,
-            phone: registerDto.phone,
-            password: hashedPassword,
-            verificationToken: verificationToken,
-            verificationExpires: verificationExpires,
-            signedUp: true,
-          },
-        });
-      }
-
-      // Attempt to send verification email
-      try {
-        await this.mailerService.sendMail({
-          to: registerDto.email,
-          subject: "Email Verification",
-          html: template1(
-            registerDto.name,
-            process.env.FRONTEND_URL,
-            verificationToken
-          ),
-        });
-      } catch (emailError) {
-        console.error("Error sending verification email:", emailError);
-        // You could return a specific message here, but don’t fail the registration
-      }
-
-      // Return success response, even if the email fails
-      return {
-        message:
-          "Signup successful. If email verification fails, please contact support.",
-        token: verificationToken,
-      };
-    } catch (error) {
-      console.error("Registration failed:", error);
-      throw new Error("Registration failed.");
+    if (isInvited) {
+      await this.databaseService.user.update({
+        where: { user_id: isInvited },
+        data: {
+          name: registerDto.name,
+          phone: registerDto.phone,
+          password: hashedPassword,
+          verificationToken: verificationToken,
+          verificationExpires: verificationExpires,
+          signedUp: true,
+        },
+      });
+    } else {
+      await this.databaseService.user.create({
+        data: {
+          name: registerDto.name,
+          email: registerDto.email,
+          role: registerDto.role,
+          phone: registerDto.phone,
+          password: hashedPassword,
+          verificationToken: verificationToken,
+          verificationExpires: verificationExpires,
+          signedUp: true,
+        },
+      });
     }
+
+    // Attempt to send verification email
+    try {
+      await this.mailerService.sendMail({
+        to: registerDto.email,
+        subject: "Email Verification",
+        html: template1(
+          registerDto.name,
+          process.env.FRONTEND_URL,
+          verificationToken
+        ),
+      });
+    } catch (emailError) {
+      console.error("Error sending verification email:", emailError);
+
+      throw new BadRequestException(
+        `Error sending verification email: ${emailError}`
+      );
+      // You could return a specific message here, but don’t fail the registration
+    }
+
+    // Return success response, even if the email fails
+    return {
+      message:
+        "Signup successful. If email verification fails, please contact support.",
+      token: verificationToken,
+    };
   }
 
   async verifyEmail(token: string) {

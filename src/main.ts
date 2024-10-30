@@ -28,8 +28,8 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle("Basseer Restaurant App API")
-    .setVersion("1.0")
+    .setTitle("Teaboy API ")
+    .setVersion("2.0")
     .addBearerAuth()
     .build();
 
@@ -42,7 +42,7 @@ async function bootstrap() {
       docExpansion: "none",
     },
   };
-  app.use("/api", swaggerUi.serve, swaggerUi.setup(document, options));
+  // app.use("/api", swaggerUi.serve, swaggerUi.setup(document, options));
   const documentV2 = SwaggerModule.createDocument(app, {
     ...config,
   });

@@ -8,6 +8,12 @@ export class CreateMenuDto {
 
   @IsOptional()
   name_ar: string;
+  @ApiProperty()
+  @IsOptional()
+  currency: string;
+
+  @IsOptional()
+  currency_ar: string;
 
   @ApiProperty({ default: false })
   @IsBoolean()

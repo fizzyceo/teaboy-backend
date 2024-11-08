@@ -9,4 +9,4 @@ import { ImagesModule } from "src/images/images.module";
   providers: [SiteService],
   imports: [DatabaseModule, ImagesModule],
 })
-export class SiteModule {}
+export class SiteModuleV2 {}

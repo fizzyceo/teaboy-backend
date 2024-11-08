@@ -10,4 +10,4 @@ import { AuthModule } from "src/auth/auth.module";
   imports: [DatabaseModule, AuthModule],
   exports: [UserSpaceLinkService],
 })
-export class UserSpaceLinkModule {}
+export class UserSpaceLinkModuleV2 {}

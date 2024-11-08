@@ -25,6 +25,8 @@ import {
   ApiParam,
   ApiConsumes,
   ApiBearerAuth,
+  ApiQuery,
+  ApiHeader,
 } from "@nestjs/swagger";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import {
@@ -58,6 +60,12 @@ export class MenuItemController {
     summary: "Get all menu items",
     description: "Get All menu items , this should be later be modified",
   })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getAllMenuItems(@Headers("LANG") lang: string) {
     return this.menuItemService.getAllMenuItems(lang);
   }
@@ -68,6 +76,12 @@ export class MenuItemController {
     name: "id",
     description: "Menu item id to fetch",
     required: true,
+  })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
   })
   getMenuItemById(
     @Param("id", ParseIntPipe) id: number,
@@ -108,18 +122,18 @@ export class MenuItemController {
     return this.menuItemService.updateMenuItem(id, updateMenuItemDto, null);
   }
 
-  @Delete(":id")
-  // @UseGuards(KitchenAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Delete menu item by id" })
-  @ApiParam({
-    name: "id",
-    description: "Menu item id to delete",
-    required: true,
-  })
-  deleteMenuItem(@Param("id", ParseIntPipe) id: number, @Req() kitchen: any) {
-    return this.menuItemService.deleteMenuItem(id);
-  }
+  // @Delete(":id")
+  // // @UseGuards(KitchenAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Delete menu item by id" })
+  // @ApiParam({
+  //   name: "id",
+  //   description: "Menu item id to delete",
+  //   required: true,
+  // })
+  // deleteMenuItem(@Param("id", ParseIntPipe) id: number, @Req() kitchen: any) {
+  //   return this.menuItemService.deleteMenuItem(id);
+  // }
 
   @Get(":id/options")
   @ApiOperation({ summary: "Get menu item options by id" })
@@ -128,6 +142,12 @@ export class MenuItemController {
     description: "Menu item id to fetch options",
     required: true,
   })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getMenuItemOptions(
     @Param("id", ParseIntPipe) id: number,
     @Headers("LANG") lang: string
@@ -135,45 +155,45 @@ export class MenuItemController {
     return this.menuItemService.getMenuItemOptions(id, lang);
   }
 
-  @Post(":id/options")
-  @ApiOperation({ summary: "Create menu item options by id" })
-  @ApiParam({
-    name: "id",
-    description: "Menu item id to create options",
-    required: true,
-  })
-  createMenuItemOptions(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() MenuOption: CreateMenuItemOption
-  ) {
-    return this.menuItemService.createMenuItemOption(id, MenuOption);
-  }
+  // @Post(":id/options")
+  // @ApiOperation({ summary: "Create menu item options by id" })
+  // @ApiParam({
+  //   name: "id",
+  //   description: "Menu item id to create options",
+  //   required: true,
+  // })
+  // createMenuItemOptions(
+  //   @Param("id", ParseIntPipe) id: number,
+  //   @Body() MenuOption: CreateMenuItemOption
+  // ) {
+  //   return this.menuItemService.createMenuItemOption(id, MenuOption);
+  // }
 
-  @Delete(":id/options/:optionId")
-  @ApiOperation({ summary: "Delete a menu item option by id" })
-  @ApiParam({
-    name: "id",
-    description: "Menu item id associated with the option",
-    required: true,
-  })
-  @ApiParam({
-    name: "optionId",
-    description: "ID of the menu item option to delete",
-    required: true,
-  })
-  async deleteMenuItemOption(
-    @Param("id", ParseIntPipe) id: number,
-    @Param("optionId", ParseIntPipe) optionId: number
-  ) {
-    return this.menuItemService.deleteMenuItemOption(id, optionId);
-  }
+  // @Delete(":id/options/:optionId")
+  // @ApiOperation({ summary: "Delete a menu item option by id" })
+  // @ApiParam({
+  //   name: "id",
+  //   description: "Menu item id associated with the option",
+  //   required: true,
+  // })
+  // @ApiParam({
+  //   name: "optionId",
+  //   description: "ID of the menu item option to delete",
+  //   required: true,
+  // })
+  // async deleteMenuItemOption(
+  //   @Param("id", ParseIntPipe) id: number,
+  //   @Param("optionId", ParseIntPipe) optionId: number
+  // ) {
+  //   return this.menuItemService.deleteMenuItemOption(id, optionId);
+  // }
 
-  @Put(":menuid/options/:optionid")
-  updateMenuItemOptions(
-    @Param("menuid", ParseIntPipe) menuid: number,
-    @Param("optionid", ParseIntPipe) optionid: number,
-    @Body() MenuOption: UpdateMenuItemOption
-  ) {
-    return this.menuItemService.updateOption(menuid, MenuOption, optionid);
-  }
+  // @Put(":menuid/options/:optionid")
+  // updateMenuItemOptions(
+  //   @Param("menuid", ParseIntPipe) menuid: number,
+  //   @Param("optionid", ParseIntPipe) optionid: number,
+  //   @Body() MenuOption: UpdateMenuItemOption
+  // ) {
+  //   return this.menuItemService.updateOption(menuid, MenuOption, optionid);
+  // }
 }

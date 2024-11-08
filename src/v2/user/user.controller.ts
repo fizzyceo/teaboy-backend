@@ -20,6 +20,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiConsumes,
+  ApiHeader,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
@@ -29,7 +30,7 @@ import {
 import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
-import { LinkingSpace } from "./dto/create-user.dto";
+import { LinkingSpace, UpdateProfile } from "./dto/create-user.dto";
 import { formatSuccessResponse } from "src/utils/format-response";
 import { UserAuthService } from "src/auth/userAuth.service";
 import { LoginDto } from "src/auth/dto/login.dto";
@@ -46,99 +47,27 @@ export class UserController {
     private readonly userAuthService: UserAuthService
   ) {}
 
-  @Post("/create")
-  @ApiBody({ type: CreateUserDto })
-  @ApiOperation({ summary: "Create a new User" })
-  createUser(@Body() createUserDto: CreateUserDto) {
-    return this.userService.createUser(createUserDto);
-  }
-
   @Get("")
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get all Users" })
   getAllUsers(@Req() req: any) {
     const { role } = req.user;
-    if (role !== "SUPER_ADMIN") throw new UnauthorizedException();
+    console.log(role);
+
+    if (role !== "ROOT") throw new UnauthorizedException();
     return this.userService.getAllUsers();
-  }
-
-  //1
-  @Patch("link-space")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Add User to Space" })
-  @ApiQuery({
-    name: "spaceId",
-    required: true,
-    description: "Space id to add",
-  })
-  addUserToSpace(@Query("spaceId") spaceId: number, @Req() user: any) {
-    const { user_id } = user.user;
-    return this.userService.addUserToSpace(user_id, spaceId);
-  }
-
-  @Post("link-space2")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  addUserToSpace2(@Body() LinkingSpace: LinkingSpace, @Req() user: any) {
-    const { user_id, role } = user.user;
-
-    if (
-      role.toUpperCase() !== "ADMIN" &&
-      role.toUpperCase() !== "SUPER_ADMIN"
-    ) {
-      console.log(role.toUpperCase());
-      throw new UnauthorizedException("you are not authorized");
-    }
-    return this.userService.addUserToSpace2(
-      LinkingSpace.email,
-      LinkingSpace.space_id
-    );
-  }
-  @Post("unlink-space2")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  removeUserFromSpace(@Body() LinkingSpace: LinkingSpace, @Req() user: any) {
-    const { user_id, role } = user.user;
-
-    if (
-      role.toUpperCase() !== "ADMIN" &&
-      role.toUpperCase() !== "SUPER_ADMIN"
-    ) {
-      throw new UnauthorizedException("you are not authorized");
-    }
-    return this.userService.removeUserFromSpace(
-      LinkingSpace.email,
-      LinkingSpace.space_id
-    );
-  }
-
-  @Patch("link-site")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Add User to Site" })
-  @ApiQuery({
-    name: "siteId",
-    required: true,
-    description: "Site id to add",
-  })
-  addUserToSite(@Query("siteId") siteId: number, @Req() user: any) {
-    const { user_id } = user.user;
-    return this.userService.addUserToSite(user_id, siteId);
-  }
-  @Get("get-all-space-links")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async getAllSpaceLinks() {
-    const allSpaceLinks = await this.userService.getAllSpaceLinks();
-
-    return allSpaceLinks;
   }
 
   @Get("/spaces")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all Spaces of a User" })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   async getUserSpaces(@Req() user: any, @Headers("LANG") lang: string) {
     const resp = await this.userService.getUserSpaces(user.user, lang);
 
@@ -163,26 +92,47 @@ export class UserController {
     return formatSuccessResponse(resp);
   }
 
-  @Patch("update")
+  @Post("upload-profile")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiBody({ type: UpdateUserDto })
-  @ApiOperation({ summary: "Update User details by id" })
-  async updateUser(@Req() user: any, @Body() updateUserDto: UpdateUserDto) {
-    const { user_id } = user.user;
-
-    const resp = await this.userService.updateUser(user_id, updateUserDto);
+  @ApiBody({ type: UploadProfileDto })
+  @ApiOperation({ summary: "Create a new site" })
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  async uploadProfile(
+    @Body() uploadProfileDto: UploadProfileDto,
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any
+  ) {
+    const { user_id } = req.user;
+    const resp = await this.userService.uploadProfileImage(user_id, file);
     return formatSuccessResponse(resp);
   }
 
-  @Delete("delete")
+  @Patch("update")
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Delete User by id" })
-  async deleteUser(@Req() user: any) {
-    const { user_id } = user.user;
+  @ApiBody({ type: UpdateProfile })
+  @ApiOperation({ summary: "Update User details and upload profile image" })
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  async updateUser(
+    @Req() req: any,
+    @Body() updateUserWithProfileDto: UpdateProfile,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    const { user_id } = req.user;
 
-    const resp = await this.userService.deleteUser(user_id);
+    // If there's a file, upload it first
+    let updatedData = { ...updateUserWithProfileDto };
+
+    // Handle profile image upload
+    if (file) {
+      await this.userService.uploadProfileImage(user_id, file);
+    }
+
+    // Update user data
+    const resp = await this.userService.updateUser(user_id, updatedData);
     return formatSuccessResponse(resp);
   }
 
@@ -205,22 +155,6 @@ export class UserController {
     return formatSuccessResponse(resp);
   }
 
-  @Post("upload-profile")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiBody({ type: UploadProfileDto })
-  @ApiOperation({ summary: "Create a new site" })
-  @UseInterceptors(FileInterceptor("file"))
-  @ApiConsumes("multipart/form-data")
-  async uploadProfile(
-    @Body() uploadProfileDto: UploadProfileDto,
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req: any
-  ) {
-    const { user_id } = req.user;
-    const resp = await this.userService.uploadProfileImage(user_id, file);
-    return formatSuccessResponse(resp);
-  }
   @Delete()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -252,6 +186,15 @@ export class UserController {
   })
   async signup(@Body() registerDto: RegisterDto) {
     const resp = await this.userAuthService.register(registerDto);
+
+    return formatSuccessResponse(resp);
+  }
+
+  @Post("auth/new-otp")
+  @ApiOperation({ summary: "send a new otp" })
+  @ApiBody({ type: ForgotPasswordDto })
+  async newOtp(@Body() newOtpDto: ForgotPasswordDto) {
+    const resp = await this.userAuthService.generateNewOtp(newOtpDto);
 
     return formatSuccessResponse(resp);
   }

@@ -17,42 +17,11 @@ import { CallModule } from "./domain/call/call.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 import { EntrepriseModule } from "./domain/entreprise/entreprise.module";
 import { V2Module } from "./v2/v2.module";
+import { V1Module } from "./domain/v1.module";
 
 @Module({
   imports: [
-    AuthModule,
-    KitchenModule,
-    SiteModule,
-    UserModule,
-    UserSpaceLinkModule,
-    DatabaseModule,
-    MenuModule,
-    EntrepriseModule,
-    MenuItemModule,
-    OrderModule,
-    OrderItemModule,
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    ImagesModule,
-    SpaceModule,
-    EncryptionModule,
-    CallModule,
-
-    MailerModule.forRoot({
-      transport: {
-        host: process.env.MAIL_APP_HOST,
-        port: parseInt(process.env.EMAIL_PORT),
-        auth: {
-          user: process.env.MAIL_APP_USERNAME,
-          pass: process.env.MAIL_APP_PASSWORD,
-        },
-      },
-      defaults: {
-        from: `"ClickOrder" <${process.env.MAIL_APP_EMAIL}>`,
-      },
-    }),
-
+    V1Module,
     V2Module,
 
     // MailerModule.forRoot({

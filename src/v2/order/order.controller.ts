@@ -24,6 +24,7 @@ import {
   ApiParam,
   ApiBearerAuth,
   ApiQuery,
+  ApiHeader,
 } from "@nestjs/swagger";
 
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
@@ -75,6 +76,12 @@ export class OrderController {
     type: Number,
     example: 1,
   })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   async getAllOrders(
     @Req() user: any,
     @Query("page") page: number = 1,
@@ -107,112 +114,112 @@ export class OrderController {
     return this.orderService.getOrderById(id, user);
   }
 
-  @Patch(":id")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Update order details by id" })
-  @ApiBody({ type: UpdateOrderDto })
-  @ApiParam({
-    name: "id",
-    description: "Order id to update",
-    required: true,
-    type: Number,
-  })
-  updateOrder(
-    @Param("id", ParseIntPipe) id: number,
-    @Body() updateOrderDto: UpdateOrderDto,
-    @Req() req
-  ) {
-    const user = req.user;
-    return this.orderService.updateOrder(id, updateOrderDto, user);
-  }
+  // @Patch(":id")
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Update order details by id" })
+  // @ApiBody({ type: UpdateOrderDto })
+  // @ApiParam({
+  //   name: "id",
+  //   description: "Order id to update",
+  //   required: true,
+  //   type: Number,
+  // })
+  // updateOrder(
+  //   @Param("id", ParseIntPipe) id: number,
+  //   @Body() updateOrderDto: UpdateOrderDto,
+  //   @Req() req
+  // ) {
+  //   const user = req.user;
+  //   return this.orderService.updateOrder(id, updateOrderDto, user);
+  // }
 
-  @Delete(":id")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Delete order by id" })
-  @ApiParam({
-    name: "id",
-    description: "Order id to delete",
-    required: true,
-    type: Number,
-  })
-  deleteOrder(@Param("id", ParseIntPipe) id: number, @Req() req) {
-    const user = req.user;
-    return this.orderService.deleteOrder(id, user);
-  }
+  // @Delete(":id")
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Delete order by id" })
+  // @ApiParam({
+  //   name: "id",
+  //   description: "Order id to delete",
+  //   required: true,
+  //   type: Number,
+  // })
+  // deleteOrder(@Param("id", ParseIntPipe) id: number, @Req() req) {
+  //   const user = req.user;
+  //   return this.orderService.deleteOrder(id, user);
+  // }
 
-  @Post(":id/cancel")
-  @ApiOperation({ summary: "Cancel order by id" })
-  @ApiParam({
-    name: "id",
-    description: "Order id to cancel",
-    required: true,
-    type: Number,
-  })
-  cancelOrder(@Param("id", ParseIntPipe) id: number) {
-    return this.orderService.cancelOrder(id);
-  }
+  // @Post(":id/cancel")
+  // @ApiOperation({ summary: "Cancel order by id" })
+  // @ApiParam({
+  //   name: "id",
+  //   description: "Order id to cancel",
+  //   required: true,
+  //   type: Number,
+  // })
+  // cancelOrder(@Param("id", ParseIntPipe) id: number) {
+  //   return this.orderService.cancelOrder(id);
+  // }
 
-  @Get("report/general")
-  @ApiOperation({ summary: "Get Order report with optional filters" })
-  @ApiQuery({
-    name: "from",
-    required: true,
-    description: "Start date for report",
-    type: Date,
-    example: "2021-09-01",
-  })
-  @ApiQuery({
-    name: "to",
-    required: true,
-    description: "End date for report",
-    type: Date,
-    example: "2021-09-30",
-  })
-  @ApiQuery({
-    name: "kitchen_id",
-    required: false,
-    description: "Kitchen ID for report (optional)",
-    type: Number,
-    example: 1,
-  })
-  @ApiQuery({
-    name: "site_id",
-    required: false,
-    description: "Site ID for report (optional)",
-    type: Number,
-    example: 2,
-  })
-  @ApiQuery({
-    name: "space_id",
-    required: false,
-    description: "Space ID for report (optional)",
-    type: Number,
-    example: 3,
-  })
-  @ApiQuery({
-    name: "user_id",
-    required: false,
-    description: "User ID for report (optional)",
-    type: Number,
-    example: 123,
-  })
-  getOrderReport(
-    @Query("from") from: Date,
-    @Query("to") to: Date,
-    @Query("kitchen_id") kitchenId?: number,
-    @Query("site_id") siteId?: number,
-    @Query("space_id") spaceId?: number,
-    @Query("user_id") userId?: number
-  ) {
-    const filters = {
-      kitchen_id: kitchenId,
-      site_id: siteId,
-      space_id: spaceId,
-      user_id: userId,
-    };
+  // @Get("report/general")
+  // @ApiOperation({ summary: "Get Order report with optional filters" })
+  // @ApiQuery({
+  //   name: "from",
+  //   required: true,
+  //   description: "Start date for report",
+  //   type: Date,
+  //   example: "2021-09-01",
+  // })
+  // @ApiQuery({
+  //   name: "to",
+  //   required: true,
+  //   description: "End date for report",
+  //   type: Date,
+  //   example: "2021-09-30",
+  // })
+  // @ApiQuery({
+  //   name: "kitchen_id",
+  //   required: false,
+  //   description: "Kitchen ID for report (optional)",
+  //   type: Number,
+  //   example: 1,
+  // })
+  // @ApiQuery({
+  //   name: "site_id",
+  //   required: false,
+  //   description: "Site ID for report (optional)",
+  //   type: Number,
+  //   example: 2,
+  // })
+  // @ApiQuery({
+  //   name: "space_id",
+  //   required: false,
+  //   description: "Space ID for report (optional)",
+  //   type: Number,
+  //   example: 3,
+  // })
+  // @ApiQuery({
+  //   name: "user_id",
+  //   required: false,
+  //   description: "User ID for report (optional)",
+  //   type: Number,
+  //   example: 123,
+  // })
+  // getOrderReport(
+  //   @Query("from") from: Date,
+  //   @Query("to") to: Date,
+  //   @Query("kitchen_id") kitchenId?: number,
+  //   @Query("site_id") siteId?: number,
+  //   @Query("space_id") spaceId?: number,
+  //   @Query("user_id") userId?: number
+  // ) {
+  //   const filters = {
+  //     kitchen_id: kitchenId,
+  //     site_id: siteId,
+  //     space_id: spaceId,
+  //     user_id: userId,
+  //   };
 
-    return this.orderService.orderReport(from, to, filters);
-  }
+  //   return this.orderService.orderReport(from, to, filters);
+  // }
 }

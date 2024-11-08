@@ -8,4 +8,4 @@ import { AuthModule } from "src/auth/auth.module";
   imports: [DatabaseModule, AuthModule],
   exports: [SpaceService],
 })
-export class SpaceModule {}
+export class SpaceModuleV2 {}

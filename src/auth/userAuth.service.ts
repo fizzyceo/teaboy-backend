@@ -151,6 +151,62 @@ export class UserAuthService {
     };
   }
 
+  async generateNewOtp(newOtpDto: ForgotPasswordDto) {
+    const { email } = newOtpDto;
+
+    // Step 1: Check if the user exists
+    const user = await this.databaseService.user.findUnique({
+      where: { email, isVerified: false },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with email ${email} not found.`);
+    }
+
+    // Step 2: Enforce a rate limit to prevent spamming OTP requests (e.g., 1 OTP per 10 minutes)
+    const lastOtpTime = user.updated_at;
+    const currentTime = new Date();
+
+    if (
+      lastOtpTime &&
+      currentTime.getTime() - lastOtpTime.getTime() < 1 * 60 * 1000
+    ) {
+      throw new BadRequestException(
+        "You can only request a new OTP every 1 minute."
+      );
+    }
+
+    // Step 3: Generate a new OTP token and expiration date (e.g., 24 hours)
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    // Step 4: Update the user record with the new OTP and expiration
+    await this.databaseService.user.update({
+      where: { email },
+      data: {
+        verificationToken,
+        verificationExpires,
+      },
+    });
+
+    // Step 5: Attempt to send the new OTP via email
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: "Password Reset OTP",
+        html: template1(user.name, process.env.FRONTEND_URL, verificationToken),
+      });
+    } catch (emailError) {
+      console.error("Error sending OTP email:", emailError);
+      throw new BadRequestException(`Error sending OTP email: ${emailError}`);
+    }
+
+    return {
+      message:
+        "A new OTP has been sent to your email. Please check your inbox.",
+    };
+  }
+
   async verifyEmail(token: string) {
     const user = await this.databaseService.user.findUnique({
       where: { verificationToken: token.trim() },

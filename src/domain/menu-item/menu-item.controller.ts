@@ -25,6 +25,8 @@ import {
   ApiParam,
   ApiConsumes,
   ApiBearerAuth,
+  ApiQuery,
+  ApiHeader,
 } from "@nestjs/swagger";
 import { FilesInterceptor } from "@nestjs/platform-express";
 import {
@@ -58,6 +60,12 @@ export class MenuItemController {
     summary: "Get all menu items",
     description: "Get All menu items , this should be later be modified",
   })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getAllMenuItems(@Headers("LANG") lang: string) {
     return this.menuItemService.getAllMenuItems(lang);
   }
@@ -68,6 +76,12 @@ export class MenuItemController {
     name: "id",
     description: "Menu item id to fetch",
     required: true,
+  })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
   })
   getMenuItemById(
     @Param("id", ParseIntPipe) id: number,
@@ -127,6 +141,12 @@ export class MenuItemController {
     name: "id",
     description: "Menu item id to fetch options",
     required: true,
+  })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
   })
   getMenuItemOptions(
     @Param("id", ParseIntPipe) id: number,

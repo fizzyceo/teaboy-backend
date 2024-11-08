@@ -11,12 +11,6 @@ import {
 import { OrderItemDto } from "./order-item.dto";
 
 export class CreateOrderDto {
-  @ApiProperty({ type: [OrderItemDto] })
-  @ValidateNested({ each: true })
-  @IsArray()
-  @Type(() => OrderItemDto)
-  order_items?: OrderItemDto[];
-
   @ApiProperty()
   @IsInt()
   spaceId: number;
@@ -26,13 +20,24 @@ export class CreateOrderDto {
   @IsOptional()
   customer_name: string;
 
+  // @ApiProperty()
+  // @IsInt()
+  // @IsOptional()
+  // table_number: number;
+
+  @ApiProperty()
+  @IsString()
+  @IsOptional()
+  answer?: string;
+
   @ApiProperty()
   @IsInt()
   @IsOptional()
   user_id: number;
 
-  @ApiProperty()
-  @IsInt()
-  @IsOptional()
-  table_number: number;
+  @ApiProperty({ type: [OrderItemDto] })
+  @ValidateNested({ each: true })
+  @IsArray()
+  @Type(() => OrderItemDto)
+  orders?: OrderItemDto[];
 }

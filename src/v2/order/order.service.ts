@@ -45,7 +45,7 @@ export class OrderService {
   }
 
   async createOrder(createOrderDto: CreateOrderDto) {
-    const { order_items, user_id, spaceId, ...orderData } = createOrderDto;
+    const { orders, user_id, spaceId, answer, ...orderData } = createOrderDto;
 
     if (user_id) {
       await this.validateUser(user_id);
@@ -53,20 +53,19 @@ export class OrderService {
 
     await this.ensureKitchenIsOpen(spaceId);
 
-    const menuId = await this.validateMenuItems(order_items);
+    const menuId = await this.validateMenuItems(orders);
 
     const createdOrder = await this.database.$transaction(async (database) => {
       const order = await database.order.create({
         data: {
+          answer: answer,
           user: user_id ? { connect: { user_id } } : undefined,
           menu: { connect: { menu_id: menuId } },
           space: { connect: { space_id: spaceId } },
           order_number: this.generateOrderNumber(),
           ...orderData,
           order_items: {
-            create: order_items.map((orderItem) =>
-              this.createOrderItem(orderItem)
-            ),
+            create: orders.map((orderItem) => this.createOrderItem(orderItem)),
           },
         },
         include: { order_items: true },
@@ -181,9 +180,9 @@ export class OrderService {
         order_items: {
           select: {
             order_item_id: true,
-            note: true,
             quantity: true,
             status: true,
+
             choices: {
               select: {
                 menu_item_option_choice: {
@@ -204,8 +203,6 @@ export class OrderService {
             },
             menu_item: {
               select: {
-                available: true,
-                description: true,
                 menu_item_id: true,
                 price: true,
                 title: true,
@@ -228,27 +225,38 @@ export class OrderService {
     });
 
     return orders.map((order) => ({
-      ...order,
+      order_id: order.order_id,
+      order_number: order.order_number,
+      answer: order.answer,
+      created_at: order.created_at,
+      updated_at: order.updated_at,
       order_items: order.order_items.map((orderItem) => {
-        const transformedChoices = orderItem.choices.map((choice) => ({
+        const { menu_item, choices, ...rest } = orderItem;
+        const transformedChoices = choices.map((choice) => ({
           option:
             lang?.toLowerCase() === "ar" &&
             choice.menu_item_option_choice.menu_item_option.name_ar
               ? choice.menu_item_option_choice.menu_item_option.name_ar
               : choice.menu_item_option_choice.menu_item_option.name,
 
-          option_id:
-            choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
           choice:
             lang?.toLowerCase() === "ar" &&
             choice.menu_item_option_choice.name_ar
               ? choice.menu_item_option_choice.name_ar
               : choice.menu_item_option_choice.name,
-          choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
         }));
-
+        const transformedMenuItems = {
+          menu_item_id: menu_item.menu_item_id,
+          title:
+            lang === "AR" && menu_item.title_ar
+              ? menu_item.title_ar
+              : menu_item.title,
+          item_images: menu_item.item_images,
+          price: menu_item.price,
+        };
         return {
-          ...orderItem,
+          ...rest,
+          menu_item: transformedMenuItems,
           choices: transformedChoices,
         };
       }),

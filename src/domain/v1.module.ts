@@ -1,42 +1,42 @@
 import { Module } from "@nestjs/common";
 import { AuthModule } from "src/auth/auth.module";
-import { KitchenModuleV2 } from "./kitchen/kitchen.module";
-import { SiteModuleV2 } from "./site/site.module";
-import { UserModuleV2 } from "./user/user.module";
-import { UserSpaceLinkModuleV2 } from "./user-space-link/user-space-link.module";
+import { KitchenModule } from "./kitchen/kitchen.module";
+import { SiteModule } from "./site/site.module";
+import { UserModule } from "./user/user.module";
+import { UserSpaceLinkModule } from "./user-space-link/user-space-link.module";
 import { DatabaseModule } from "src/database/database.module";
-import { MenuModuleV2 } from "./menu/menu.module";
-import { EntrepriseModuleV2 } from "./entreprise/entreprise.module";
-import { MenuItemModuleV2 } from "./menu-item/menu-item.module";
-import { OrderModuleV2 } from "./order/order.module";
-import { OrderItemModuleV2 } from "./order-item/order-item.module";
+import { MenuModule } from "./menu/menu.module";
+import { EntrepriseModule } from "./entreprise/entreprise.module";
+import { MenuItemModule } from "./menu-item/menu-item.module";
+import { OrderModule } from "./order/order.module";
+import { OrderItemModule } from "./order-item/order-item.module";
 import { ConfigModule } from "@nestjs/config";
 import { ImagesModule } from "src/images/images.module";
-import { SpaceModuleV2 } from "./space/space.module";
+import { SpaceModule } from "./space/space.module";
 import { EncryptionModule } from "src/encryption/encryption.module";
-import { CallModuleV2 } from "./call/call.module";
+import { CallModule } from "./call/call.module";
 import { MailerModule } from "@nestjs-modules/mailer";
 
 @Module({
   imports: [
     AuthModule,
-    KitchenModuleV2,
-    SiteModuleV2,
-    UserModuleV2,
-    UserSpaceLinkModuleV2,
+    KitchenModule,
+    SiteModule,
+    UserModule,
+    UserSpaceLinkModule,
     DatabaseModule,
-    MenuModuleV2,
-    EntrepriseModuleV2,
-    MenuItemModuleV2,
-    OrderModuleV2,
-    OrderItemModuleV2,
+    MenuModule,
+    EntrepriseModule,
+    MenuItemModule,
+    OrderModule,
+    OrderItemModule,
     ConfigModule.forRoot({
       isGlobal: true,
     }),
     ImagesModule,
-    SpaceModuleV2,
+    SpaceModule,
     EncryptionModule,
-    CallModuleV2,
+    CallModule,
 
     MailerModule.forRoot({
       transport: {
@@ -53,4 +53,4 @@ import { MailerModule } from "@nestjs-modules/mailer";
     }),
   ],
 })
-export class V2Module {}
+export class V1Module {}

@@ -10,8 +10,8 @@ import {
 
 enum UserRole {
   ADMIN = "ADMIN",
-  TEABOY = "TEABOY",
-  NORMAL_USER = "NORMAL_USER",
+  USER = "USER",
+  ROOT = "ROOT",
 }
 export class CreateUserDto {
   @ApiProperty()
@@ -44,6 +44,31 @@ export class CreateUserDto {
   @ApiProperty({ enum: UserRole })
   @IsEnum(UserRole)
   role: UserRole;
+
+  @ApiProperty({ type: "string", format: "binary", required: false })
+  @IsOptional()
+  file?: Express.Multer.File;
+}
+
+export class UpdateProfile {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  name: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  password?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @ApiProperty({ type: "string", format: "binary", required: false })
+  @IsOptional()
+  file?: Express.Multer.File;
 }
 
 export class LinkingSpace {

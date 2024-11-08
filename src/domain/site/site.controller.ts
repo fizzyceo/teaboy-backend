@@ -22,6 +22,8 @@ import {
   ApiOperation,
   ApiParam,
   ApiConsumes,
+  ApiQuery,
+  ApiHeader,
 } from "@nestjs/swagger";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { CreateSpaceDto } from "./dto";
@@ -48,6 +50,12 @@ export class SiteController {
   }
 
   @Get()
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   @ApiOperation({ summary: "Get all sites" })
   getAllSites(@Headers("LANG") lang: string) {
     return this.siteService.getAllSites(lang);
@@ -60,6 +68,12 @@ export class SiteController {
     description: "Site id to fetch",
     required: true,
   })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getSiteById(
     @Param("id", ParseIntPipe) id: number,
     @Headers("LANG") lang: string
@@ -68,11 +82,23 @@ export class SiteController {
   }
 
   @Get(":id/menus")
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   @ApiOperation({ summary: "Get Site menus by id" })
   @ApiParam({
     name: "id",
     description: "Site id to fetch menus",
     required: true,
+  })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
   })
   getSiteMenus(
     @Param("id", ParseIntPipe) id: number,
@@ -88,10 +114,7 @@ export class SiteController {
     description: "site id to fetch employees",
     required: true,
   })
-  getSiteEmployees(
-    @Param("id", ParseIntPipe) id: number,
-    @Headers("LANG") lang: string
-  ) {
+  getSiteEmployees(@Param("id", ParseIntPipe) id: number) {
     return this.siteService.getSiteEmployees(id);
   }
 
@@ -101,6 +124,12 @@ export class SiteController {
     name: "id",
     description: "site id to fetch spaces",
     required: true,
+  })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
   })
   getSiteSpaces(
     @Param("id", ParseIntPipe) id: number,

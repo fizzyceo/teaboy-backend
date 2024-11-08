@@ -18,8 +18,8 @@ import {
 
 enum UserRole {
   ADMIN = "ADMIN",
-  TEABOY = "TEABOY",
-  NORMAL_USER = "NORMAL_USER",
+  USER = "USER",
+  ROOT = "ROOT",
 }
 class User {
   @ApiProperty()

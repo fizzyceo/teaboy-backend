@@ -10,4 +10,4 @@ import { AuthModule } from "src/auth/auth.module";
   providers: [KitchenService],
   exports: [KitchenService],
 })
-export class KitchenModule {}
+export class KitchenModuleV2 {}

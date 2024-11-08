@@ -45,7 +45,11 @@ export class KitchenService {
   }
 
   async getAllKitchens(user_id: number, lang: string) {
-    return await this.database.kitchen.findMany();
+    return await this.database.kitchen.findMany({
+      include: {
+        site: true,
+      },
+    });
   }
 
   async getKitchenInfos(req: any, lang: string) {
@@ -105,6 +109,70 @@ export class KitchenService {
       openingHours: kitchen.openingHours,
       spaces: formattedSpaces,
     };
+  }
+
+  async updateKitchenFromPortal(kitchenId: number, updateKitchenDto: any) {
+    const { openingHours, ...kitchenData } = updateKitchenDto;
+
+    const updatedKitchen = await this.database.$transaction(
+      async (transaction) => {
+        // Handle updating or creating opening hours
+        if (openingHours) {
+          const currentOpeningHours = await transaction.openingHours.findMany({
+            where: { kitchen_id: kitchenId },
+          });
+
+          const existingDaysOfWeek = currentOpeningHours.map(
+            (hour) => hour.dayOfWeek
+          );
+
+          // Update existing opening hours or create new ones
+          for (const hour of openingHours) {
+            const { timezone, ...HourWithoutTimezone } = hour;
+            if (existingDaysOfWeek.includes(hour.dayOfWeek)) {
+              // Update existing opening hour
+              await transaction.openingHours.updateMany({
+                where: {
+                  kitchen_id: kitchenId,
+                  dayOfWeek: HourWithoutTimezone.dayOfWeek,
+                },
+                data: {
+                  openTime: HourWithoutTimezone.openTime,
+                  closeTime: HourWithoutTimezone.closeTime,
+                  timezone: timezone,
+                },
+              });
+            } else {
+              // Create new opening hour
+              await transaction.openingHours.create({
+                data: {
+                  kitchen_id: kitchenId,
+                  ...HourWithoutTimezone,
+                  timezone: timezone,
+                },
+              });
+            }
+          }
+
+          // Delete opening hours that are not in the updated list
+          const daysToKeep = openingHours.map((hour) => hour.dayOfWeek);
+          await transaction.openingHours.deleteMany({
+            where: {
+              kitchen_id: kitchenId,
+              dayOfWeek: { notIn: daysToKeep },
+            },
+          });
+        }
+
+        // Update the kitchen data
+        return await transaction.kitchen.update({
+          where: { kitchen_id: kitchenId },
+          data: kitchenData,
+        });
+      }
+    );
+
+    return updatedKitchen;
   }
 
   async updateKitchen(kitchen: any, updateKitchenDto: UpdateKitchenDto) {

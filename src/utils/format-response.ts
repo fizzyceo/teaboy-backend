@@ -1,7 +1,8 @@
 export function formatSuccessResponse(data: any): any {
   return {
-    data,
     success: true,
+
+    data,
   };
 }
 

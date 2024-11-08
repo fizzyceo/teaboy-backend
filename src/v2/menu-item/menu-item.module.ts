@@ -10,4 +10,4 @@ import { AuthModule } from "src/auth/auth.module";
   providers: [MenuItemService],
   imports: [DatabaseModule, ImagesModule, AuthModule],
 })
-export class MenuItemModule {}
+export class MenuItemModuleV2 {}

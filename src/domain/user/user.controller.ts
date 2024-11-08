@@ -69,10 +69,7 @@ export class UserController {
   addUserToSpace2(@Body() LinkingSpace: LinkingSpace, @Req() user: any) {
     const { user_id, role } = user.user;
 
-    if (
-      role.toUpperCase() !== "ADMIN" &&
-      role.toUpperCase() !== "SUPER_ADMIN"
-    ) {
+    if (role.toUpperCase() !== "ADMIN" && role.toUpperCase() !== "ROOT") {
       throw new UnauthorizedException("you are not authorized");
     }
     return this.userService.addUserToSpace2(
@@ -86,10 +83,7 @@ export class UserController {
   removeUserFromSpace(@Body() LinkingSpace: LinkingSpace, @Req() user: any) {
     const { user_id, role } = user.user;
 
-    if (
-      role.toUpperCase() !== "ADMIN" &&
-      role.toUpperCase() !== "SUPER_ADMIN"
-    ) {
+    if (role.toUpperCase() !== "ADMIN" && role.toUpperCase() !== "ROOT") {
       throw new UnauthorizedException("you are not authorized");
     }
     return this.userService.removeUserFromSpace(
@@ -168,7 +162,7 @@ export class UserController {
   ) {
     const { role } = user.user;
 
-    if (role !== "SUPER_ADMIN") throw new UnauthorizedException();
+    if (role !== "ROOT") throw new UnauthorizedException();
 
     return this.userService.updateUserByAdmin(userId, updateUserDto);
   }
@@ -191,7 +185,7 @@ export class UserController {
     @Param("userId", ParseIntPipe) userId: number
   ) {
     const { role } = user.user;
-    if (role !== "SUPER_ADMIN") throw new UnauthorizedException();
+    if (role !== "ROOT") throw new UnauthorizedException();
 
     return this.userService.deleteUser(userId);
   }

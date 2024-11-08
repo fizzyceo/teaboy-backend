@@ -19,6 +19,7 @@ import {
   ApiParam,
   ApiQuery,
   ApiBearerAuth,
+  ApiHeader,
 } from "@nestjs/swagger";
 
 import { MenuService } from "./menu.service";
@@ -45,19 +46,32 @@ export class MenuController {
     return this.menuService.createMenu(createMenuDto);
   }
 
-  @Get("v2")
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Get detailed menus v2" })
-  getAllMenusv2(@Req() user: any, @Headers("LANG") lang: string) {
-    const { user_id } = user.user;
-    return this.menuService.getAllMenusv2(user_id, lang);
-  }
+  // @Get("v2")
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @ApiOperation({ summary: "Get detailed menus v2" })
+  // @ApiQuery({
+  //   name: "LANG",
+  //   required: false,
+  //   description: "EN/AR",
+  //   type: String,
+  //   example: "EN",
+  // })
+  // getAllMenusv2(@Req() user: any, @Headers("LANG") lang: string) {
+  //   const { user_id } = user.user;
+  //   return this.menuService.getAllMenusv2(user_id, lang);
+  // }
 
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all menus" })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getAllMenus(@Req() req: any, @Headers("LANG") lang: string) {
     const { user_id } = req.user;
     return this.menuService.getAllMenus(user_id, lang);
@@ -79,6 +93,12 @@ export class MenuController {
     name: "site_id",
     description: "Site id to fetch",
     required: false,
+  })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
   })
   getMenuById(
     @Headers("LANG") lang: string,
@@ -195,6 +215,12 @@ export class MenuController {
   }
 
   @Get("s/:encryptedToken")
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   async getMenuFromToken(
     @Headers("LANG") lang: string,
     @Param("encryptedToken") encryptedToken: string
@@ -210,6 +236,12 @@ export class MenuController {
   }
 
   @Get("links/a")
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   async getLinks(@Headers("LANG") lang: string) {
     const menus = await this.menuService.getAllMenusOld();
     const result = menus.map((menu) =>
@@ -241,6 +273,12 @@ export class MenuController {
   }
 
   @Get("list/a")
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   async getMenuList(@Headers("LANG") lang: string) {
     return this.menuService.getMenuList(lang);
   }

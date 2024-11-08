@@ -19,6 +19,7 @@ import {
   ApiParam,
   ApiQuery,
   ApiBearerAuth,
+  ApiHeader,
 } from "@nestjs/swagger";
 
 import { KitchenService } from "./kitchen.service";
@@ -47,6 +48,12 @@ export class KitchenController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: "Get all kitchens" })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getAllKitchens(@Req() user: any, @Headers("LANG") lang: string) {
     const { user_id } = user.user;
     return this.kitchenService.getAllKitchens(user_id, lang);
@@ -68,6 +75,12 @@ export class KitchenController {
     type: Number,
     example: 1,
   })
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   @ApiOperation({ summary: "Get all order items related to a Kitchen" })
   async getOrderItems(
     @Req() req,
@@ -88,6 +101,12 @@ export class KitchenController {
   @ApiOperation({ summary: "Get kitchen details by id" })
   @UseGuards(KitchenAuthGuard)
   @ApiBearerAuth()
+  @ApiHeader({
+    name: "LANG",
+    required: false,
+    description: "EN/AR",
+    example: "EN",
+  })
   getKitchenById(@Req() req, @Headers("LANG") lang: string) {
     return this.kitchenService.getKitchenInfos(req.user, lang);
   }

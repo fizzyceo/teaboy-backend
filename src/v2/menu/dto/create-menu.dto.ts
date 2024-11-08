@@ -1,21 +1,26 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsBoolean, IsOptional } from "class-validator";
+import { IsBoolean, IsNumber, IsOptional } from "class-validator";
 
 export class CreateMenuDto {
   @ApiProperty()
   @IsOptional()
   name: string;
-  @ApiProperty()
+
   @IsOptional()
   name_ar: string;
 
   @ApiProperty()
   @IsOptional()
-  currency?: string;
+  currency: string;
 
-  @ApiProperty()
   @IsOptional()
-  currency_ar?: string;
+  currency_ar: string;
+
+  @IsOptional()
+  @IsNumber()
+  VAT?: number;
+  @IsOptional()
+  ask: string;
 
   @ApiProperty({ default: false })
   @IsBoolean()

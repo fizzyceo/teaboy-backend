@@ -56,7 +56,7 @@ export class MenuService {
         currency: true,
         currency_ar: true,
         ask_for_table: true,
-
+        VAT: true,
         created_at: true,
         updated_at: true,
         spaces: {
@@ -105,7 +105,7 @@ export class MenuService {
         name_ar: true,
         ask_for_name: true,
         ask_for_table: true,
-
+        VAT: true,
         created_at: true,
         updated_at: true,
         spaces: {
@@ -200,29 +200,30 @@ export class MenuService {
       : false;
 
     // Fetch the menu
+    console.log("start: ", new Date());
+
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
-        created_at: true,
-        updated_at: true,
         name: true,
         name_ar: true,
         currency: true,
         currency_ar: true,
         menu_id: true,
-        ask_for_name: true,
-        ask_for_table: true,
-        sites: site_id
-          ? {
-              select: {
-                name: true,
-                name_ar: true,
-                site_id: true,
-                image_url: true,
-              },
-              where: { site_id },
-            }
-          : undefined,
+        VAT: true,
+        // ask_for_name: true,
+        // ask_for_table: true,
+        // sites: site_id
+        //   ? {
+        //       select: {
+        //         name: true,
+        //         name_ar: true,
+        //         site_id: true,
+        //         image_url: true,
+        //       },
+        //       where: { site_id },
+        //     }
+        //   : undefined,
         spaces: space_id
           ? {
               select: {
@@ -265,13 +266,7 @@ export class MenuService {
                     name: true,
                     name_ar: true,
                     menu_item_option_id: true,
-                    default_choice: {
-                      select: {
-                        name: true,
-                        name_ar: true,
-                        menu_item_option_choice_id: true,
-                      },
-                    },
+
                     default_choice_id: true,
                     choices: {
                       select: {
@@ -294,6 +289,7 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
+    console.log("end: ", new Date());
     const { name, name_ar, spaces, currency, currency_ar, ...rest } = menu;
     const currentLang = lang?.toUpperCase() === "AR" ? "ar" : "en";
 
@@ -301,7 +297,6 @@ export class MenuService {
     const transformedSpaces = spaces.map((space) => ({
       space_id: space.space_id,
       name: currentLang === "ar" && space.name_ar ? space.name_ar : space.name,
-      name_ar: space.name_ar,
 
       default_lang: space.default_lang,
       kitchen_id: space.kitchen_id,
@@ -315,62 +310,54 @@ export class MenuService {
             currentLang === "ar" && space.site.name_ar
               ? space.site.name_ar
               : space.site.name,
-          name_ar: space.site.name_ar,
         },
       }),
     }));
 
     // Transform menu items
     const transformedMenuItems = menu.menu_items.map((item) => ({
-      menu_item_id: item.menu_item_id,
+      item_id: item.menu_item_id,
       title: currentLang === "ar" && item.title_ar ? item.title_ar : item.title,
-      title_ar: item.title_ar,
       price: item.price,
 
       available: item.available,
       description: item.description,
-      item_images: item.item_images.map((image) => ({
-        image_url: image.image_url,
-        item_image_id: image.item_image_id,
-      })),
+      images: item.item_images.map((image) => image.image_url.split("/").pop()), // Get unique part of the image URL
+
       options: item.menuItem_options.map((option) => ({
         name:
           currentLang === "ar" && option.menu_item_option.name_ar
             ? option.menu_item_option.name_ar
             : option.menu_item_option.name,
-        name_ar: option.menu_item_option.name_ar,
-        menu_item_option_id: option.menu_item_option.menu_item_option_id,
-        default_choice: {
-          ...option.menu_item_option.default_choice,
-          name:
-            currentLang === "ar" &&
-            option.menu_item_option.default_choice.name_ar
-              ? option.menu_item_option.default_choice.name_ar
-              : option.menu_item_option.default_choice.name,
-          name_ar: option.menu_item_option.default_choice.name_ar,
-        },
+        option_id: option.menu_item_option.menu_item_option_id,
+
         choices: option.menu_item_option.choices.map((choice) => ({
-          ...choice,
+          choice_id: choice.menu_item_option_choice_id,
           name:
             currentLang === "ar" && choice.name_ar
               ? choice.name_ar
               : choice.name,
-          name_ar: choice.name_ar,
         })),
         default_choice_id: option.menu_item_option.default_choice_id,
       })),
     }));
 
+    const isPriceAvailable = transformedMenuItems.some(
+      (item) => item.price > 0
+    );
+
     // Return the structured menu data
     return {
-      ...rest,
+      ask: "Put your table number: ",
+      image_url: "https://res.cloudinary.com/dm2k40ije/image/upload/",
       name: currentLang === "ar" && name_ar ? name_ar : name,
-      name_ar: name_ar,
       currency: currentLang === "ar" && currency_ar ? currency_ar : currency,
-      currency_ar: currency_ar,
       isOpen: isCurrentlyOpen,
-      spaces: transformedSpaces,
+      is_price: isPriceAvailable,
+      ...rest,
+
       menu_items: transformedMenuItems,
+      spaces: transformedSpaces,
     };
   }
 

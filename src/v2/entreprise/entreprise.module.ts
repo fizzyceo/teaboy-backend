@@ -11,4 +11,4 @@ import { ImagesModule } from "src/images/images.module";
   imports: [DatabaseModule, AuthModule, ImagesModule],
   exports: [EntrepriseService],
 })
-export class EntrepriseModule {}
+export class EntrepriseModuleV2 {}

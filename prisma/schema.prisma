@@ -8,80 +8,255 @@ datasource db {
 }
 
 model User {
-  user_id Int @id @default(autoincrement())
-
-  name     String?
-  email    String    @unique
-  password String?
-  phone    String?
-  
-  role     USER_ROLE @default(NORMAL_USER)
-
-  signedUp Boolean? 
-
-  canCallTeaboy Boolean? @default(true)
-
-  image_url   String? 
-  isDeleted Boolean? @default(false)
-  // email verification
-  isVerified            Boolean   @default(false) 
-  verificationToken     String?    @unique
-  verificationExpires   DateTime? 
-
-  resetPasswordToken    String?   @unique
-  resetPasswordExpires  DateTime? 
-
-  phoneOS     OS_TYPE? @default(android)
-  userLanguage LANGUAGE? @default(EN)
-  
-  orders Order[]
-  spaces Space[] @relation("UserSpaces")
-  sites  Site[]  @relation("UserSites")
-  calls  Call[]
- 
-  kitchen_id Int?
-  kitchen    Kitchen? @relation(fields: [kitchen_id], references: [kitchen_id])
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-
-  Entreprise Entreprise[]
+  user_id              Int          @id @default(autoincrement())
+  name                 String?
+  email                String       @unique
+  password             String?
+  phone                String?
+  created_at           DateTime     @default(now())
+  updated_at           DateTime     @updatedAt
+  kitchen_id           Int?
+  isVerified           Boolean      @default(false)
+  verificationExpires  DateTime?
+  verificationToken    String?      @unique
+  image_url            String?
+  resetPasswordExpires DateTime?
+  resetPasswordToken   String?      @unique
+  isDeleted            Boolean?     @default(false)
+  signedUp             Boolean?
+  canCallTeaboy        Boolean?     @default(true)
+  phoneOS              OS_TYPE?     @default(android)
+  userLanguage         LANGUAGE?    @default(EN)
+  role                 USER_ROLE2   @default(USER)
+  calls                Call[]
+  Entreprise           Entreprise[]
+  orders               Order[]
+  kitchen              Kitchen?     @relation(fields: [kitchen_id], references: [kitchen_id])
+  sites                Site[]       @relation("UserSites")
+  spaces               Space[]      @relation("UserSpaces")
 }
 
-
-model Entreprise{
-  ent_id Int @id @default(autoincrement())
+model Entreprise {
+  ent_id    Int    @id @default(autoincrement())
   image_url String
-  name String
-  owner_id Int
-  owner User @relation(fields: [owner_id], references: [user_id])
-
-  Site Site[]
+  name      String
+  owner_id  Int
+  owner     User   @relation(fields: [owner_id], references: [user_id])
+  Site      Site[]
 }
 
 model Site {
-  site_id Int @id @default(autoincrement())
-
+  site_id     Int         @id @default(autoincrement())
   name        String
-  name_ar     String?
-
-  description String? @default("")
+  description String?     @default("")
   phone       String?
   address     String?
-  address_ar String?
   image_url   String?
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  latitude    Float?
+  longitude   Float?
+  name_ar     String?
+  ent_id      Int?
+  owner_id    Int?
+  address_ar  String?
+  kitchens    Kitchen[]
+  entreprise  Entreprise? @relation(fields: [ent_id], references: [ent_id], onDelete: Cascade)
+  spaces      Space[]
+  menus       Menu[]      @relation("SiteMenus")
+  users       User[]      @relation("UserSites")
+}
 
-  latitude  Float?
-  longitude Float? 
-  owner_id Int? 
-  spaces Space[]
-  menus  Menu[]  @relation("SiteMenus")
-  users  User[]  @relation("UserSites")
-  ent_id Int?
-  entreprise Entreprise? @relation(fields: [ent_id], references: [ent_id], onDelete: Cascade)
+model Space {
+  space_id     Int             @id @default(autoincrement())
+  name         String
+  site_id      Int
+  created_at   DateTime        @default(now())
+  updated_at   DateTime        @updatedAt
+  kitchen_id   Int?
+  type         SPACE_TYPE      @default(DEPARTMENT)
+  name_ar      String?
+  default_lang String?         @default("EN")
+  calls        Call[]
+  orders       Order[]
+  kitchen      Kitchen?        @relation(fields: [kitchen_id], references: [kitchen_id])
+  site         Site            @relation(fields: [site_id], references: [site_id], onDelete: Cascade)
+  links        SpaceUserLink[]
+  menus        Menu[]          @relation("SpaceMenus")
+  users        User[]          @relation("UserSpaces")
+}
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+model SpaceUserLink {
+  link_id    Int    @id @default(autoincrement())
+  space_id   Int
+  user_email String
+  space      Space  @relation(fields: [space_id], references: [space_id], onDelete: Cascade)
+}
+
+model Menu {
+  menu_id       Int         @id @default(autoincrement())
+  name          String?
+  ask_for_name  Boolean     @default(false)
+  ask_for_table Boolean     @default(false)
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  name_ar       String?
+  currency      String?     @default("$")
+  currency_ar   String?
+  ask           String?
+  VAT           Float?      @default(0.0)
+  ask_ar        String?
+  menu_items    Menu_Item[]
+  orders        Order[]
+  sites         Site[]      @relation("SiteMenus")
+  spaces        Space[]     @relation("SpaceMenus")
+}
+
+model Menu_Item {
+  menu_item_id     Int                        @id @default(autoincrement())
+  title            String
+  description      String?                    @default("")
+  price            Float
+  available        Boolean                    @default(true)
+  menu_id          Int
+  created_at       DateTime                   @default(now())
+  updated_at       DateTime                   @updatedAt
+  title_ar         String?
+  item_images      ItemImages[]
+  menuItem_options MenuItemOptionConnection[]
+  menu             Menu                       @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade)
+  order_items      Order_Item[]
+}
+
+model Menu_Item_Option {
+  menu_item_option_id Int                        @id @default(autoincrement())
+  name                String
+  default_choice_id   Int?                       @unique
+  created_at          DateTime                   @default(now())
+  updated_at          DateTime                   @updatedAt
+  name_ar             String?
+  option_menuItems    MenuItemOptionConnection[]
+  default_choice      Menu_Item_Option_Choice?   @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id])
+  choices             Menu_Item_Option_Choice[]  @relation("OptionChoices")
+}
+
+model Menu_Item_Option_Choice {
+  menu_item_option_choice_id Int                 @id @default(autoincrement())
+  name                       String
+  menu_item_option_id        Int
+  created_at                 DateTime            @default(now())
+  updated_at                 DateTime            @updatedAt
+  name_ar                    String?
+  menu_Item_Option           Menu_Item_Option?   @relation("DefaultChoice")
+  menu_item_option           Menu_Item_Option    @relation("OptionChoices", fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade)
+  order_item_choices         Order_Item_Choice[]
+}
+
+model MenuItemOptionConnection {
+  menu_item_id        Int
+  menu_item_option_id Int
+  menu_item           Menu_Item        @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
+  menu_item_option    Menu_Item_Option @relation(fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade)
+
+  @@id([menu_item_id, menu_item_option_id])
+}
+
+model Order {
+  order_id      Int          @id @default(autoincrement())
+  order_number  String
+  customer_name String?
+  table_number  Int?
+  scheduled_at  DateTime?
+  spaceId       Int
+  menuId        Int
+  userId        Int?
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @updatedAt
+  answer        String?
+  menu          Menu         @relation(fields: [menuId], references: [menu_id], onDelete: Cascade)
+  space         Space        @relation(fields: [spaceId], references: [space_id], onDelete: Cascade)
+  user          User?        @relation(fields: [userId], references: [user_id])
+  order_items   Order_Item[]
+}
+
+model Order_Item {
+  order_item_id Int                 @id @default(autoincrement())
+  note          String?
+  quantity      Int?
+  menu_item_id  Int
+  order_id      Int
+  status        OrderStatus
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+  menu_item     Menu_Item           @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
+  order         Order               @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  choices       Order_Item_Choice[]
+}
+
+model Order_Item_Choice {
+  order_item_choice_id       Int                     @id @default(autoincrement())
+  order_item_id              Int
+  menu_item_option_choice_id Int
+  menu_item_option_choice    Menu_Item_Option_Choice @relation(fields: [menu_item_option_choice_id], references: [menu_item_option_choice_id], onDelete: Cascade)
+  order_item                 Order_Item              @relation(fields: [order_item_id], references: [order_item_id], onDelete: Cascade)
+}
+
+model ItemImages {
+  item_image_id Int       @id @default(autoincrement())
+  image_url     String
+  menu_item_id  Int
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+  menu_item     Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
+}
+
+model Call {
+  call_id    Int         @id @default(autoincrement())
+  user_id    Int
+  space_id   Int
+  created_at DateTime    @default(now())
+  updated_at DateTime    @updatedAt
+  status     CALL_STATUS @default(STARTED)
+  Space      Space       @relation(fields: [space_id], references: [space_id], onDelete: Cascade)
+  User       User        @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model Kitchen {
+  kitchen_id       Int             @id @default(autoincrement())
+  isOpen           Boolean         @default(true)
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
+  name             String
+  token            String          @unique
+  isWeeklyTimingOn Boolean         @default(false)
+  name_ar          String?
+  site_id          Int?
+  site             Site?           @relation(fields: [site_id], references: [site_id], onDelete: Cascade)
+  tablets          KitchenTablet[]
+  openingHours     OpeningHours[]
+  spaces           Space[]
+  Teaboys          User[]
+}
+
+model OpeningHours {
+  openingHours_id Int       @id @default(autoincrement())
+  dayOfWeek       DayOfWeek
+  openTime        String
+  closeTime       String
+  kitchen_id      Int
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  timezone        String?
+  kitchen         Kitchen   @relation(fields: [kitchen_id], references: [kitchen_id])
+}
+
+model KitchenTablet {
+  kitchenTablet_id Int      @id @default(autoincrement())
+  kitchen_id       Int
+  fcmToken         String   @unique
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  kitchen          Kitchen  @relation(fields: [kitchen_id], references: [kitchen_id])
 }
 
 enum SPACE_TYPE {
@@ -90,200 +265,29 @@ enum SPACE_TYPE {
   DEPARTMENT
 }
 
-
-model Space {
-  space_id Int @id @default(autoincrement())
-
-  name String
-  name_ar String?
-  type SPACE_TYPE @default(DEPARTMENT)
-
-  site_id Int
-  site    Site @relation(fields: [site_id], references: [site_id], onDelete: Cascade)
-
-  kitchen_id Int?
-  kitchen    Kitchen? @relation(fields: [kitchen_id], references: [kitchen_id])
-  default_lang String? @default("EN")
-
-  links SpaceUserLink[]
-  orders Order[]
-  calls  Call[]
-  menus  Menu[]  @relation("SpaceMenus")
-  users  User[]  @relation("UserSpaces")
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-
-model SpaceUserLink {
-  link_id Int @id @default(autoincrement())
-  space_id Int
-  space Space @relation(fields:[space_id], references: [space_id], onDelete: Cascade)
-
-  user_email String
-
-
-}
-
-model Menu {
-  menu_id Int @id @default(autoincrement())
-  currency         String? @default("$")
-  currency_ar      String? 
-  name             String?
-  name_ar          String?
-  ask_for_name  Boolean @default(false)
-  ask_for_table Boolean @default(false)
-
-  menu_items Menu_Item[]
-  orders     Order[]
-  sites      Site[]      @relation("SiteMenus")
-  spaces     Space[]     @relation("SpaceMenus")
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Menu_Item {
-  menu_item_id Int @id @default(autoincrement())
-
-  title       String
-  title_ar     String?
-  description String? @default("")
-  price       Float
-  available   Boolean @default(true)
-
-  item_images      ItemImages[]
-  menuItem_options MenuItemOptionConnection[]
-  order_items      Order_Item[]
-
-  menu_id Int
-  menu    Menu @relation(fields: [menu_id], references: [menu_id], onDelete: Cascade)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Menu_Item_Option {
-  menu_item_option_id Int @id @default(autoincrement())
-
-  name String
-  name_ar  String?
-  default_choice_id Int?                     @unique
-  default_choice    Menu_Item_Option_Choice? @relation("DefaultChoice", fields: [default_choice_id], references: [menu_item_option_choice_id])
-
-  choices          Menu_Item_Option_Choice[]  @relation("OptionChoices")
-  option_menuItems MenuItemOptionConnection[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Menu_Item_Option_Choice {
-  menu_item_option_choice_id Int @id @default(autoincrement())
-
-  name String
-  name_ar String?
-
-  menu_Item_Option Menu_Item_Option? @relation("DefaultChoice")
-
-  menu_item_option_id Int
-  menu_item_option    Menu_Item_Option @relation("OptionChoices", fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade)
-
-  order_item_choices Order_Item_Choice[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model MenuItemOptionConnection {
-  menu_item_id Int
-  menu_item    Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
-
-  menu_item_option_id Int
-  menu_item_option    Menu_Item_Option @relation(fields: [menu_item_option_id], references: [menu_item_option_id], onDelete: Cascade)
-
-  @@id([menu_item_id, menu_item_option_id])
-}
-
-model Order {
-  order_id Int @id @default(autoincrement())
-
-  order_number  String
-  customer_name String?
-  table_number  Int?
-  scheduled_at  DateTime?
-
-  menuId Int
-  menu   Menu @relation(fields: [menuId], references: [menu_id], onDelete: Cascade)
-
-  spaceId Int
-  space   Space @relation(fields: [spaceId], references: [space_id], onDelete: Cascade)
-
-  userId Int?
-  user   User? @relation(fields: [userId], references: [user_id])
-
-  order_items Order_Item[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Order_Item {
-  order_item_id Int @id @default(autoincrement())
-
-  note     String?
-  quantity Int?
-  status   OrderStatus
-
-  menu_item_id Int
-  menu_item    Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
-
-  order_id Int
-  order    Order @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
-
-  choices Order_Item_Choice[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Order_Item_Choice {
-  order_item_choice_id Int @id @default(autoincrement())
-
-  menu_item_option_choice_id Int
-  menu_item_option_choice    Menu_Item_Option_Choice @relation(fields: [menu_item_option_choice_id], references: [menu_item_option_choice_id], onDelete: Cascade)
-
-  order_item_id Int
-  order_item    Order_Item @relation(fields: [order_item_id], references: [order_item_id], onDelete: Cascade)
-}
-
-model ItemImages {
-  item_image_id Int @id @default(autoincrement())
-
-  image_url String
-
-  menu_item_id Int
-  menu_item    Menu_Item @relation(fields: [menu_item_id], references: [menu_item_id], onDelete: Cascade)
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
 enum USER_ROLE {
-  SUPER_ADMIN
   ADMIN
   TEABOY
   NORMAL_USER
+  SUPER_ADMIN
+  USER
+  ROOT
 }
+
+enum USER_ROLE2 {
+  ADMIN
+  USER
+  ROOT
+}
+
 enum LANGUAGE {
   EN
   AR
 }
+
 enum OS_TYPE {
   android
   ios
-
 }
 
 enum OrderStatus {
@@ -301,51 +305,6 @@ enum CALL_STATUS {
   FAILED
 }
 
-model Call {
-  call_id    Int      @id @default(autoincrement())
-  user_id    Int
-  User       User     @relation(fields: [user_id], references: [user_id],onDelete: Cascade)
-  space_id   Int
-  Space      Space    @relation(fields: [space_id], references: [space_id],onDelete: Cascade)
-
-  status     CALL_STATUS @default(STARTED)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model Kitchen {
-  kitchen_id Int     @id @default(autoincrement())
-  name       String
-  name_ar    String?
-  token       String    @unique
-  isOpen     Boolean @default(true)
-  isWeeklyTimingOn Boolean @default(false)
-
-  spaces       Space[]
-  Teaboys      User[]
-  openingHours OpeningHours[]
-  tablets KitchenTablet[]
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-model OpeningHours {
-  openingHours_id Int       @id @default(autoincrement())
-  dayOfWeek       DayOfWeek
-  openTime        String
-  closeTime       String
-
-  timezone String?
-
-  kitchen_id Int
-  kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
-}
-
-
 enum DayOfWeek {
   MONDAY
   TUESDAY
@@ -354,16 +313,4 @@ enum DayOfWeek {
   FRIDAY
   SATURDAY
   SUNDAY
-}
-
-model KitchenTablet{
-  kitchenTablet_id Int @id @default(autoincrement())
-
-  kitchen_id Int
-  kitchen    Kitchen @relation(fields: [kitchen_id], references: [kitchen_id])
-
-  fcmToken String @unique
-
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
 }

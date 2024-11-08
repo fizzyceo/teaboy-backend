@@ -91,14 +91,36 @@ export class UserService {
   async updateUser(id: number, updateuserDto: UpdateUserDto) {
     const user = await this.findUserById(id);
 
+    // If a password is provided, hash it before updating
     if (updateuserDto.password) {
       updateuserDto.password = await this.hashPassword(updateuserDto.password);
     }
-    if (updateuserDto.signedUp) {
-    }
+
+    // Filter out fields that are null or undefined
+    const updateData = Object.fromEntries(
+      Object.entries(updateuserDto).filter(([key, value]) => value !== "")
+    );
+    console.log(updateData);
+    // Perform the update with only the non-null/undefined fields
     return await this.database.user.update({
       where: { user_id: id },
-      data: updateuserDto,
+      data: updateData,
+    });
+  }
+
+  async uploadProfileImage(user_id: number, file: Express.Multer.File) {
+    const user = await this.findUserById(user_id);
+
+    const imageUrl = await this.imagesService.uploadFile(file);
+
+    return await this.database.user.update({
+      where: { user_id },
+      data: {
+        image_url: imageUrl ? imageUrl.url : user.image_url,
+      },
+      select: {
+        image_url: true,
+      },
     });
   }
 
@@ -257,6 +279,7 @@ export class UserService {
         name_ar: true,
         type: true,
         site_id: true,
+
         site: {
           select: {
             site_id: true,
@@ -265,6 +288,8 @@ export class UserService {
             address: true,
             address_ar: true,
             phone: true,
+            latitude: true,
+            longitude: true,
           },
         },
         kitchen_id: true,
@@ -282,29 +307,30 @@ export class UserService {
 
     return spaces.map((space) => ({
       space_id: space.space_id,
-      name:
+      space_name:
         lang?.toLowerCase() === "ar" && space.name_ar
           ? space.name_ar
           : space.name,
-      site: {
-        site_id: space.site.site_id,
-        name:
-          lang?.toLowerCase() === "ar" && space.site.name_ar
-            ? space.site.name_ar
-            : space.site.name, // Handle site name translation
-        address:
-          lang?.toLowerCase() === "ar" && space.site.address_ar
-            ? space.site.address_ar
-            : space.site.address, // Handle site address translation
-        phone: space.site.phone, // No translation needed for phone
+
+      site_id: space.site.site_id,
+      site_name:
+        lang?.toLowerCase() === "ar" && space.site.name_ar
+          ? space.site.name_ar
+          : space.site.name, // Handle site name translation
+      address:
+        lang?.toLowerCase() === "ar" && space.site.address_ar
+          ? space.site.address_ar
+          : space.site.address, // Handle site address translation
+      phone: space.site.phone, // No translation needed for phone
+      location: {
+        lat: space.site.latitude,
+        lon: space.site.longitude,
       },
       type: space.type,
-      kitchen_id: space.kitchen_id,
-      created_at: space.created_at,
-      updated_at: space.updated_at,
+
       menus: space.menus.map((menu) => ({
         menu_id: menu.menu_id,
-        name:
+        menu_name:
           lang?.toLowerCase() === "ar" && menu.name_ar
             ? menu.name_ar
             : menu.name, // Handle menu name translation
@@ -376,21 +402,5 @@ export class UserService {
     return {
       isOpen: isCurrentlyOpen,
     };
-  }
-
-  async uploadProfileImage(user_id: number, file: Express.Multer.File) {
-    const user = await this.findUserById(user_id);
-
-    const imageUrl = await this.imagesService.uploadFile(file);
-
-    return await this.database.user.update({
-      where: { user_id },
-      data: {
-        image_url: imageUrl ? imageUrl.url : user.image_url,
-      },
-      select: {
-        image_url: true,
-      },
-    });
   }
 }

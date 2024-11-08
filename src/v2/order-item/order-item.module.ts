@@ -8,4 +8,4 @@ import { DatabaseModule } from "src/database/database.module";
   providers: [OrderItemService],
   imports: [DatabaseModule],
 })
-export class OrderItemModule {}
+export class OrderItemModuleV2 {}

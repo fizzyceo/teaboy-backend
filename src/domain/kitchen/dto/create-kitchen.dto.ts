@@ -2,6 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import {
   IsArray,
   IsBoolean,
+  IsNumber,
   IsOptional,
   IsString,
   ValidateNested,
@@ -32,4 +33,8 @@ export class CreateKitchenDto {
   @ApiProperty()
   @IsBoolean()
   isWeeklyTimingOn: boolean;
+
+  @ApiProperty()
+  @IsNumber()
+  site_id?: number;
 }

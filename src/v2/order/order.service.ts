@@ -143,6 +143,8 @@ export class OrderService {
   }
 
   private createOrderItem(orderItem: any) {
+    console.log(orderItem);
+
     return {
       menu_item: { connect: { menu_item_id: orderItem.menu_item_id } },
       note: orderItem.note,

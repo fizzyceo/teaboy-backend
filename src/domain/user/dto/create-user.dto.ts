@@ -56,6 +56,10 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(LANGUAGE)
   userLanguage?: LANGUAGE;
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  max_daily_orders?: number;
 
   @ApiProperty({ enum: OS_TYPE })
   @IsOptional()
@@ -111,6 +115,11 @@ export class UpdateUserByAdminDto {
   @IsOptional()
   @IsEnum(LANGUAGE)
   userLanguage?: LANGUAGE;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  max_daily_orders?: number;
 
   @ApiProperty({ enum: OS_TYPE })
   @IsOptional()

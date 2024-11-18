@@ -53,10 +53,8 @@ export class MenuService {
         name: true,
         name_ar: true,
         ask_for_name: true,
-        currency: true,
-        currency_ar: true,
         ask_for_table: true,
-        VAT: true,
+
         created_at: true,
         updated_at: true,
         spaces: {
@@ -79,10 +77,7 @@ export class MenuService {
     return menus.flatMap((menu) =>
       menu.spaces.map((space) => ({
         menu_id: space.space_id,
-        name:
-          lang?.toUpperCase() === "AR" && space.name_ar
-            ? space.name_ar
-            : space.name, // Conditional logic based on LANG
+        name: lang === "AR" && space.name_ar ? space.name_ar : space.name, // Conditional logic based on LANG
       }))
     );
   }
@@ -105,7 +100,7 @@ export class MenuService {
         name_ar: true,
         ask_for_name: true,
         ask_for_table: true,
-        VAT: true,
+
         created_at: true,
         updated_at: true,
         spaces: {
@@ -153,7 +148,6 @@ export class MenuService {
             space_id: true,
             name: true,
             name_ar: true,
-
             site: {
               select: {
                 site_id: true,
@@ -200,36 +194,32 @@ export class MenuService {
       : false;
 
     // Fetch the menu
-    console.log("start: ", new Date());
-
     const menu = await this.database.menu.findUnique({
       where: { menu_id: id },
       select: {
+        created_at: true,
+        updated_at: true,
         name: true,
         name_ar: true,
-        currency: true,
-        currency_ar: true,
         menu_id: true,
-        VAT: true,
-        // ask_for_name: true,
-        // ask_for_table: true,
-        // sites: site_id
-        //   ? {
-        //       select: {
-        //         name: true,
-        //         name_ar: true,
-        //         site_id: true,
-        //         image_url: true,
-        //       },
-        //       where: { site_id },
-        //     }
-        //   : undefined,
+        ask_for_name: true,
+        ask_for_table: true,
+        sites: site_id
+          ? {
+              select: {
+                name: true,
+                name_ar: true,
+                site_id: true,
+                image_url: true,
+              },
+              where: { site_id },
+            }
+          : undefined,
         spaces: space_id
           ? {
               select: {
                 name: true,
                 name_ar: true,
-
                 default_lang: true,
                 kitchen_id: true,
                 site_id: true,
@@ -266,7 +256,13 @@ export class MenuService {
                     name: true,
                     name_ar: true,
                     menu_item_option_id: true,
-
+                    default_choice: {
+                      select: {
+                        name: true,
+                        name_ar: true,
+                        menu_item_option_choice_id: true,
+                      },
+                    },
                     default_choice_id: true,
                     choices: {
                       select: {
@@ -289,15 +285,18 @@ export class MenuService {
       throw new NotFoundException(`Menu with id ${id} not found`);
     }
 
-    console.log("end: ", new Date());
-    const { name, name_ar, spaces, currency, currency_ar, ...rest } = menu;
+    const { name, name_ar, spaces, ...rest } = menu;
     const currentLang = lang?.toUpperCase() === "AR" ? "ar" : "en";
+
+    // Helper function to get the correct name based on language
+    const getName = (enName: string, arName: string) =>
+      currentLang === "ar" ? arName : enName;
 
     // Transform spaces
     const transformedSpaces = spaces.map((space) => ({
       space_id: space.space_id,
       name: currentLang === "ar" && space.name_ar ? space.name_ar : space.name,
-
+      name_ar: space.name_ar,
       default_lang: space.default_lang,
       kitchen_id: space.kitchen_id,
       site_id: space.site_id,
@@ -310,54 +309,59 @@ export class MenuService {
             currentLang === "ar" && space.site.name_ar
               ? space.site.name_ar
               : space.site.name,
+          name_ar: space.site.name_ar,
         },
       }),
     }));
 
     // Transform menu items
     const transformedMenuItems = menu.menu_items.map((item) => ({
-      item_id: item.menu_item_id,
+      menu_item_id: item.menu_item_id,
       title: currentLang === "ar" && item.title_ar ? item.title_ar : item.title,
+      title_ar: item.title_ar,
       price: item.price,
-
       available: item.available,
       description: item.description,
-      images: item.item_images.map((image) => image.image_url.split("/").pop()), // Get unique part of the image URL
-
+      item_images: item.item_images.map((image) => ({
+        image_url: image.image_url,
+        item_image_id: image.item_image_id,
+      })),
       options: item.menuItem_options.map((option) => ({
         name:
           currentLang === "ar" && option.menu_item_option.name_ar
             ? option.menu_item_option.name_ar
             : option.menu_item_option.name,
-        option_id: option.menu_item_option.menu_item_option_id,
-
+        name_ar: option.menu_item_option.name_ar,
+        menu_item_option_id: option.menu_item_option.menu_item_option_id,
+        default_choice: {
+          ...option.menu_item_option.default_choice,
+          name:
+            currentLang === "ar" &&
+            option.menu_item_option.default_choice.name_ar
+              ? option.menu_item_option.default_choice.name_ar
+              : option.menu_item_option.default_choice.name,
+          name_ar: option.menu_item_option.default_choice.name_ar,
+        },
         choices: option.menu_item_option.choices.map((choice) => ({
-          choice_id: choice.menu_item_option_choice_id,
+          ...choice,
           name:
             currentLang === "ar" && choice.name_ar
               ? choice.name_ar
               : choice.name,
+          name_ar: choice.name_ar,
         })),
         default_choice_id: option.menu_item_option.default_choice_id,
       })),
     }));
 
-    const isPriceAvailable = transformedMenuItems.some(
-      (item) => item.price > 0
-    );
-
     // Return the structured menu data
     return {
-      ask: "Put your table number: ",
-      image_url: "https://res.cloudinary.com/dm2k40ije/image/upload/",
-      name: currentLang === "ar" && name_ar ? name_ar : name,
-      currency: currentLang === "ar" && currency_ar ? currency_ar : currency,
-      isOpen: isCurrentlyOpen,
-      is_price: isPriceAvailable,
       ...rest,
-
-      menu_items: transformedMenuItems,
+      name: currentLang === "ar" && name_ar ? name_ar : name,
+      name_ar: name_ar,
+      isOpen: isCurrentlyOpen,
       spaces: transformedSpaces,
+      menu_items: transformedMenuItems,
     };
   }
 
@@ -441,7 +445,12 @@ export class MenuService {
   }
 
   async getMenuList(lang: string) {
-    const menus = await this.database.menu.findMany();
+    const menus = await this.database.menu.findMany({
+      include: {
+        sites: true,
+        spaces: true,
+      },
+    });
 
     return menus.map((menu) => {
       return formatMenuResponse(menu, lang);

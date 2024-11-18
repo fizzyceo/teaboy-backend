@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -35,6 +36,10 @@ export class RegisterDto {
   @IsOptional()
   @IsBoolean()
   signedUp?: boolean;
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  max_daily_orders?: number;
 
   @ApiProperty({ enum: UserRole })
   @IsEnum(UserRole)

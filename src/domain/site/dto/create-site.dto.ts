@@ -41,6 +41,10 @@ export class CreateSiteDto {
   @IsOptional()
   longitude: number;
 
+  @ApiProperty()
+  @IsNumber()
+  @IsOptional()
+  allowedOrderDistance?: number;
   @ApiProperty({ type: "string", format: "binary" })
   file: Express.Multer.File;
 }

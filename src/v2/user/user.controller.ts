@@ -14,6 +14,7 @@ import {
   UploadedFile,
   UnauthorizedException,
   Headers,
+  BadRequestException,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
@@ -128,6 +129,26 @@ export class UserController {
 
     // Handle profile image upload
     if (file) {
+      const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+      if (file.size > MAX_FILE_SIZE) {
+        throw new BadRequestException("File size exceeds the 1MB limit");
+      }
+
+      // Check file type (allowed formats: .jpg, .jpeg, .png, .webp, .heif, .heic)
+      const allowedMimeTypes = [
+        "image/jpeg", // .jpg and .jpeg
+        "image/png", // .png
+        "image/webp", // .webp
+        "image/heif", // .heif
+        "image/heic", // .heic
+      ];
+
+      if (!allowedMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          "Invalid file type. Only JPG, JPEG, PNG, WEBP, HEIF, and HEIC are allowed"
+        );
+      }
+
       await this.userService.uploadProfileImage(user_id, file);
     }
 

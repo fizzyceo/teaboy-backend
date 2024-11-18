@@ -3,22 +3,24 @@ import { IsBoolean, IsNumber, IsOptional } from "class-validator";
 
 export class CreateMenuDto {
   @ApiProperty()
-  @IsOptional()
   name: string;
 
+  @ApiProperty()
   @IsOptional()
   name_ar: string;
   @ApiProperty()
-  @IsOptional()
   currency: string;
 
+  @ApiProperty()
   @IsOptional()
   currency_ar: string;
 
+  @ApiProperty()
   @IsOptional()
   @IsNumber()
   VAT?: number;
 
+  @ApiProperty()
   @IsOptional()
   ask: string;
 
@@ -31,4 +33,9 @@ export class CreateMenuDto {
   @IsOptional()
   @IsBoolean()
   ask_for_name?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
+  site_id?: number;
 }

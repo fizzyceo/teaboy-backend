@@ -73,13 +73,21 @@ export class OrderController {
     type: Number,
     example: 1,
   })
-  getAllOrders(
+  async getAllOrders(
     @Req() user: any,
     @Query("page") page: number = 1,
-    @Query("limit") limit: number = 5
+    @Query("limit") limit: number = 10
   ) {
+    const endpointStartTime = Date.now(); // DB response time starts
+
     const { user_id } = user.user;
-    return this.orderService.getAllOrders(user_id, page, limit);
+    const orders = await this.orderService.getAllOrders(user_id, page, limit);
+    const endpointEndTime = Date.now(); // DB response time starts
+    console.log(
+      `Backend response latency: ${endpointEndTime - endpointStartTime} ms`
+    );
+
+    return orders;
   }
 
   @Get(":id")

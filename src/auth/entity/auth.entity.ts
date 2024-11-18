@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsEmail,
   IsEnum,
+  IsNumber,
   IsOptional,
   IsString,
 } from "class-validator";
@@ -49,6 +50,11 @@ class User {
   @IsOptional()
   @IsEnum(LANGUAGE)
   userLanguage?: LANGUAGE;
+
+  @ApiProperty()
+  @IsOptional()
+  @IsNumber()
+  max_daily_orders?: number;
 
   @ApiProperty()
   @IsOptional()

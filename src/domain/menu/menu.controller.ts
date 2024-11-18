@@ -42,8 +42,10 @@ export class MenuController {
     summary: "Create a new menu",
     description: "Create a new menu by providing name, space_id",
   })
-  createMenu(@Body() createMenuDto: CreateMenuDto) {
-    return this.menuService.createMenu(createMenuDto);
+  async createMenu(@Body() createMenuDto: CreateMenuDto) {
+    const menu = await this.menuService.createMenu(createMenuDto);
+
+    return menu;
   }
 
   // @Get("v2")
@@ -269,6 +271,7 @@ export class MenuController {
         };
       })
     );
+
     return result.flat();
   }
 

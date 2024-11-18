@@ -173,6 +173,14 @@ export class OrderService {
         userId: user_id,
       },
       include: {
+        space: {
+          select: {
+            name: true,
+            space_id: true,
+            site_id: true,
+            kitchen_id: true,
+          },
+        },
         order_items: {
           select: {
             order_item_id: true,
@@ -219,7 +227,7 @@ export class OrderService {
       take: pageSize,
     });
 
-    return orders.map((order) => ({
+    const formattedOrders = orders.map((order) => ({
       ...order,
       order_items: order.order_items.map((orderItem) => {
         const transformedChoices = orderItem.choices.map((choice) => ({
@@ -236,6 +244,8 @@ export class OrderService {
         };
       }),
     }));
+
+    return formattedOrders;
   }
 
   async getOrderById(id: number, user: any) {

@@ -8,6 +8,7 @@ import {
   Delete,
   ParseIntPipe,
   Query,
+  UseInterceptors,
 } from "@nestjs/common";
 import { OrderItemService } from "./order-item.service";
 import { CreateOrderItemDto, OrderStatus } from "./dto/create-order-item.dto";
@@ -19,9 +20,11 @@ import {
   ApiQuery,
   ApiTags,
 } from "@nestjs/swagger";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("v2/order-item")
 @ApiTags("order-item")
+@UseInterceptors(CacheInterceptor)
 export class OrderItemController {
   constructor(private readonly orderItemService: OrderItemService) {}
 

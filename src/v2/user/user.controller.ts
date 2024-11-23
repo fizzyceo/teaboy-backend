@@ -15,6 +15,7 @@ import {
   UnauthorizedException,
   Headers,
   BadRequestException,
+  Inject,
 } from "@nestjs/common";
 import { UserService } from "./user.service";
 import {
@@ -39,13 +40,17 @@ import { AuthEntity } from "src/auth/entity/auth.entity";
 import { RegisterDto } from "src/auth/dto/register.dto";
 import { ForgotPasswordDto } from "src/auth/dto/forgotPassword.dto";
 import { ResetPasswordDto } from "src/auth/dto/resetPassword.dt";
+import { CACHE_MANAGER, CacheInterceptor } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
 
 @Controller("v2/user")
 @ApiTags("user")
+@UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(
     private readonly userService: UserService,
-    private readonly userAuthService: UserAuthService
+    private readonly userAuthService: UserAuthService,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache
   ) {}
 
   @Get("")
@@ -53,9 +58,9 @@ export class UserController {
   @ApiOperation({ summary: "Get all Users" })
   getAllUsers(@Req() req: any) {
     const { role } = req.user;
-    console.log(role);
-
     if (role !== "ROOT") throw new UnauthorizedException();
+    console.log(this.cacheManager.store.keys());
+
     return this.userService.getAllUsers();
   }
 
@@ -129,18 +134,19 @@ export class UserController {
 
     // Handle profile image upload
     if (file) {
-      const MAX_FILE_SIZE = 1 * 1024 * 1024; // 1MB
+      const MAX_FILE_SIZE = 5 * 1024 * 1024; // 1MB
       if (file.size > MAX_FILE_SIZE) {
-        throw new BadRequestException("File size exceeds the 1MB limit");
+        throw new BadRequestException("File size exceeds the 5MB limit");
       }
 
       // Check file type (allowed formats: .jpg, .jpeg, .png, .webp, .heif, .heic)
       const allowedMimeTypes = [
         "image/jpeg", // .jpg and .jpeg
-        "image/png", // .png
-        "image/webp", // .webp
-        "image/heif", // .heif
-        "image/heic", // .heic
+        "image/jpg",
+        "image/png",
+        "image/webp",
+        "image/heif",
+        "image/heic",
       ];
 
       if (!allowedMimeTypes.includes(file.mimetype)) {

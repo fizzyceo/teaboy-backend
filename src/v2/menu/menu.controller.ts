@@ -11,6 +11,7 @@ import {
   UseGuards,
   Req,
   Headers,
+  UseInterceptors,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -28,9 +29,11 @@ import { CreateMenuDto, UpdateMenuDto } from "./dto";
 import { EncryptionService } from "src/encryption/encryption.service";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { formatSuccessResponse } from "src/utils/format-response";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("v2/menu")
 @ApiTags("menu")
+@UseInterceptors(CacheInterceptor)
 export class MenuController {
   constructor(
     private readonly menuService: MenuService,

@@ -18,12 +18,17 @@ import { MailerModule } from "@nestjs-modules/mailer";
 import { EntrepriseModule } from "./domain/entreprise/entreprise.module";
 import { V2Module } from "./v2/v2.module";
 import { V1Module } from "./domain/v1.module";
+import { CacheModule } from "@nestjs/cache-manager";
 
 @Module({
   imports: [
     V1Module,
     V2Module,
-
+    CacheModule.register({
+      max: 500,
+      ttl: 60 * 1000,
+      isGlobal: true,
+    }),
     // MailerModule.forRoot({
     //   transport: {
     //     service: "gmail",

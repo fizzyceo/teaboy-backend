@@ -34,9 +34,11 @@ import {
   UpdateMenuItemOption,
 } from "./dto/menu-item-option.dto";
 import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("v2/menu-item")
 @ApiTags("menu-item")
+@UseInterceptors(CacheInterceptor)
 export class MenuItemController {
   constructor(private readonly menuItemService: MenuItemService) {}
 

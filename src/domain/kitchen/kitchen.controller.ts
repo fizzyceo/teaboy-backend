@@ -11,6 +11,7 @@ import {
   Req,
   UseGuards,
   Headers,
+  UseInterceptors,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -27,9 +28,11 @@ import { CreateKitchenDto, UpdateKitchenDto } from "./dto";
 import { KitchenAuthGuard } from "src/auth/guard/kitchen.guard";
 import { OrderStatus } from "../order-item/dto";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("kitchen")
 @ApiTags("kitchen")
+@UseInterceptors(CacheInterceptor)
 export class KitchenController {
   constructor(private readonly kitchenService: KitchenService) {}
 

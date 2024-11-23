@@ -10,6 +10,7 @@ import {
   UseGuards,
   Req,
   Query,
+  UseInterceptors,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -26,9 +27,11 @@ import {
 } from "@nestjs/swagger";
 
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("order")
 @ApiTags("order")
+@UseInterceptors(CacheInterceptor)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 

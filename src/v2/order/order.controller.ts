@@ -11,6 +11,7 @@ import {
   Req,
   Query,
   Headers,
+  UseInterceptors,
 } from "@nestjs/common";
 import { OrderService } from "./order.service";
 import { CreateOrderDto } from "./dto/create-order.dto";
@@ -29,9 +30,11 @@ import {
 
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { formatSuccessResponse } from "src/utils/format-response";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("v2/order")
 @ApiTags("order")
+@UseInterceptors(CacheInterceptor)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 

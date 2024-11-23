@@ -29,9 +29,11 @@ import { CreateUserDto, UpdateUserDto, UploadProfileDto } from "./dto";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { LinkingSpace, UpdateUserByAdminDto } from "./dto/create-user.dto";
+import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("user")
 @ApiTags("user")
+@UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

@@ -28,10 +28,11 @@ import {
 
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { CacheInterceptor } from "@nestjs/cache-manager";
+import { UserSpecificCacheInterceptor } from "src/cache/cache.service";
 
 @Controller("order")
 @ApiTags("order")
-@UseInterceptors(CacheInterceptor)
+@UseInterceptors(UserSpecificCacheInterceptor)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 

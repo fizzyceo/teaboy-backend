@@ -30,10 +30,11 @@ import { EncryptionService } from "src/encryption/encryption.service";
 import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 import { formatSuccessResponse } from "src/utils/format-response";
 import { CacheInterceptor } from "@nestjs/cache-manager";
+import { UserSpecificCacheInterceptor } from "src/cache/cache.service";
 
 @Controller("v2/menu")
 @ApiTags("menu")
-@UseInterceptors(CacheInterceptor)
+@UseInterceptors(UserSpecificCacheInterceptor)
 export class MenuController {
   constructor(
     private readonly menuService: MenuService,

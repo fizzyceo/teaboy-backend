@@ -441,7 +441,7 @@ export class MenuService {
     });
   }
 
-  async getMenuList(lang: string) {
+  async getMenuList(lang?: string) {
     const menus = await this.database.menu.findMany();
 
     return menus.map((menu) => {

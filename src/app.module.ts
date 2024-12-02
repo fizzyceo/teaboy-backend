@@ -30,7 +30,7 @@ import { HttpModule } from "@nestjs/axios";
     HttpModule,
     CacheModule.register({
       max: 500,
-      ttl: 30 * 1000,
+      ttl: 5 * 60 * 1000,
       isGlobal: true,
     }),
     ScheduleModule.forRoot(),

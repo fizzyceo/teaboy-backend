@@ -155,12 +155,20 @@ export class UserAuthService {
     const { email } = newOtpDto;
 
     // Step 1: Check if the user exists
+    // Step 1: Check if the user exists
     const user = await this.databaseService.user.findUnique({
-      where: { email, isVerified: false },
+      where: { email },
     });
 
     if (!user) {
       throw new NotFoundException(`User with email ${email} not found.`);
+    }
+
+    // Step 2: Check if the user is already verified
+    if (user.isVerified) {
+      throw new BadRequestException(
+        `User with email ${email} is already verified. No OTP required.`
+      );
     }
 
     // Step 2: Enforce a rate limit to prevent spamming OTP requests (e.g., 1 OTP per 10 minutes)
@@ -177,7 +185,10 @@ export class UserAuthService {
     }
 
     // Step 3: Generate a new OTP token and expiration date (e.g., 24 hours)
-    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const otpLength = 6;
+    const verificationToken = Array.from({ length: otpLength }, () =>
+      Math.floor(Math.random() * 10)
+    ).join(""); //crypto.randomBytes(32).toString("hex");
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     // Step 4: Update the user record with the new OTP and expiration

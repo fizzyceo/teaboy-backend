@@ -23,6 +23,9 @@ export class CreateMenuDto {
   @ApiProperty()
   @IsOptional()
   ask: string;
+  @ApiProperty()
+  @IsOptional()
+  ask_ar: string;
 
   @ApiProperty({ default: false })
   @IsOptional()

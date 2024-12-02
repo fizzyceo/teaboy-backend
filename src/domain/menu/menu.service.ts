@@ -390,10 +390,17 @@ export class MenuService {
 
   async updateMenu(id: number, updateMenuDto: UpdateMenuDto, user_id: number) {
     const menu = await this.findMenuById(id);
-
+    const { site_id, ...rest } = updateMenuDto;
     return await this.database.menu.update({
       where: { menu_id: id },
-      data: updateMenuDto,
+      data: {
+        ...rest,
+        sites: {
+          connect: {
+            site_id: site_id,
+          },
+        },
+      },
     });
   }
 

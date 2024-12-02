@@ -231,6 +231,7 @@ export class MenuController {
     @Param("encryptedToken") encryptedToken: string
   ) {
     const decryptedData = this.encryptionService.decryptData(encryptedToken);
+
     const [menuId, spaceId] = decryptedData.split("-");
     return this.menuService.getMenuById(
       parseInt(menuId),

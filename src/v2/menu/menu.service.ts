@@ -236,6 +236,7 @@ export class MenuService {
                 site_id: true,
                 type: true,
                 space_id: true,
+                theme: true,
                 site: {
                   select: {
                     name: true,
@@ -297,7 +298,7 @@ export class MenuService {
     const transformedSpaces = spaces.map((space) => ({
       space_id: space.space_id,
       name: currentLang === "ar" && space.name_ar ? space.name_ar : space.name,
-
+      theme: space.theme,
       default_lang: space.default_lang,
       kitchen_id: space.kitchen_id,
       site_id: space.site_id,

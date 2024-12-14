@@ -27,8 +27,8 @@ model User {
   canCallTeaboy        Boolean?     @default(true)
   phoneOS              OS_TYPE?     @default(android)
   userLanguage         LANGUAGE?    @default(EN)
-  // role                 USER_ROLE2 @default(USER)
-  role                 USER_ROLE @default(USER)
+  role                 USER_ROLE2 @default(USER)
+  // role                 USER_ROLE @default(USER)
     max_daily_orders      Int?      @default(5)
 
   calls                Call[]
@@ -80,6 +80,7 @@ model Space {
   type         SPACE_TYPE      @default(DEPARTMENT)
   name_ar      String?
   default_lang String?         @default("EN")
+  theme        String?         
   calls        Call[]
   orders       Order[]
   kitchen      Kitchen?        @relation(fields: [kitchen_id], references: [kitchen_id])
@@ -278,6 +279,7 @@ enum SPACE_TYPE {
   MAJLISS
   OFFICE
   DEPARTMENT
+  SERVICE
 }
 
 enum USER_ROLE {

@@ -9,127 +9,77 @@ import {
   ParseIntPipe,
   UseInterceptors,
   UploadedFile,
+  UseGuards,
 } from "@nestjs/common";
-//   import { SiteService } from "./site.service";
-//   import { CreateSiteDto } from "./dto/create-site.dto";
-//   import { UpdateSiteDto } from "./dto/update-site.dto";
-//   import {
-//     ApiTags,
-//     ApiBody,
-//     ApiOperation,
-//     ApiParam,
-//     ApiConsumes,
-//   } from "@nestjs/swagger";
-//   import { FileInterceptor } from "@nestjs/platform-express";
-//   import { CreateSpaceDto } from "./dto";
+import { SpaceService } from "./space.service";
+import { CreateSpaceDto } from "./dto/create-space.dto";
+import { UpdateSpaceDto } from "./dto/update-space.dto";
+import {
+  ApiTags,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiConsumes,
+} from "@nestjs/swagger";
+import { FileInterceptor } from "@nestjs/platform-express";
+import { JwtAuthGuard } from "src/auth/guard/jwt-auth.guard";
 
-// //   @Controller("site")
-//   @ApiTags("site")
-//   export class SiteController {
-//     constructor(private readonly siteService: SiteService) {}
+@Controller("v2/space")
+@ApiTags("space")
+export class SpaceController {
+  constructor(private readonly spaceService: SpaceService) {}
 
-//     @Post("create")
-//     @ApiBody({ type: CreateSiteDto })
-//     @ApiOperation({ summary: "Create a new site" })
-//     @UseInterceptors(FileInterceptor("file"))
-//     @ApiConsumes("multipart/form-data")
-//     createSite(
-//       @Body() createRestaurantDto: CreateSiteDto,
-//       @UploadedFile() file: Express.Multer.File
-//     ) {
-//       return this.siteService.createSite(createRestaurantDto, file);
-//     }
+  @Post("create")
+  @ApiBody({ type: CreateSpaceDto })
+  @ApiOperation({ summary: "Create a new space" })
+  @UseInterceptors(FileInterceptor("file"))
+  @ApiConsumes("multipart/form-data")
+  createSpace(@Body() createSpaceDto: CreateSpaceDto) {
+    return this.spaceService.createSpace(createSpaceDto);
+  }
 
-//     @Get()
-//     @ApiOperation({ summary: "Get all sites" })
-//     getAllSites() {
-//       return this.siteService.getAllSites();
-//     }
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: "Get all spaces" })
+  getAllSpaces() {
+    return this.spaceService.getAllSpaces();
+  }
 
-//     @Get(":id")
-//     @ApiOperation({ summary: "Get Site details by id" })
-//     @ApiParam({
-//       name: "id",
-//       description: "Site id to fetch",
-//       required: true,
-//     })
-//     getSiteById(@Param("id", ParseIntPipe) id: number) {
-//       return this.siteService.getSiteById(id);
-//     }
+  @Get(":id")
+  @ApiOperation({ summary: "Get Space details by id" })
+  @ApiParam({
+    name: "id",
+    description: "Space id to fetch",
+    required: true,
+  })
+  getSpaceById(@Param("id", ParseIntPipe) id: number) {
+    return this.spaceService.findSpaceById(id);
+  }
 
-//     @Get(":id/menus")
-//     @ApiOperation({ summary: "Get Site menus by id" })
-//     @ApiParam({
-//       name: "id",
-//       description: "Site id to fetch menus",
-//       required: true,
-//     })
-//     getSiteMenus(@Param("id", ParseIntPipe) id: number) {
-//       return this.siteService.getSiteMenus(id);
-//     }
+  @Patch(":id")
+  @ApiBody({ type: UpdateSpaceDto })
+  @ApiOperation({ summary: "Update Space details by id" })
+  @ApiConsumes("multipart/form-data")
+  @ApiParam({
+    name: "id",
+    description: "Space id to update",
+    required: true,
+  })
+  updateSpace(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() updateSpaceDto: UpdateSpaceDto
+  ) {
+    return this.spaceService.updateSpace(id, updateSpaceDto);
+  }
 
-//     @Get(":id/employees")
-//     @ApiOperation({ summary: "Get site employees by id" })
-//     @ApiParam({
-//       name: "id",
-//       description: "site id to fetch employees",
-//       required: true,
-//     })
-//     getSiteEmployees(@Param("id", ParseIntPipe) id: number) {
-//       return this.siteService.getSiteEmployees(id);
-//     }
-
-//     @Get(":id/spaces")
-//     @ApiOperation({ summary: "Get site spaces by id" })
-//     @ApiParam({
-//       name: "id",
-//       description: "site id to fetch spaces",
-//       required: true,
-//     })
-//     getSiteSpaces(@Param("id", ParseIntPipe) id: number) {
-//       return this.siteService.getSiteSpaces(id);
-//     }
-
-//     @Post(":id/spaces")
-//     @ApiOperation({ summary: "Add space to site" })
-//     @ApiParam({
-//       name: "id",
-//       description: "site id to add space",
-//       required: true,
-//     })
-//     addSpaceToSite(
-//       @Param("id", ParseIntPipe) id: number,
-//       @Body() createSiteSpaceDto: CreateSpaceDto
-//     ) {
-//       return this.siteService.createSiteSpace(id, createSiteSpaceDto);
-//     }
-
-//     @Patch(":id")
-//     @ApiBody({ type: UpdateSiteDto })
-//     @ApiOperation({ summary: "Update Site details by id" })
-//     @UseInterceptors(FileInterceptor("file"))
-//     @ApiConsumes("multipart/form-data")
-//     @ApiParam({
-//       name: "id",
-//       description: "Site id to update",
-//       required: true,
-//     })
-//     updateSite(
-//       @Param("id", ParseIntPipe) id: number,
-//       @UploadedFile() file: Express.Multer.File,
-//       @Body() updateSiteDto: UpdateSiteDto
-//     ) {
-//       return this.siteService.updateSite(id, updateSiteDto, file);
-//     }
-
-//     @Delete(":id")
-//     @ApiOperation({ summary: "Delete Site by id" })
-//     @ApiParam({
-//       name: "id",
-//       description: "Site id to delete",
-//       required: true,
-//     })
-//     deleteSite(@Param("id", ParseIntPipe) id: number) {
-//       return this.siteService.deleteSite(id);
-//     }
-//   }
+  @Delete(":id")
+  @ApiOperation({ summary: "Delete Space by id" })
+  @ApiParam({
+    name: "id",
+    description: "Space id to delete",
+    required: true,
+  })
+  deleteSpace(@Param("id", ParseIntPipe) id: number) {
+    return this.spaceService.deleteSpace(id);
+  }
+}

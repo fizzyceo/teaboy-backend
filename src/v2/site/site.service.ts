@@ -153,6 +153,7 @@ export class SiteService {
         default_lang: true,
         name: true,
         name_ar: true,
+        theme: true,
       },
     });
     spaces.map((space) => ({
@@ -160,6 +161,7 @@ export class SiteService {
       name: lang?.toUpperCase() === "AR" ? space.name_ar : space.name,
       default_lang: space.default_lang,
       name_ar: space.name_ar,
+      theme: space.theme,
     }));
 
     return spaces;
@@ -168,14 +170,15 @@ export class SiteService {
   async createSiteSpace(siteId: number, spaceData: CreateSpaceDto) {
     const site = await this.findSiteById(siteId);
 
-    const { name } = spaceData;
+    const { name, theme, type, name_ar, default_lang } = spaceData;
 
     return await this.database.space.create({
       data: {
+        theme: theme,
         name,
-        type: spaceData.type,
-        default_lang: spaceData.default_lang,
-        name_ar: spaceData.name_ar,
+        type: type,
+        default_lang: default_lang,
+        name_ar: name_ar,
         site: {
           connect: {
             site_id: siteId,

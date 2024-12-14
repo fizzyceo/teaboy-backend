@@ -34,7 +34,7 @@ import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("v2/order")
 @ApiTags("order")
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
@@ -115,6 +115,29 @@ export class OrderController {
   getOrderById(@Param("id", ParseIntPipe) id: number, @Req() req) {
     const user = req.user;
     return this.orderService.getOrderById(id, user);
+  }
+  @Get("number/:order_number")
+  @ApiOperation({ summary: "Get order details by id" })
+  @ApiParam({
+    name: "id",
+    description: "Order id to fetch",
+    required: true,
+    type: Number,
+  })
+  getOrderByNumber(@Param("order_number") order_number: string) {
+    return this.orderService.getOrderByNumber(order_number);
+  }
+  @Get("space/:space_id")
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get order details by id" })
+  @ApiParam({
+    name: "space_id",
+    description: "Orders of the space for the last 24h",
+    required: true,
+    type: Number,
+  })
+  getOrderBySpace(@Param("space_id", ParseIntPipe) space_id: number) {
+    return this.orderService.getOrdersOfSpace(space_id);
   }
 
   // @Patch(":id")

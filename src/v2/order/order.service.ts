@@ -44,6 +44,17 @@ export class OrderService {
     return order.spaceId;
   }
 
+  async getSpaceId(space_id: number) {
+    const space = await this.database.space.findUnique({
+      where: { space_id },
+    });
+
+    if (!space) {
+      throw new NotFoundException(`space with id ${space_id} not found`);
+    }
+
+    return space;
+  }
   async createOrder(createOrderDto: CreateOrderDto) {
     const { orders, user_id, spaceId, answer, ...orderData } = createOrderDto;
 
@@ -160,6 +171,116 @@ export class OrderService {
         })),
       },
     };
+  }
+  async getOrdersOfSpace(space_id: number) {
+    // Check if the kitchen exists
+    const spaceExists = await this.getSpaceId(space_id);
+
+    let createdAtCondition: any = {};
+
+    // Apply date condition for orders that are pending or in progress
+
+    const last24Hours = new Date();
+    last24Hours.setHours(last24Hours.getHours() - 24);
+    createdAtCondition = { created_at: { gte: last24Hours } };
+
+    // Fetch orders
+    const orders = await this.database.order_Item.findMany({
+      where: {
+        AND: [
+          {
+            order: {
+              space: {
+                space_id: space_id,
+              },
+            },
+          },
+          {
+            status: "PENDING",
+          },
+          createdAtCondition,
+        ],
+      },
+
+      orderBy: {
+        created_at: "desc",
+      },
+      include: {
+        order: {
+          select: {
+            customer_name: true,
+            table_number: true,
+            order_number: true,
+
+            space: {
+              select: {
+                name: true,
+                name_ar: true,
+                space_id: true,
+                kitchen_id: true,
+              },
+            },
+          },
+        },
+        choices: {
+          select: {
+            menu_item_option_choice: {
+              select: {
+                name: true,
+                name_ar: true,
+                menu_item_option_choice_id: true,
+                menu_item_option: {
+                  select: {
+                    name: true,
+                    name_ar: true,
+                    menu_item_option_id: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        menu_item: {
+          select: {
+            menu: {
+              select: {
+                menu_id: true,
+                name: true,
+              },
+            },
+            title: true,
+            title_ar: true,
+            available: true,
+            description: true,
+            price: true,
+            item_images: {
+              select: {
+                image_url: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const formattedOrders = orders.map((order) => ({
+      ...order,
+      choices: order.choices.map((choice) => ({
+        option: choice.menu_item_option_choice.menu_item_option.name,
+        option_id:
+          choice.menu_item_option_choice.menu_item_option.menu_item_option_id,
+        choice: choice.menu_item_option_choice.name,
+        choice_id: choice.menu_item_option_choice.menu_item_option_choice_id,
+      })),
+    }));
+
+    if (formattedOrders.length === 0) {
+      throw new NotFoundException(
+        `No pending orders found for space with ID ${space_id} in the last 24 hours`
+      );
+    }
+
+    return formattedOrders;
   }
 
   async getAllOrders(
@@ -300,6 +421,42 @@ export class OrderService {
     const orderSpaceId = await this.getOrderSpaceId(id);
     if (orderSpaceId !== space_id) {
       throw new UnauthorizedException("You do not have access to this order");
+    }
+
+    return order;
+  }
+  async getOrderByNumber(order_number: string) {
+    const order = await this.database.order.findFirst({
+      where: { order_number: order_number },
+      include: {
+        order_items: {
+          select: {
+            order_item_id: true,
+            note: true,
+            status: true,
+            menu_item: {
+              select: {
+                menu_item_id: true,
+                title: true,
+                description: true,
+                price: true,
+                available: true,
+                item_images: {
+                  select: {
+                    image_url: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException(
+        `Order with number ${order_number} not found`
+      );
     }
 
     return order;

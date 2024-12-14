@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { LANGUAGE, OS_TYPE, USER_ROLE } from "@prisma/client";
+import { LANGUAGE, OS_TYPE, USER_ROLE2 } from "@prisma/client";
 import {
   IsBoolean,
   IsEmail,
@@ -41,9 +41,9 @@ export class RegisterDto {
   @IsNumber()
   max_daily_orders?: number;
 
-  @ApiProperty({ enum: USER_ROLE })
-  @IsEnum(USER_ROLE)
-  role: USER_ROLE;
+  @ApiProperty({ enum: USER_ROLE2 })
+  @IsEnum(USER_ROLE2)
+  role: USER_ROLE2;
 
   @ApiProperty({ enum: LANGUAGE })
   @IsOptional()

@@ -5,6 +5,7 @@ enum SPACE_TYPE {
   MAJLISS = "MAJLISS",
   OFFICE = "OFFICE",
   DEPARTMENT = "DEPARTMENT",
+  SERVICE = "SERVICE",
 }
 
 export class CreateSpaceDto {
@@ -19,6 +20,10 @@ export class CreateSpaceDto {
   @IsString()
   @IsOptional()
   name_ar?: string;
+
+  @IsString()
+  @IsOptional()
+  theme?: string;
 
   @IsString()
   @IsOptional()

@@ -45,7 +45,7 @@ import { Cache } from "cache-manager";
 
 @Controller("v2/user")
 @ApiTags("user")
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(
     private readonly userService: UserService,

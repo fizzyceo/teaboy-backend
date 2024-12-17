@@ -32,7 +32,7 @@ import { UserSpecificCacheInterceptor } from "src/cache/cache.service";
 
 @Controller("order")
 @ApiTags("order")
-@UseInterceptors(UserSpecificCacheInterceptor)
+// @UseInterceptors(UserSpecificCacheInterceptor)
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 

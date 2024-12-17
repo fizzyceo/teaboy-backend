@@ -34,7 +34,7 @@ import { UserSpecificCacheInterceptor } from "src/cache/cache.service";
 
 @Controller("v2/menu")
 @ApiTags("menu")
-@UseInterceptors(UserSpecificCacheInterceptor)
+// @UseInterceptors(UserSpecificCacheInterceptor)
 export class MenuController {
   constructor(
     private readonly menuService: MenuService,

@@ -38,7 +38,7 @@ import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("v2/menu-item")
 @ApiTags("menu-item")
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 export class MenuItemController {
   constructor(private readonly menuItemService: MenuItemService) {}
 

@@ -195,9 +195,9 @@ export class OrderService {
               },
             },
           },
-          {
-            status: "PENDING",
-          },
+          // {
+          //   status: "PENDING",
+          // },
           createdAtCondition,
         ],
       },

@@ -33,7 +33,7 @@ import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("user")
 @ApiTags("user")
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 

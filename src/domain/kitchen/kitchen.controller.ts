@@ -32,7 +32,7 @@ import { CacheInterceptor } from "@nestjs/cache-manager";
 
 @Controller("kitchen")
 @ApiTags("kitchen")
-@UseInterceptors(CacheInterceptor)
+// @UseInterceptors(CacheInterceptor)
 export class KitchenController {
   constructor(private readonly kitchenService: KitchenService) {}
 

@@ -10,6 +10,8 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  UnauthorizedException,
+  Req,
 } from "@nestjs/common";
 import { SpaceService } from "./space.service";
 import { CreateSpaceDto } from "./dto/create-space.dto";
@@ -41,8 +43,11 @@ export class SpaceController {
   @Get()
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: "Get all spaces" })
-  getAllSpaces() {
-    return this.spaceService.getAllSpaces();
+  getAllSpaces(@Req() req: any) {
+    const { role } = req.user;
+
+    if (role !== "ROOT") throw new UnauthorizedException();
+    return this.spaceService.findAllSpaces();
   }
 
   @Get(":id")

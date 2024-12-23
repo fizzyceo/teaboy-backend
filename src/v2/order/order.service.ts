@@ -483,7 +483,7 @@ export class OrderService {
 
   async cancelOrder(id: number) {
     const order = await this.findOrderById(id);
-
+    //only allow if the status of the order is PENDING
     return await this.database.order_Item.updateMany({
       where: { order_id: id },
       data: { status: "CANCELLED" },

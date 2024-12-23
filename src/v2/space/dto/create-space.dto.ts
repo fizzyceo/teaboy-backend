@@ -20,9 +20,26 @@ export class CreateSpaceDto {
   @ApiProperty()
   @IsNumber()
   site_id: number;
+  @ApiProperty()
+  @IsNumber()
+  menu_id?: number;
 
   @ApiProperty({ required: false })
   @IsNumber()
   @IsOptional()
   kitchen_id?: number;
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  default_lang?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  theme?: string;
+
+  @ApiProperty({ required: false })
+  @IsNumber()
+  @IsOptional()
+  allowedOrderDistance?: number;
 }

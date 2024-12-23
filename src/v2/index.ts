@@ -6,3 +6,4 @@ export { OrderItemModuleV2 } from "./order-item/order-item.module";
 export { MenuItemModuleV2 } from "./menu-item/menu-item.module";
 export { MenuModuleV2 } from "./menu/menu.module";
 export { CallModuleV2 } from "./call/call.module";
+// export { SpaceModuleV2 } from "./space/space.module";

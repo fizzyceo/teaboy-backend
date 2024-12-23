@@ -49,23 +49,8 @@ export class SiteService {
     });
   }
 
-  async updateSpaces() {
-    const updatedSpaces = await this.database.space.updateMany({
-      where: {
-        default_lang: {
-          not: "EN", // or null if you want to update only those that are null
-        },
-      },
-      data: {
-        default_lang: "EN",
-      },
-    });
-  }
-
   async getSiteById(id: number, lang: string) {
     const site = await this.findSiteById(id);
-
-    this.updateSpaces();
 
     return formatSiteResponse(site, lang);
   }
@@ -143,28 +128,59 @@ export class SiteService {
   }
 
   async getSiteSpaces(id: number, lang: string) {
-    // const site = await this.findSiteById(id);
-
     const spaces = await this.database.space.findMany({
       where: { site_id: id },
       select: {
         space_id: true,
         type: true,
+        theme: true,
         default_lang: true,
         name: true,
         name_ar: true,
-        theme: true,
+        kitchen_id: true,
+        kitchen: {
+          select: {
+            kitchen_id: true,
+            name: true,
+            name_ar: true,
+          },
+        },
+        site: {
+          select: {
+            site_id: true,
+            name: true,
+            name_ar: true,
+          },
+        },
+        menus: {
+          select: {
+            menu_id: true,
+            name: true,
+            name_ar: true,
+          },
+        },
       },
     });
-    spaces.map((space) => ({
+
+    // Map each space and handle multiple menus
+    const transformedSpaces = spaces.map((space) => ({
       space_id: space.space_id,
-      name: lang?.toUpperCase() === "AR" ? space.name_ar : space.name,
-      default_lang: space.default_lang,
-      name_ar: space.name_ar,
+      type: space.type,
       theme: space.theme,
+      default_lang: space.default_lang,
+      name: lang?.toUpperCase() === "AR" ? space.name_ar : space.name,
+      name_ar: space.name_ar,
+      kitchen_id: space.kitchen_id,
+      kitchen_name:
+        lang?.toUpperCase() === "AR"
+          ? space.kitchen?.name_ar
+          : space.kitchen?.name,
+      site_id: space.site?.site_id,
+      site_name:
+        lang?.toUpperCase() === "AR" ? space.site?.name_ar : space.site?.name,
     }));
 
-    return spaces;
+    return transformedSpaces;
   }
 
   async createSiteSpace(siteId: number, spaceData: CreateSpaceDto) {

@@ -22,6 +22,8 @@ import { MailerModule } from "@nestjs-modules/mailer";
     AuthModule,
     KitchenModuleV2,
     SiteModuleV2,
+    SpaceModuleV2,
+
     UserModuleV2,
     UserSpaceLinkModuleV2,
     DatabaseModule,
@@ -34,7 +36,6 @@ import { MailerModule } from "@nestjs-modules/mailer";
       isGlobal: true,
     }),
     ImagesModule,
-    SpaceModuleV2,
     EncryptionModule,
     CallModuleV2,
 

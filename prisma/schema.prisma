@@ -27,8 +27,8 @@ model User {
   canCallTeaboy        Boolean?     @default(true)
   phoneOS              OS_TYPE?     @default(android)
   userLanguage         LANGUAGE?    @default(EN)
-  role                 USER_ROLE2 @default(USER)
-  // role                 USER_ROLE @default(USER)
+  // role                 USER_ROLE2 @default(USER)
+  role                 USER_ROLE @default(USER)
     max_daily_orders      Int?      @default(5)
 
   calls                Call[]
@@ -280,6 +280,7 @@ enum SPACE_TYPE {
   OFFICE
   DEPARTMENT
   SERVICE
+  BEACH
 }
 
 enum USER_ROLE {
